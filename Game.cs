@@ -3,32 +3,38 @@ using System.Threading;
 
 public class Game
 {
+    private readonly ScreenController _screen;
+    private readonly GameState _state;
+
+    public Game()
+    {
+        _screen = new ScreenController();
+        _state = new GameState 
+        { 
+            PlayerX = 40,
+            PlayerY = 10
+        };
+    }
+
     public void Run()
     {
-        Console.CursorVisible = false;
-        int playerX = 40; // Starting position
         bool movingRight = true;
-        char player = '☺'; // Smiley face character
 
         while (true)
         {
-            Console.Clear();
-            
-            // Draw player
-            Console.SetCursorPosition(playerX, 10);
-            Console.Write(player);
+            _screen.Draw(_state);
 
             // Update position
             if (movingRight)
             {
-                playerX++;
-                if (playerX >= Console.WindowWidth - 1)
+                _state.PlayerX++;
+                if (_state.PlayerX >= Console.WindowWidth - 1)
                     movingRight = false;
             }
             else
             {
-                playerX--;
-                if (playerX <= 0)
+                _state.PlayerX--;
+                if (_state.PlayerX <= 0)
                     movingRight = true;
             }
 
