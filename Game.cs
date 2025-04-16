@@ -20,7 +20,7 @@ public class Game
     {
         bool movingRight = true;
 
-        while (true)
+        while (!_screen.WindowShouldClose())
         {
             _screen.Draw(_state);
 
@@ -28,9 +28,9 @@ public class Game
             if (movingRight)
             {
                 _state.PlayerX++;
-                if (_state.PlayerX >= Console.WindowWidth - 1)
+                if (_state.PlayerX >= 79)  // Adjusted for 80-column display
                     movingRight = false;
-            }
+            } 
             else
             {
                 _state.PlayerX--;
@@ -38,7 +38,9 @@ public class Game
                     movingRight = true;
             }
 
-            Thread.Sleep(50); // Control movement speed
+            Thread.Sleep(200);
         }
+
+        _screen.Cleanup();
     }
 } 
