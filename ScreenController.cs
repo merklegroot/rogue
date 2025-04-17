@@ -4,6 +4,7 @@ using System.Numerics;
 public class ScreenController
 {
     private readonly Texture2D _charset;
+    private readonly Image _charsetImage;
     private readonly int _width;
     private readonly int _height;
     
@@ -15,6 +16,9 @@ public class ScreenController
     private const int CHAR_V_GAP = 2;
     private const int SIDE_PADDING = 8;
     private const int TOP_PADDING = 10;
+
+    // React default background color
+    private readonly Color _backgroundColor = new Color(40, 44, 52, 255);  // #282c34
 
     private readonly Color[] _colors = new Color[] 
     {
@@ -36,13 +40,14 @@ public class ScreenController
         Raylib.InitWindow(_width * CHAR_WIDTH * DISPLAY_SCALE, _height * CHAR_HEIGHT * DISPLAY_SCALE, "Rogue-like");
         Raylib.SetTargetFPS(60);
         
-        _charset = Raylib.LoadTexture("images/Codepage-437.png");
+        // Load the pre-processed transparent image
+        _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
     }
 
     public void Draw(GameState state)
     {
         Raylib.BeginDrawing();
-        Raylib.ClearBackground(Color.Black);
+        Raylib.ClearBackground(_backgroundColor);
 
         // Draw all characters in a grid
         for (int charNum = 0; charNum < 256; charNum++)
@@ -52,9 +57,9 @@ public class ScreenController
             
             DrawCharacter(
                 charNum,
-                20 + (col * 40),  // x position: 40 pixels between characters
-                20 + (row * 60),  // y position: 60 pixels between rows
-                _colors[charNum % _colors.Length]  // Cycle through colors
+                20 + (col * 40),
+                20 + (row * 60),
+                _colors[charNum % _colors.Length]
             );
         }
 
@@ -63,8 +68,8 @@ public class ScreenController
 
     private void DrawCharacter(int charNum, int x, int y, Color color)
     {
-        int sourceX = charNum % 32;  // Column in source image
-        int sourceY = charNum / 32;  // Row in source image
+        int sourceX = charNum % 32;
+        int sourceY = charNum / 32;
 
         Rectangle sourceRect = new Rectangle(
             SIDE_PADDING + (sourceX * (CHAR_WIDTH + CHAR_H_GAP)),
