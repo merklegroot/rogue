@@ -9,10 +9,10 @@ public class ScreenController
     
     // Character dimensions
     private const int CHAR_WIDTH = 8;
-    private const int CHAR_HEIGHT = 10;
+    private const int CHAR_HEIGHT = 14;
     private const int DISPLAY_SCALE = 4;
     private const int CHAR_H_GAP = 1;
-    private const int CHAR_V_GAP = 6;
+    private const int CHAR_V_GAP = 2;
     private const int SIDE_PADDING = 8;
     private const int TOP_PADDING = 10;
 
