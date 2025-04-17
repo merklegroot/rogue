@@ -1,38 +1,32 @@
 using Raylib_cs;
-using System.Text;
 using System.Numerics;
 
 public class ScreenController
 {
-    private readonly int _player = 0x01;  // CP437 white smiley face character
-    private readonly int _ground = 0x2E;  // CP437 period character (.)
+    private readonly Texture2D _charset;
     private readonly int _width;
     private readonly int _height;
-    private readonly StringBuilder _buffer;
-    private readonly string _emptyLine;
-    private readonly Font _font;
-    private const int FONT_SIZE = 16;
-    // private const string FONT_PATH = "font/Ac437_IBM_VGA_8x16.ttf";
+    
+    // Character dimensions
+    private const int CHAR_WIDTH = 8;
+    private const int CHAR_HEIGHT = 10;
+    private const int CHAR_H_GAP = 1;
+    private const int CHAR_V_GAP = 6;
+    private const int SIDE_PADDING = 8;
+    private const int TOP_PADDING = 10;
 
-    private const string FONT_PATH = "font/Dernyn's-256(baseline).ttf";
-    private bool _showFontTest = true;  // Start with font test mode
+    private const string FONT_PATH = "Ac437_IBM_VGA_8x16.ttf";
 
     public ScreenController()
     {
         _width = 80;
-        _height = 40;
+        _height = 16;
         
-        // Initialize Raylib
-        Raylib.InitWindow(_width * FONT_SIZE, _height * FONT_SIZE, "Rogue-like");
+        Raylib.InitWindow(_width * CHAR_WIDTH, _height * CHAR_HEIGHT, "Rogue-like");
         Raylib.SetTargetFPS(60);
         
-        // Load the CP437 font
-        _font = Raylib.LoadFont(FONT_PATH);
-        Console.WriteLine($"Font loaded: {_font.BaseSize} glyphs available");
-        
-        // Initialize buffer
-        _buffer = new StringBuilder(_width * _height);
-        _emptyLine = new string((char)_ground, _width);
+        // Load the character set image
+        _charset = Raylib.LoadTexture("images/Codepage-437.png");
     }
 
     public void Draw(GameState state)
@@ -40,81 +34,38 @@ public class ScreenController
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
 
-        if (_showFontTest)
-        {
-            // Draw font test screen
-            DrawFontTest();
-            
-            // Draw instructions
-            string instructions = "Press SPACE to continue to game";
-            Raylib.DrawTextEx(_font, instructions, new Vector2(10, _height * FONT_SIZE - 30), FONT_SIZE, 1, Color.White);
-        }
-        else
-        {
-            // Build and draw the game screen
-            for (int y = 0; y < _height; y++)
-            {
-                for (int x = 0; x < _width; x++)
-                {
-                    string charToDraw = x == state.PlayerX && y == state.PlayerY 
-                        ? ((char)_player).ToString() 
-                        : ((char)_ground).ToString();
-                    
-                    Vector2 position = new Vector2(x * FONT_SIZE, y * FONT_SIZE);
-                    Raylib.DrawTextEx(
-                        _font,
-                        charToDraw,
-                        position,
-                        FONT_SIZE,
-                        1,  // spacing
-                        Color.White
-                    );
-                }
-            }
-        }
+        // Draw characters 1-4 in different colors (first row)
+        DrawCharacter(1, 10, 10, Color.White);    // Smiley
+        DrawCharacter(2, 20, 10, Color.Red);      // Inverse smiley
+        DrawCharacter(3, 30, 10, Color.Green);    // Heart
+        DrawCharacter(4, 40, 10, Color.Blue);     // Diamond
+
+        // Draw characters 5-8 in different colors (second row)
+        DrawCharacter(5, 10, 30, Color.Yellow);   // Club
+        DrawCharacter(6, 20, 30, Color.Purple);   // Spade
+        DrawCharacter(7, 30, 30, Color.Orange);   // •
+        DrawCharacter(8, 40, 30, Color.Pink);     // ◘
 
         Raylib.EndDrawing();
-        
-        // Check for space key to toggle font test mode
-        if (Raylib.IsKeyPressed(KeyboardKey.Space))
-        {
-            _showFontTest = !_showFontTest;
-        }
     }
-    
-    private void DrawFontTest()
+
+    private void DrawCharacter(int charNum, int x, int y, Color color)
     {
-        // Display all 256 CP437 characters in a grid
-        int charsPerRow = 16;
-        int rows = 16;
-        
-        for (int i = 0; i < 256; i++)
-        {
-            int x = (i % charsPerRow) * FONT_SIZE * 2;
-            int y = (i / charsPerRow) * FONT_SIZE * 2;
-            
-            // Draw character
-            string charToDraw = ((char)i).ToString();
-            Raylib.DrawTextEx(
-                _font,
-                charToDraw,
-                new Vector2(x, y),
-                FONT_SIZE,
-                1,
-                Color.White
-            );
-            
-            // Draw hex value
-            string hexValue = $"{i:X2}";
-            Raylib.DrawTextEx(
-                _font,
-                hexValue,
-                new Vector2(x, y + FONT_SIZE),
-                FONT_SIZE / 2,
-                1,
-                Color.Gray
-            );
-        }
+        Rectangle sourceRect = new Rectangle(
+            SIDE_PADDING + (charNum * (CHAR_WIDTH + CHAR_H_GAP)),
+            TOP_PADDING,
+            CHAR_WIDTH,
+            CHAR_HEIGHT
+        );
+
+        Rectangle destRect = new Rectangle(
+            x,
+            y,
+            CHAR_WIDTH,
+            CHAR_HEIGHT
+        );
+
+        Raylib.DrawTexturePro(_charset, sourceRect, destRect, Vector2.Zero, 0, color);
     }
 
     public bool WindowShouldClose()
@@ -124,7 +75,7 @@ public class ScreenController
 
     public void Cleanup()
     {
-        Raylib.UnloadFont(_font);
+        Raylib.UnloadTexture(_charset);
         Raylib.CloseWindow();
     }
-} 
+}
