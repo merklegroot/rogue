@@ -1,21 +1,27 @@
 using Raylib_cs;
 using System.Numerics;
 
+public enum GameView
+{
+    Menu,
+    CharacterSet
+}
+
 public class ScreenController
 {
     private readonly Texture2D _charset;
-    private readonly Image _charsetImage;
     private readonly int _width;
     private readonly int _height;
+    private GameView _currentView = GameView.Menu;
     
     // Character dimensions
     private const int CHAR_WIDTH = 8;
-    private const int CHAR_HEIGHT = 16;
+    private const int CHAR_HEIGHT = 14;
     private const int DISPLAY_SCALE = 4;
     private const int CHAR_H_GAP = 1;
-    private const int CHAR_V_GAP = 0;
+    private const int CHAR_V_GAP = 2;
     private const int SIDE_PADDING = 8;
-    private const int TOP_PADDING = 9;
+    private const int TOP_PADDING = 10;
 
     // React default background color
     private readonly Color _backgroundColor = new Color(40, 44, 52, 255);  // #282c34
@@ -40,7 +46,6 @@ public class ScreenController
         Raylib.InitWindow(_width * CHAR_WIDTH * DISPLAY_SCALE, _height * CHAR_HEIGHT * DISPLAY_SCALE, "Rogue-like");
         Raylib.SetTargetFPS(60);
         
-        // Load the pre-processed transparent image
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
     }
 
@@ -49,13 +54,40 @@ public class ScreenController
         Raylib.BeginDrawing();
         Raylib.ClearBackground(_backgroundColor);
 
-        ShowAllCharacters();
+        switch (_currentView)
+        {
+            case GameView.Menu:
+                DrawMenu();
+                HandleMenuInput();
+                break;
+            
+            case GameView.CharacterSet:
+                DrawCharacterSet();
+                HandleCharacterSetInput();
+                break;
+        }
 
         Raylib.EndDrawing();
     }
 
-    private void ShowAllCharacters()
+    private void DrawMenu()
     {
+        // Draw menu text
+        DrawText("Main Menu", 20, 20, Color.White);
+        DrawText("View (C)haracter Set", 20, 60, Color.White);
+    }
+
+    private void HandleMenuInput()
+    {
+        if (Raylib.IsKeyPressed(KeyboardKey.C))
+        {
+            _currentView = GameView.CharacterSet;
+        }
+    }
+
+    private void DrawCharacterSet()
+    {
+        // Draw all characters in a grid
         for (int charNum = 0; charNum < 256; charNum++)
         {
             int row = charNum / 32;
@@ -68,6 +100,21 @@ public class ScreenController
                 _colors[charNum % _colors.Length]
             );
         }
+
+        DrawText("Press any key to return", 20, _height * CHAR_HEIGHT * DISPLAY_SCALE - 40, Color.White);
+    }
+
+    private void HandleCharacterSetInput()
+    {
+        if (Raylib.GetKeyPressed() != 0)
+        {
+            _currentView = GameView.Menu;
+        }
+    }
+
+    private void DrawText(string text, int x, int y, Color color)
+    {
+        Raylib.DrawText(text, x, y, 20, color);
     }
 
     private void DrawCharacter(int charNum, int x, int y, Color color)
