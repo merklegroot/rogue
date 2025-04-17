@@ -12,12 +12,15 @@ public class ScreenController
     private readonly string _emptyLine;
     private readonly Font _font;
     private const int FONT_SIZE = 16;
-    private const string FONT_PATH = "font/Ac437_IBM_VGA_8x16.ttf";
+    // private const string FONT_PATH = "font/Ac437_IBM_VGA_8x16.ttf";
+
+    private const string FONT_PATH = "font/Dernyn's-256(baseline).ttf";
+    private bool _showFontTest = true;  // Start with font test mode
 
     public ScreenController()
     {
-        _width = 80;  // Standard terminal width
-        _height = 16;
+        _width = 80;
+        _height = 40;
         
         // Initialize Raylib
         Raylib.InitWindow(_width * FONT_SIZE, _height * FONT_SIZE, "Rogue-like");
@@ -25,6 +28,7 @@ public class ScreenController
         
         // Load the CP437 font
         _font = Raylib.LoadFont(FONT_PATH);
+        Console.WriteLine($"Font loaded: {_font.BaseSize} glyphs available");
         
         // Initialize buffer
         _buffer = new StringBuilder(_width * _height);
@@ -36,28 +40,81 @@ public class ScreenController
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
 
-        // Build and draw the screen
-        for (int y = 0; y < _height; y++)
+        if (_showFontTest)
         {
-            for (int x = 0; x < _width; x++)
+            // Draw font test screen
+            DrawFontTest();
+            
+            // Draw instructions
+            string instructions = "Press SPACE to continue to game";
+            Raylib.DrawTextEx(_font, instructions, new Vector2(10, _height * FONT_SIZE - 30), FONT_SIZE, 1, Color.White);
+        }
+        else
+        {
+            // Build and draw the game screen
+            for (int y = 0; y < _height; y++)
             {
-                string charToDraw = x == state.PlayerX && y == state.PlayerY 
-                    ? ((char)_player).ToString() 
-                    : ((char)_ground).ToString();
-                
-                Vector2 position = new Vector2(x * FONT_SIZE, y * FONT_SIZE);
-                Raylib.DrawTextEx(
-                    _font,
-                    charToDraw,
-                    position,
-                    FONT_SIZE,
-                    1,  // spacing
-                    Color.White
-                );
+                for (int x = 0; x < _width; x++)
+                {
+                    string charToDraw = x == state.PlayerX && y == state.PlayerY 
+                        ? ((char)_player).ToString() 
+                        : ((char)_ground).ToString();
+                    
+                    Vector2 position = new Vector2(x * FONT_SIZE, y * FONT_SIZE);
+                    Raylib.DrawTextEx(
+                        _font,
+                        charToDraw,
+                        position,
+                        FONT_SIZE,
+                        1,  // spacing
+                        Color.White
+                    );
+                }
             }
         }
 
         Raylib.EndDrawing();
+        
+        // Check for space key to toggle font test mode
+        if (Raylib.IsKeyPressed(KeyboardKey.Space))
+        {
+            _showFontTest = !_showFontTest;
+        }
+    }
+    
+    private void DrawFontTest()
+    {
+        // Display all 256 CP437 characters in a grid
+        int charsPerRow = 16;
+        int rows = 16;
+        
+        for (int i = 0; i < 256; i++)
+        {
+            int x = (i % charsPerRow) * FONT_SIZE * 2;
+            int y = (i / charsPerRow) * FONT_SIZE * 2;
+            
+            // Draw character
+            string charToDraw = ((char)i).ToString();
+            Raylib.DrawTextEx(
+                _font,
+                charToDraw,
+                new Vector2(x, y),
+                FONT_SIZE,
+                1,
+                Color.White
+            );
+            
+            // Draw hex value
+            string hexValue = $"{i:X2}";
+            Raylib.DrawTextEx(
+                _font,
+                hexValue,
+                new Vector2(x, y + FONT_SIZE),
+                FONT_SIZE / 2,
+                1,
+                Color.Gray
+            );
+        }
     }
 
     public bool WindowShouldClose()

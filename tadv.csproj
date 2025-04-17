@@ -15,6 +15,9 @@
     <None Update="font/Ac437_IBM_VGA_8x16.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="font/Dernyn's-256(baseline).ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
