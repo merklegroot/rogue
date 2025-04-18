@@ -4,7 +4,8 @@ using System.Numerics;
 public enum GameView
 {
     Menu,
-    CharacterSet
+    CharacterSet,
+    Animation
 }
 
 public class ScreenController
@@ -80,6 +81,11 @@ public class ScreenController
                 DrawCharacterSet();
                 HandleCharacterSetInput();
                 break;
+                
+            case GameView.Animation:
+                DrawAnimation();
+                HandleAnimationInput();
+                break;
         }
 
         Raylib.EndDrawing();
@@ -102,7 +108,8 @@ public class ScreenController
         // Draw menu text
         DrawText("Main Menu", 20, 20, Color.White);
         DrawColoredHotkeyText("View (C)haracter Set", 20, 60);
-        DrawColoredHotkeyText("e(X)it", 20, 100);
+        DrawColoredHotkeyText("(A)nimation", 20, 100);
+        DrawColoredHotkeyText("e(X)it", 20, 140);
     }
 
     private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotkeyOptions? options = null)
@@ -154,6 +161,11 @@ public class ScreenController
                 _currentView = GameView.CharacterSet;
                 break;
             }
+            if (key == KeyboardKey.A)
+            {
+                _currentView = GameView.Animation;
+                break;
+            }
             if (key == KeyboardKey.X)
             {
                 Raylib.CloseWindow();
@@ -186,6 +198,43 @@ public class ScreenController
         if (_keyEvents.Count > 0)
         {
             _currentView = GameView.Menu;
+        }
+    }
+
+    private void DrawAnimation()
+    {
+        // Draw a field of dots
+        for (int y = 0; y < 10; y++)
+        {
+            for (int x = 0; x < 20; x++)
+            {
+                // Draw dots everywhere except at position (10, 5)
+                if (x == 10 && y == 5)
+                {
+                    // Draw smiley face at center
+                    DrawCharacter(1, 100 + x * 40, 100 + y * 40, Color.Yellow);
+                }
+                else
+                {
+                    // Draw dots
+                    DrawCharacter(0x2E, 100 + x * 40, 100 + y * 40, Color.White);
+                }
+            }
+        }
+
+        DrawText("Press ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
+    }
+
+    private void HandleAnimationInput()
+    {
+        while (_keyEvents.Count > 0)
+        {
+            var key = _keyEvents.Dequeue();
+            if (key == KeyboardKey.Escape)
+            {
+                _currentView = GameView.Menu;
+                break;
+            }
         }
     }
 
