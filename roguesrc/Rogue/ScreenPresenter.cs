@@ -142,6 +142,7 @@ public class ScreenPresenter : IScreenPresenter
         public required string Description { get; set; }
         public int Price { get; set; }
         public required Action OnPurchase { get; set; }
+        public ShopCategory Category { get; set; } = ShopCategory.Consumable;  // Default category
     }
 
     // Add shop-related fields
@@ -154,6 +155,9 @@ public class ScreenPresenter : IScreenPresenter
     public ScreenPresenter(IRayLoader rayLoader)
     {
         _rayLoader = rayLoader;
+
+        // Disable the default ESC key behavior that closes the window
+        Raylib.SetExitKey(KeyboardKey.Null);  // This disables the ESC key from closing the window
 
         Raylib.InitWindow(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale, "Rogue-like");
         Raylib.SetTargetFPS(60);
@@ -1140,7 +1144,17 @@ public class ScreenPresenter : IScreenPresenter
 
     public bool WindowShouldClose()
     {
-        return Raylib.WindowShouldClose();
+        // Check if window close was requested (like clicking the X button)
+        // but ignore if it was triggered by the Escape key
+        bool closeRequested = Raylib.WindowShouldClose();
+        
+        // If close is requested and it's because of Escape key, ignore it
+        if (closeRequested && Raylib.IsKeyPressed(KeyboardKey.Escape))
+        {
+            return false;
+        }
+        
+        return closeRequested;
     }
 
     public void Cleanup()
@@ -1193,12 +1207,14 @@ public class ScreenPresenter : IScreenPresenter
 
     private void InitializeShop()
     {
+        // Regular items section
         _shopInventory.Add(new ShopItem
         {
             Name = "Health Potion",
             Description = "Restores 25 health",
             Price = 10,
-            OnPurchase = () => { _currentHealth = Math.Min(10, _currentHealth + 25); }
+            OnPurchase = () => { _currentHealth = Math.Min(10, _currentHealth + 25); },
+            Category = ShopCategory.Consumable
         });
         
         _shopInventory.Add(new ShopItem
@@ -1209,7 +1225,8 @@ public class ScreenPresenter : IScreenPresenter
             OnPurchase = () => { 
                 if (_swordCooldown > 0.3f) // Don't let it go below 0.3s
                     _swordCooldown -= 0.2f; 
-            }
+            },
+            Category = ShopCategory.Upgrade
         });
         
         _shopInventory.Add(new ShopItem
@@ -1217,7 +1234,8 @@ public class ScreenPresenter : IScreenPresenter
             Name = "Longer Sword",
             Description = "Increases sword reach",
             Price = 30,
-            OnPurchase = () => { _swordReach++; }
+            OnPurchase = () => { _swordReach++; },
+            Category = ShopCategory.Upgrade
         });
         
         _shopInventory.Add(new ShopItem
@@ -1229,7 +1247,19 @@ public class ScreenPresenter : IScreenPresenter
                 _isInvincible = true;
                 _invincibilityTimer = 0f;
                 _invincibilityTimer = 5f;
-            }
+            },
+            Category = ShopCategory.Consumable
+        });
+        
+        // Weapons section (empty for now)
+        // You can add weapon items here later
+        _shopInventory.Add(new ShopItem
+        {
+            Name = "--- Weapons ---",
+            Description = "Coming soon...",
+            Price = 0,
+            OnPurchase = () => { /* Do nothing, this is just a header */ },
+            Category = ShopCategory.Header
         });
     }
 
@@ -1251,6 +1281,16 @@ public class ScreenPresenter : IScreenPresenter
         for (int i = 0; i < _shopInventory.Count; i++)
         {
             var item = _shopInventory[i];
+            
+            // Special handling for header items
+            if (item.Category == ShopCategory.Header)
+            {
+                // Draw section header with special styling
+                DrawText(item.Name, 80, startY + i * itemHeight + 10, Color.Gold);
+                DrawText(item.Description, 80, startY + i * itemHeight + 35, new Color(150, 150, 150, 255));
+                continue;  // Skip the rest of the drawing for headers
+            }
+            
             Color itemColor = (_selectedShopItem == i) ? Color.Yellow : Color.White;
             Color priceColor = (_playerGold >= item.Price) ? Color.Green : Color.Red;
             
@@ -1287,11 +1327,23 @@ public class ScreenPresenter : IScreenPresenter
             }
             else if (key == KeyboardKey.Up)
             {
-                _selectedShopItem = Math.Max(0, _selectedShopItem - 1);
+                // Move selection up, skipping headers
+                int newSelection = _selectedShopItem - 1;
+                while (newSelection >= 0 && _shopInventory[newSelection].Category == ShopCategory.Header)
+                {
+                    newSelection--;
+                }
+                _selectedShopItem = Math.Max(0, newSelection);
             }
             else if (key == KeyboardKey.Down)
             {
-                _selectedShopItem = Math.Min(_shopInventory.Count - 1, _selectedShopItem + 1);
+                // Move selection down, skipping headers
+                int newSelection = _selectedShopItem + 1;
+                while (newSelection < _shopInventory.Count && _shopInventory[newSelection].Category == ShopCategory.Header)
+                {
+                    newSelection++;
+                }
+                _selectedShopItem = Math.Min(_shopInventory.Count - 1, newSelection);
             }
             else if (key == KeyboardKey.Enter)
             {
@@ -1299,7 +1351,8 @@ public class ScreenPresenter : IScreenPresenter
                 if (_selectedShopItem >= 0 && _selectedShopItem < _shopInventory.Count)
                 {
                     var item = _shopInventory[_selectedShopItem];
-                    if (_playerGold >= item.Price)
+                    // Don't allow purchasing headers
+                    if (item.Category != ShopCategory.Header && _playerGold >= item.Price)
                     {
                         // Deduct gold
                         _playerGold -= item.Price;
@@ -1310,5 +1363,14 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
         }
+    }
+
+    // Add a category enum for shop items
+    private enum ShopCategory
+    {
+        Consumable,
+        Upgrade,
+        Weapon,
+        Header  // Used for section headers
     }
 }
