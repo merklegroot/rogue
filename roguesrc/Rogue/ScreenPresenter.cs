@@ -111,6 +111,7 @@ public class ScreenPresenter : IScreenPresenter
     private int _flickerLoc;
     private int _timeLoc;
     private float _shaderTime = 0f;
+    private int _scanlineCountLoc;
 
     private readonly IRayLoader _rayLoader;
 
@@ -141,26 +142,14 @@ public class ScreenPresenter : IScreenPresenter
         // Create a render texture the size of the window
         _gameTexture = Raylib.LoadRenderTexture(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale);
         
-        // Load the CRT shader with absolute path
-        // string shaderPath = Path.GetFullPath("resources/crt.fs");
-        var shaderPath = "resources/crt.fs";
-        
-        // Check if the shader file exists
-        if (!File.Exists(shaderPath))
-        {
-            string errorMessage = $"Shader file not found at path: {shaderPath}";
-            Console.WriteLine(errorMessage);
-            throw new FileNotFoundException(errorMessage, shaderPath);
-        }
-        
-        Console.WriteLine($"Shader file found at: {shaderPath}");
-        Console.WriteLine($"Loading shader from: {shaderPath}");
-        _crtShader = Raylib.LoadShader(null, shaderPath);
+        // Load the CRT shader
+        _crtShader = Raylib.LoadShader(null, "resources/crt.fs");
         
         // Get shader uniform locations
         _resolutionLoc = Raylib.GetShaderLocation(_crtShader, "resolution");
         _curvatureLoc = Raylib.GetShaderLocation(_crtShader, "curvature");
         _scanlineLoc = Raylib.GetShaderLocation(_crtShader, "scanlineIntensity");
+        _scanlineCountLoc = Raylib.GetShaderLocation(_crtShader, "scanlineCount");
         _vignetteLoc = Raylib.GetShaderLocation(_crtShader, "vignetteIntensity");
         _brightnessLoc = Raylib.GetShaderLocation(_crtShader, "brightness");
         _distortionLoc = Raylib.GetShaderLocation(_crtShader, "distortion");
@@ -170,25 +159,15 @@ public class ScreenPresenter : IScreenPresenter
         // Set initial uniform values
         float[] resolution = { Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale };
         Raylib.SetShaderValue(_crtShader, _resolutionLoc, resolution, ShaderUniformDataType.Vec2);
-        Raylib.SetShaderValue(_crtShader, _curvatureLoc, 0.1f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _scanlineLoc, 1.5f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _vignetteLoc, 0.2f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _brightnessLoc, 1.1f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _distortionLoc, 0.05f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _flickerLoc, 0.03f, ShaderUniformDataType.Float);
-
-        // After loading the shader
-        if (_crtShader.Id == 0)
-        {
-            Console.WriteLine("Failed to load CRT shader!");
-        }
-        else
-        {
-            Console.WriteLine("CRT shader loaded successfully with ID: " + _crtShader.Id);
-            // Check if shader compiled successfully
-            int result = Raylib.GetShaderLocation(_crtShader, "nonexistent_uniform");
-            Console.WriteLine("Shader test result: " + result);
-        }
+        
+        // Fix the extreme warping by drastically reducing curvature
+        Raylib.SetShaderValue(_crtShader, _curvatureLoc, 0.1f, ShaderUniformDataType.Float);  // Decreased from 0.5 to 0.3
+        Raylib.SetShaderValue(_crtShader, _scanlineLoc, 0.1f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _scanlineCountLoc, 240.0f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _vignetteLoc, 0.1f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _brightnessLoc, 1.05f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _distortionLoc, 0.005f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _flickerLoc, 0.01f, ShaderUniformDataType.Float);
     }
 
     public void Update()
