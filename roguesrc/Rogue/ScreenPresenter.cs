@@ -7,14 +7,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System;
 
-public enum GameView
-{
-    Menu,
-    CharacterSet,
-    Animation
-}
-
-public class ScreenController
+public class ScreenPresenter
 {
     private readonly Texture2D _charset;
     private readonly Font _menuFont;
@@ -54,7 +47,6 @@ public class ScreenController
     private float _timeSinceLastMove = 0;
 
     // Add these fields to track direction and sword state
-    private enum Direction { Up, Down, Left, Right }
     private Direction _lastDirection = Direction.Right;
     private bool _isSwordSwinging = false;
     private float _swordSwingTime = 0;
@@ -72,14 +64,6 @@ public class ScreenController
     private bool _enemyAlive = true;  // Add this field
     
     // Multiple enemies support
-    private class Enemy
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public bool Alive { get; set; } = true;
-        public float MoveTimer { get; set; } = 0f;  // Add individual move timer for each enemy
-    }
-    
     private List<Enemy> _enemies = new List<Enemy>();
     private float _enemySpawnTimer = 0;
     private const float EnemySpawnDelay = 1.0f;  // Spawn a new enemy every 1 second
@@ -96,7 +80,7 @@ public class ScreenController
     private float _invincibilityTimer = 0f;
     private const float InvincibilityDuration = 1.0f;  // 1 second of invincibility after taking damage
 
-    public ScreenController()
+    public ScreenPresenter()
     {
         _width = 40;
         _height = 16;

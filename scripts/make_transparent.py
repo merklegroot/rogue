@@ -1,7 +1,7 @@
 from PIL import Image
 
 # Load the image
-img = Image.open('../images/Codepage-437.png')
+img = Image.open('../roguesrc/Rogue/images/Codepage-437.png')
 
 # Convert to RGBA if it isn't already
 img = img.convert('RGBA')
@@ -24,4 +24,4 @@ for item in data:
 img.putdata(new_data)
 
 # Save the modified image
-img.save('../images/Codepage-437-transparent.png', 'PNG')
+img.save('../roguesrc/Rogue/images/Codepage-437-transparent.png', 'PNG')

@@ -3,12 +3,12 @@ using System.Threading;
 
 public class Game
 {
-    private readonly ScreenController _screen;
+    private readonly ScreenPresenter _screen;
     private readonly GameState _state;
 
     public Game()
     {
-        _screen = new ScreenController();
+        _screen = new ScreenPresenter();
         _state = new GameState 
         { 
             PlayerX = 40,
