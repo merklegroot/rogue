@@ -17,13 +17,13 @@ public class ScreenController
     private Queue<KeyboardKey> _keyEvents = new Queue<KeyboardKey>();
     
     // Character dimensions
-    private const int CHAR_WIDTH = 8;
-    private const int CHAR_HEIGHT = 14;
-    private const int DISPLAY_SCALE = 4;
-    private const int CHAR_H_GAP = 1;
-    private const int CHAR_V_GAP = 2;
-    private const int SIDE_PADDING = 8;
-    private const int TOP_PADDING = 10;
+    private const int CharWidth = 8;
+    private const int CharHeight = 14;
+    private const int DisplayScale = 4;
+    private const int CharHGap = 1;
+    private const int CharVGap = 2;
+    private const int SidePadding = 8;
+    private const int TopPadding = 10;
 
     private const int MenuFontSize = 32;
 
@@ -47,7 +47,7 @@ public class ScreenController
         _width = 40;
         _height = 16;
         
-        Raylib.InitWindow(_width * CHAR_WIDTH * DISPLAY_SCALE, _height * CHAR_HEIGHT * DISPLAY_SCALE, "Rogue-like");
+        Raylib.InitWindow(_width * CharWidth * DisplayScale, _height * CharHeight * DisplayScale, "Rogue-like");
         Raylib.SetTargetFPS(60);
         
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
@@ -167,7 +167,7 @@ public class ScreenController
             );
         }
 
-        DrawText("Press any key to return", 20, _height * CHAR_HEIGHT * DISPLAY_SCALE - 40, Color.White);
+        DrawText("Press any key to return", 20, _height * CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput()
@@ -189,17 +189,17 @@ public class ScreenController
         int sourceY = charNum / 32;
 
         Rectangle sourceRect = new Rectangle(
-            SIDE_PADDING + (sourceX * (CHAR_WIDTH + CHAR_H_GAP)),
-            TOP_PADDING + (sourceY * (CHAR_HEIGHT + CHAR_V_GAP)),
-            CHAR_WIDTH,
-            CHAR_HEIGHT
+            SidePadding + (sourceX * (CharWidth + CharHGap)),
+            TopPadding + (sourceY * (CharHeight + CharVGap)),
+            CharWidth,
+            CharHeight
         );
 
         Rectangle destRect = new Rectangle(
             x,
             y,
-            CHAR_WIDTH * DISPLAY_SCALE,
-            CHAR_HEIGHT * DISPLAY_SCALE
+            CharWidth * DisplayScale,
+            CharHeight * DisplayScale
         );
 
         // Draw the character
