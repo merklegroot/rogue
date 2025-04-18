@@ -1,5 +1,6 @@
 using Raylib_cs;
 using System.Numerics;
+using System.Collections.Generic;
 
 public enum GameView
 {
@@ -13,6 +14,7 @@ public class ScreenController
     private readonly int _width;
     private readonly int _height;
     private GameView _currentView = GameView.Menu;
+    private Queue<KeyboardKey> _keyEvents = new Queue<KeyboardKey>();
     
     // Character dimensions
     private const int CHAR_WIDTH = 8;
@@ -49,6 +51,16 @@ public class ScreenController
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
     }
 
+    public void Update()
+    {
+        // Collect all key events that occurred
+        int key;
+        while ((key = Raylib.GetKeyPressed()) != 0)
+        {
+            _keyEvents.Enqueue((KeyboardKey)key);
+        }
+    }
+
     public void Draw(GameState state)
     {
         Raylib.BeginDrawing();
@@ -68,6 +80,9 @@ public class ScreenController
         }
 
         Raylib.EndDrawing();
+
+        // Clear processed events
+        _keyEvents.Clear();
     }
 
     private void DrawMenu()
@@ -79,9 +94,14 @@ public class ScreenController
 
     private void HandleMenuInput()
     {
-        if (Raylib.IsKeyPressed(KeyboardKey.C))
+        while (_keyEvents.Count > 0)
         {
-            _currentView = GameView.CharacterSet;
+            var key = _keyEvents.Dequeue();
+            if (key == KeyboardKey.C)
+            {
+                _currentView = GameView.CharacterSet;
+                break;
+            }
         }
     }
 
@@ -106,7 +126,7 @@ public class ScreenController
 
     private void HandleCharacterSetInput()
     {
-        if (Raylib.GetKeyPressed() != 0)
+        if (_keyEvents.Count > 0)
         {
             _currentView = GameView.Menu;
         }

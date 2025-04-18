@@ -22,6 +22,7 @@ public class Game
 
         while (!_screen.WindowShouldClose())
         {
+            _screen.Update();
             _screen.Draw(_state);
 
             // Update position
