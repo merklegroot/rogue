@@ -277,22 +277,24 @@ public class ScreenController
             // Get sword character based on direction and animation frame
             char swordChar = (_lastDirection, frame) switch
             {
-                // Horizontal animations (top to bottom: / | \)
-                (Direction.Left, 0) => '/',
-                (Direction.Left, 1) => '|',
-                (Direction.Left, 2) => '\\',
+                // Left side: \ → - → /
+                (Direction.Left, 0) => '\\',
+                (Direction.Left, 1) => '-',
+                (Direction.Left, 2) => '/',
                 
-                (Direction.Right, 0) => '\\',
-                (Direction.Right, 1) => '|',
-                (Direction.Right, 2) => '/',
+                // Right side: / → - → \
+                (Direction.Right, 0) => '/',
+                (Direction.Right, 1) => '-',
+                (Direction.Right, 2) => '\\',
                 
-                // Vertical animations (left to right: \ - /)
+                // Up: \ → | → /
                 (Direction.Up, 0) => '\\',
-                (Direction.Up, 1) => '-',
+                (Direction.Up, 1) => '|',
                 (Direction.Up, 2) => '/',
                 
+                // Down: / → | → \
                 (Direction.Down, 0) => '/',
-                (Direction.Down, 1) => '-',
+                (Direction.Down, 1) => '|',
                 (Direction.Down, 2) => '\\',
                 
                 // Fallback
