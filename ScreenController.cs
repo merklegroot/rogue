@@ -1,5 +1,11 @@
 using Raylib_cs;
 using System.Numerics;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Concurrent;
+using System;
 
 public enum GameView
 {
@@ -53,6 +59,16 @@ public class ScreenController
     private bool _isSwordSwinging = false;
     private float _swordSwingTime = 0;
     private const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
+
+    // Add a silvery-blue color for the sword
+    private readonly Color _swordColor = new Color(180, 210, 230, 255);  // Silvery-blue color
+
+    // Add enemy fields
+    private int _enemyX = 15;
+    private int _enemyY = 5;
+    private float _enemyMoveTimer = 0;
+    private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
+    private readonly Random _random = new Random();
 
     public ScreenController()
     {
@@ -219,11 +235,16 @@ public class ScreenController
         {
             for (int x = 0; x < 20; x++)
             {
-                // Draw dots everywhere except at player position
+                // Draw player
                 if (x == _animPlayerX && y == _animPlayerY)
                 {
                     // Draw smiley face at player position
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, Color.Yellow);
+                }
+                // Draw enemy (Ç - capital C with cedilla, ASCII 128 in CP437)
+                else if (x == _enemyX && y == _enemyY)
+                {
+                    DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.Red);
                 }
                 else
                 {
@@ -305,8 +326,8 @@ public class ScreenController
             float swordX = 100 + (_animPlayerX + xOffset) * 40;
             float swordY = 100 + (_animPlayerY + yOffset) * 40;
             
-            // Draw the sword character
-            DrawCharacter(swordChar, (int)swordX, (int)swordY, Color.Red);
+            // Draw the sword character with silvery-blue color
+            DrawCharacter(swordChar, (int)swordX, (int)swordY, _swordColor);
         }
 
         DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
@@ -386,6 +407,38 @@ public class ScreenController
             {
                 _isSwordSwinging = false;
             }
+        }
+        
+        // Update enemy movement
+        UpdateEnemy();
+    }
+
+    private void UpdateEnemy()
+    {
+        _enemyMoveTimer += Raylib.GetFrameTime();
+        
+        if (_enemyMoveTimer >= EnemyMoveDelay)
+        {
+            // Choose a random direction (0-3)
+            int direction = _random.Next(4);
+            
+            switch (direction)
+            {
+                case 0: // Up
+                    _enemyY = Math.Max(0, _enemyY - 1);
+                    break;
+                case 1: // Right
+                    _enemyX = Math.Min(19, _enemyX + 1);
+                    break;
+                case 2: // Down
+                    _enemyY = Math.Min(9, _enemyY + 1);
+                    break;
+                case 3: // Left
+                    _enemyX = Math.Max(0, _enemyX - 1);
+                    break;
+            }
+            
+            _enemyMoveTimer = 0;
         }
     }
 
