@@ -317,7 +317,7 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawMenu()
     {
-        // Draw menu text
+        // Restore the original position
         DrawText("Main Menu", 20, 20, Color.White);
         DrawColoredHotkeyText("View (C)haracter Set", 20, 60);
         DrawColoredHotkeyText("(A)nimation", 20, 100);
@@ -639,15 +639,16 @@ public class ScreenPresenter : IScreenPresenter
             Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(150, 150, 200, 200));
         }
 
-        // Update instructions text to include crossbow if player has it
+        // Move the instructions text up by 20 pixels
         string instructionsText = "Use WASD to move, SPACE to swing sword";
         if (_hasCrossbow)
         {
             instructionsText += ", F to fire crossbow";
         }
-        instructionsText += ", ESC to return to menu";
+        instructionsText += ", ESC to return to menu, (G) for debug gold";
         
-        DrawText(instructionsText, 20, Height * CharHeight * DisplayScale - 40, Color.White);
+        // Changed from Height * CharHeight * DisplayScale - 40 to Height * CharHeight * DisplayScale - 60
+        DrawText(instructionsText, 20, Height * CharHeight * DisplayScale - 60, Color.White);
     }
 
     private void HandleAnimationInput()
@@ -665,6 +666,20 @@ public class ScreenPresenter : IScreenPresenter
             {
                 _isSwordSwinging = true;
                 _swordSwingTime = 0;
+            }
+            // Add debug option to get free gold with G key
+            if (key == KeyboardKey.G)
+            {
+                _playerGold += 100;
+                
+                // Optional: Add a visual indicator that gold was added
+                int screenWidth = Width * CharWidth * DisplayScale;
+                _flyingGold.Add(new FlyingGold { 
+                    StartX = screenWidth / 2,
+                    StartY = Height * CharHeight * DisplayScale / 2,
+                    Value = 100,
+                    Timer = 0f
+                });
             }
         }
 
