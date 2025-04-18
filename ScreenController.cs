@@ -85,6 +85,12 @@ public class ScreenController
     private const float EnemySpawnDelay = 1.0f;  // Spawn a new enemy every 1 second
     private const int MaxEnemies = 3;  // Maximum number of enemies
 
+    // Add health fields
+    private int _maxHealth = 10;
+    private int _currentHealth = 7;  // Start with 7 out of 10 health
+    private readonly Color _healthColor = Color.Red;
+    private readonly Color _emptyHealthColor = new Color(100, 100, 100, 255);  // Gray color for empty hearts
+
     public ScreenController()
     {
         _width = 40;
@@ -248,6 +254,9 @@ public class ScreenController
 
    private void DrawAnimation()
     {
+        // Draw health bar at the top
+        DrawHealthBar();
+        
         // Draw a field of dots
         for (int y = 0; y < 10; y++)
         {
@@ -600,6 +609,23 @@ public class ScreenController
                 (int)destRect.Height + 2,
                 Color.DarkGray
             );
+        }
+    }
+
+    private void DrawHealthBar()
+    {
+        const int heartChar = 3;  // ASCII/CP437 code for heart symbol (♥)
+        const int heartSpacing = 30;  // Pixels between hearts
+        const int startX = 20;
+        const int startY = 20;
+        
+        for (int i = 0; i < _maxHealth; i++)
+        {
+            // Determine if this heart should be filled or empty
+            Color heartColor = (i < _currentHealth) ? _healthColor : _emptyHealthColor;
+            
+            // Draw the heart
+            DrawCharacter(heartChar, startX + (i * heartSpacing), startY, heartColor);
         }
     }
 
