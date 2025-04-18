@@ -96,7 +96,7 @@ public class ScreenPresenter : IScreenPresenter
 
     // Add flying gold animation fields
     private readonly List<FlyingGold> _flyingGold = [];
-    private const float GoldFlyDuration = 0.5f;  // How long it takes gold to fly to counter
+    private const float GoldFlyDuration = 0.3f;  // Reduced from 0.5f to 0.3f for faster animation
 
     private readonly IRayLoader _rayLoader;
 
@@ -419,8 +419,12 @@ public class ScreenPresenter : IScreenPresenter
             int currentX = (int)(gold.StartX + (endX - gold.StartX) * progress);
             int currentY = (int)(gold.StartY + (endY - gold.StartY) * progress);
             
-            // Draw the flying gold character
-            DrawCharacter(GoldChar, currentX, currentY, _goldColor);
+            // Calculate alpha (opacity) based on progress - fade out as it approaches the counter
+            byte alpha = (byte)(255 * (1.0f - progress * 0.8f));  // Fade to 20% opacity
+            Color fadingGoldColor = new Color(_goldColor.R, _goldColor.G, _goldColor.B, alpha);
+            
+            // Draw the flying gold character with fading effect
+            DrawCharacter(GoldChar, currentX, currentY, fadingGoldColor);
         }
 
         DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, Height * CharHeight * DisplayScale - 40, Color.White);
