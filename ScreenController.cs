@@ -52,7 +52,7 @@ public class ScreenController
     private Direction _lastDirection = Direction.Right;
     private bool _isSwordSwinging = false;
     private float _swordSwingTime = 0;
-    private const float SwordSwingDuration = 0.2f;
+    private const float SwordSwingDuration = 0.3f;  // Increased duration for multi-frame animation
 
     public ScreenController()
     {
@@ -250,11 +250,32 @@ public class ScreenController
                         
                         if (isSwordPosition)
                         {
-                            // Draw sword character based on direction
-                            char swordChar = _lastDirection switch
+                            // Calculate animation frame (0, 1, or 2)
+                            int frame = (int)(_swordSwingTime / SwordSwingDuration * 3);
+                            if (frame > 2) frame = 2;  // Clamp to max frame
+                            
+                            // Get sword character based on direction and animation frame
+                            char swordChar = (_lastDirection, frame) switch
                             {
-                                Direction.Up or Direction.Down => '|',   // Vertical pipe for up/down
-                                Direction.Left or Direction.Right => '-', // Dash for left/right
+                                // Horizontal animations (left to right: / - \)
+                                (Direction.Left, 0) => '/',
+                                (Direction.Left, 1) => '-',
+                                (Direction.Left, 2) => '\\',
+                                
+                                (Direction.Right, 0) => '\\',
+                                (Direction.Right, 1) => '-',
+                                (Direction.Right, 2) => '/',
+                                
+                                // Vertical animations (top to bottom: \ | /)
+                                (Direction.Up, 0) => '\\',
+                                (Direction.Up, 1) => '|',
+                                (Direction.Up, 2) => '/',
+                                
+                                (Direction.Down, 0) => '/',
+                                (Direction.Down, 1) => '|',
+                                (Direction.Down, 2) => '\\',
+                                
+                                // Fallback
                                 _ => '+'
                             };
                             
