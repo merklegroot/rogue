@@ -25,6 +25,8 @@ public class ScreenController
     private const int SIDE_PADDING = 8;
     private const int TOP_PADDING = 10;
 
+    private const int MenuFontSize = 32;
+
     // React default background color
     private readonly Color _backgroundColor = new Color(40, 44, 52, 255);  // #282c34
 
@@ -105,20 +107,20 @@ public class ScreenController
             // Draw text before parenthesis
             string beforeText = text.Substring(0, startParenIndex);
             DrawText(beforeText, currentX, y, baseColor);
-            currentX += Raylib.MeasureText(beforeText, 20) - 1;  // Slight kerning adjustment
+            currentX += Raylib.MeasureText(beforeText, MenuFontSize) - 1;  // Slight kerning adjustment
             
             // Draw opening parenthesis
             DrawText("(", currentX, y, baseColor);
-            currentX += Raylib.MeasureText("(", 20) - 2;  // Tighter kerning for parentheses
+            currentX += Raylib.MeasureText("(", MenuFontSize) - 2;  // Tighter kerning for parentheses
             
             // Draw hotkey in different color
             string hotkey = text.Substring(startParenIndex + 1, endParenIndex - startParenIndex - 1);
             DrawText(hotkey, currentX, y, hotkeyColor);
-            currentX += Raylib.MeasureText(hotkey, 20) - 2;  // Tighter kerning for hotkey
+            currentX += Raylib.MeasureText(hotkey, MenuFontSize) - 2;  // Tighter kerning for hotkey
             
             // Draw closing parenthesis
             DrawText(")", currentX, y, baseColor);
-            currentX += Raylib.MeasureText(")", 20) - 1;  // Slight kerning adjustment
+            currentX += Raylib.MeasureText(")", MenuFontSize) - 1;  // Slight kerning adjustment
             
             // Draw remaining text
             string afterText = text.Substring(endParenIndex + 1);
@@ -178,7 +180,7 @@ public class ScreenController
 
     private void DrawText(string text, int x, int y, Color color)
     {
-        Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), 20, 1, color);
+        Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);
     }
 
     private void DrawCharacter(int charNum, int x, int y, Color color)
