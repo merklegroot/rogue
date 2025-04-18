@@ -88,15 +88,7 @@ public class ScreenController
         _keyEvents.Clear();
     }
 
-    private void DrawMenu()
-    {
-        // Draw menu text
-        DrawText("Main Menu", 20, 20, Color.White);
-        DrawColoredHotkeyText("View (C)haracter Set", 20, 60);
-        DrawColoredHotkeyText("e(X)it", 20, 100);
-    }
-
-    private record ColoredHotKeyOptions
+    private record ColoredHotkeyOptions
     {
         public Color BaseColor { get; init; } = DefaultBaseColor;
         public Color HotkeyColor { get; init; } = DefaultHotkeyColor;
@@ -105,44 +97,51 @@ public class ScreenController
         public static Color DefaultHotkeyColor = Color.Yellow;
     }
 
-    private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotKeyOptions? options = null)
+    private void DrawMenu()
     {
-        var currentX = x;
-        var startParenIndex = text.IndexOf('(');
-        var endParenIndex = text.IndexOf(')');
+        // Draw menu text
+        DrawText("Main Menu", 20, 20, Color.White);
+        DrawColoredHotkeyText("View (C)haracter Set", 20, 60);
+        DrawColoredHotkeyText("e(X)it", 20, 100);
+    }
 
-        var baseColor = options?.BaseColor ?? ColoredHotKeyOptions.DefaultBaseColor;
-        var hotkeyColor = options?.HotkeyColor ?? ColoredHotKeyOptions.DefaultHotkeyColor;
+    private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotkeyOptions? options = null)
+    {
+        options ??= new ColoredHotkeyOptions();
         
-        if (startParenIndex != -1 && endParenIndex != -1 && endParenIndex > startParenIndex + 1)
+        int startParenIndex = text.IndexOf('(');
+        int endParenIndex = text.IndexOf(')');
+        
+        // Guard clause: if no valid parentheses found, draw plain text
+        if (startParenIndex == -1 || endParenIndex == -1 || endParenIndex <= startParenIndex + 1)
         {
-            // Draw text before parenthesis
-            var beforeText = text.Substring(0, startParenIndex);
-            DrawText(beforeText, currentX, y, baseColor);
-            currentX += Raylib.MeasureText(beforeText, MenuFontSize) - 1;  // Slight kerning adjustment
-            
-            // Draw opening parenthesis
-            DrawText("(", currentX, y, baseColor);
-            currentX += Raylib.MeasureText("(", MenuFontSize) - 2;  // Tighter kerning for parentheses
-            
-            // Draw hotkey in different color
-            var hotkey = text.Substring(startParenIndex + 1, endParenIndex - startParenIndex - 1);
-            DrawText(hotkey, currentX, y, hotkeyColor);
-            currentX += Raylib.MeasureText(hotkey, MenuFontSize) - 2;  // Tighter kerning for hotkey
-            
-            // Draw closing parenthesis
-            DrawText(")", currentX, y, baseColor);
-            currentX += Raylib.MeasureText(")", MenuFontSize) - 1;  // Slight kerning adjustment
-            
-            // Draw remaining text
-            var afterText = text.Substring(endParenIndex + 1);
-            DrawText(afterText, currentX, y, baseColor);
+            DrawText(text, x, y, options.BaseColor);
+            return;
         }
-        else
-        {
-            // If no parentheses found, draw the whole text in base color
-            DrawText(text, x, y, baseColor);
-        }
+
+        var currentX = x;
+        
+        // Draw text before parenthesis
+        var beforeText = text[..startParenIndex];
+        DrawText(beforeText, currentX, y, options.BaseColor);
+        currentX += Raylib.MeasureText(beforeText, MenuFontSize) - 1;  // Slight kerning adjustment
+        
+        // Draw opening parenthesis
+        DrawText("(", currentX, y, options.BaseColor);
+        currentX += Raylib.MeasureText("(", MenuFontSize) - 2;  // Tighter kerning for parentheses
+        
+        // Draw hotkey in different color
+        var hotkey = text[(startParenIndex + 1)..endParenIndex];
+        DrawText(hotkey, currentX, y, options.HotkeyColor);
+        currentX += Raylib.MeasureText(hotkey, MenuFontSize) - 2;  // Tighter kerning for hotkey
+        
+        // Draw closing parenthesis
+        DrawText(")", currentX, y, options.BaseColor);
+        currentX += Raylib.MeasureText(")", MenuFontSize) - 1;  // Slight kerning adjustment
+        
+        // Draw remaining text
+        var afterText = text[(endParenIndex + 1)..];
+        DrawText(afterText, currentX, y, options.BaseColor);
     }
 
     private void HandleMenuInput()
@@ -155,7 +154,7 @@ public class ScreenController
                 _currentView = GameView.CharacterSet;
                 break;
             }
-            else if (key == KeyboardKey.X)
+            if (key == KeyboardKey.X)
             {
                 Raylib.CloseWindow();
                 break;
@@ -197,17 +196,17 @@ public class ScreenController
 
     private void DrawCharacter(int charNum, int x, int y, Color color)
     {
-        int sourceX = charNum % 32;
-        int sourceY = charNum / 32;
+        var sourceX = charNum % 32;
+        var sourceY = charNum / 32;
 
-        Rectangle sourceRect = new Rectangle(
+        Rectangle sourceRect = new(
             SidePadding + (sourceX * (CharWidth + CharHGap)),
             TopPadding + (sourceY * (CharHeight + CharVGap)),
             CharWidth,
             CharHeight
         );
 
-        Rectangle destRect = new Rectangle(
+        Rectangle destRect = new(
             x,
             y,
             CharWidth * DisplayScale,
