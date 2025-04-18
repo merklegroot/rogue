@@ -80,6 +80,11 @@ public class ScreenPresenter : IScreenPresenter
     private float _invincibilityTimer = 0f;
     private const float InvincibilityDuration = 1.0f;  // 1 second of invincibility after taking damage
 
+    // Add these fields for explosion animation
+    private readonly List<Explosion> _explosions = [];
+    private const float ExplosionDuration = 0.5f;  // How long each explosion lasts
+    private readonly Color _explosionColor = new(255, 165, 0, 255);  // Orange color for explosions
+
     private readonly IRayLoader _rayLoader;
 
     public ScreenPresenter(IRayLoader rayLoader)
@@ -276,6 +281,19 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
         }
+        
+        // Draw explosions (after ground and enemies, but before sword)
+        foreach (var explosion in _explosions)
+        {
+            char explosionChar = explosion.Frame switch
+            {
+                0 => '*',      // Small explosion
+                1 => (char)15, // Medium explosion (sun symbol in CP437)
+                _ => (char)42  // Large explosion (asterisk)
+            };
+            
+            DrawCharacter(explosionChar, 100 + explosion.X * 40, 100 + explosion.Y * 40, _explosionColor);
+        }
 
         // Draw sword if swinging (drawn after ground to appear on top)
         if (_isSwordSwinging)
@@ -444,6 +462,16 @@ public class ScreenPresenter : IScreenPresenter
                 _invincibilityTimer = 0f;
             }
         }
+
+        // Update explosions
+        for (int i = _explosions.Count - 1; i >= 0; i--)
+        {
+            _explosions[i].Timer += Raylib.GetFrameTime();
+            if (_explosions[i].Timer >= ExplosionDuration)
+            {
+                _explosions.RemoveAt(i);
+            }
+        }
     }
 
     private void UpdateEnemy()
@@ -551,6 +579,13 @@ public class ScreenPresenter : IScreenPresenter
                 if (enemy.Alive && collisionPoints.Any(p => p.x == enemy.X && p.y == enemy.Y))
                 {
                     enemy.Alive = false;
+                    
+                    // Create explosion at enemy position
+                    _explosions.Add(new Explosion { 
+                        X = enemy.X, 
+                        Y = enemy.Y, 
+                        Timer = 0f 
+                    });
                 }
             }
         }
@@ -712,5 +747,13 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.UnloadTexture(_charset);
         Raylib.UnloadFont(_menuFont);
         Raylib.CloseWindow();
+    }
+
+    private class Explosion
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public float Timer { get; set; }
+        public int Frame => (int)((Timer / ExplosionDuration) * 3);  // 3 frames of animation
     }
 }
