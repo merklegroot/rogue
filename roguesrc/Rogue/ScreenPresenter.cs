@@ -655,6 +655,13 @@ public class ScreenPresenter : IScreenPresenter
             Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(150, 150, 200, 200));
         }
 
+        // Draw charger health if active
+        if (_chargerActive && _charger != null && _charger.Alive)
+        {
+            string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth}";
+            DrawText(healthText, 20, 60, Color.Red);
+        }
+
         // Move the instructions text up by 20 pixels
         string instructionsText = "Use WASD to move, SPACE to swing sword";
         if (_hasCrossbow)
@@ -1007,6 +1014,9 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (!_isInvincible)
                 {
+                    // Debug output before decrementing health
+                    Console.WriteLine($"Charger hit by sword! Health before: {_charger.Health}");
+                    
                     // Charger does 2 damage instead of 1
                     _currentHealth = Math.Max(0, _currentHealth - 2);
                     
@@ -1113,13 +1123,20 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (collisionPoints.Any(p => Math.Abs(p.x - _charger.X) < 0.5f && Math.Abs(p.y - _charger.Y) < 0.5f))
                 {
+                    // Debug output before decrementing health
+                    Console.WriteLine($"Charger hit by sword! Health before: {_charger.Health}");
+                    
                     // Reduce charger health
                     _charger.Health--;
+                    
+                    // Debug output after decrementing health
+                    Console.WriteLine($"Charger health after hit: {_charger.Health}");
                     
                     // If charger health reaches zero, kill it
                     if (_charger.Health <= 0)
                     {
                         _charger.Alive = false;
+                        Console.WriteLine("Charger defeated!");
                         
                         // Create explosion at charger position
                         _explosions.Add(new Explosion { 
@@ -1151,13 +1168,20 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (Math.Abs(bolt.X - _charger.X) < 0.5f && Math.Abs(bolt.Y - _charger.Y) < 0.5f)
                 {
+                    // Debug output before decrementing health
+                    Console.WriteLine($"Charger hit by bolt! Health before: {_charger.Health}");
+                    
                     // Reduce charger health
                     _charger.Health--;
+                    
+                    // Debug output after decrementing health
+                    Console.WriteLine($"Charger health after hit: {_charger.Health}");
                     
                     // If charger health reaches zero, kill it
                     if (_charger.Health <= 0)
                     {
                         _charger.Alive = false;
+                        Console.WriteLine("Charger defeated!");
                         
                         // Create explosion at charger position
                         _explosions.Add(new Explosion { 
@@ -1692,10 +1716,10 @@ public class ScreenPresenter : IScreenPresenter
         public float Y { get; set; }
         public bool Alive { get; set; } = true;
         public float MoveTimer { get; set; } = 0f;
-        public int Health { get; set; } // Remove default value here
+        public int Health { get; set; } // No default value here
     }
 
-    // Add method to spawn a charger
+    // Update the SpawnCharger method to use the constant
     private void SpawnCharger()
     {
         // Find a position that's not occupied by the player or another enemy
@@ -1742,5 +1766,8 @@ public class ScreenPresenter : IScreenPresenter
 
         _charger = new ChargerEnemy { X = newX, Y = newY, Health = ChargerHealth }; // Use the constant
         _chargerActive = true;
+        
+        // Debug output
+        Console.WriteLine($"Spawned charger with {_charger.Health} health");
     }
 }
