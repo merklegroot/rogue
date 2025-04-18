@@ -156,6 +156,32 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Color _chargerColor = new(255, 50, 50, 255); // Bright red color
     private const int ChargerHealth = 5; // Define charger health as a constant
 
+    // Add fields for player idle animation
+    private float _playerIdleAnimTimer = 0f;
+    private int _playerIdleAnimFrame = 0;
+    private const int PlayerIdleFrameCount = 4;
+    private const float PlayerIdleFrameDuration = 0.25f; // 4 frames per second
+
+    // Add a single field for player animation
+    private int _playerChar = 2; // Default player character
+
+    // Add this method to update the player animation
+    private void UpdatePlayerAnimation()
+    {
+        // Simple animation: change character every 30 frames (about 0.5 seconds)
+        if ((int)(Raylib.GetTime() * 60) % 30 == 0)
+        {
+            // Toggle between character 2 and 1
+            _playerChar = (_playerChar == 2) ? 1 : 2;
+        }
+    }
+
+    // Add this method to get the current player character
+    private int GetPlayerChar()
+    {
+        return _playerChar;
+    }
+
     // Define ShopItem class before it's used
     private class ShopItem
     {
@@ -327,11 +353,34 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawMenu()
     {
-        // Restore the original position
-        DrawText("Main Menu", 20, 20, Color.White);
-        DrawColoredHotkeyText("View (C)haracter Set", 20, 60);
-        DrawColoredHotkeyText("(A)nimation", 20, 100);
-        DrawColoredHotkeyText("e(X)it", 20, 140);
+        // Draw a fancy title
+        string title = "ROGUE ADVENTURE";
+        int titleSize = 48;
+        int titleWidth = Raylib.MeasureText(title, titleSize);
+        int centerX = (Width * CharWidth * DisplayScale) / 2;
+        
+        // Draw title with shadow effect
+        Raylib.DrawTextEx(_menuFont, title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
+        Raylib.DrawTextEx(_menuFont, title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
+        
+        // Draw a decorative line under the title
+        Raylib.DrawRectangle(centerX - 150, 100, 300, 2, Color.Gold);
+        
+        // Draw menu options centered with more spacing
+        int menuStartY = 150;
+        int menuSpacing = 60;
+        
+        DrawColoredHotkeyText("Start (A)dventure", centerX - 120, menuStartY);
+        DrawColoredHotkeyText("View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
+        DrawColoredHotkeyText("(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
+        DrawColoredHotkeyText("e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
+        
+        // Draw a version number and copyright
+        string version = "v0.1 Alpha";
+        DrawText(version, 20, Height * CharHeight * DisplayScale - 40, new Color(150, 150, 150, 200));
+        
+        // Draw a small decorative element
+        DrawCharacter(2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
     }
 
     private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotkeyOptions? options = null)
@@ -431,31 +480,36 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawAnimation()
     {
+        // Update player idle animation timer
+        _playerIdleAnimTimer += Raylib.GetFrameTime();
+        if (_playerIdleAnimTimer >= PlayerIdleFrameDuration)
+        {
+            _playerIdleAnimTimer -= PlayerIdleFrameDuration;
+            _playerIdleAnimFrame = (_playerIdleAnimFrame + 1) % PlayerIdleFrameCount;
+        }
+        
         // Draw health bar at the top
         DrawHealthBar();
         
         // Draw gold counter
         DrawGoldCounter();
 
-        // Draw a field of dots
+        // Draw the game world
         for (int y = 0; y < 10; y++)
         {
             for (int x = 0; x < 20; x++)
             {
-                // Draw player
-                if (x == _animPlayerX && y == _animPlayerY)
+                // Draw player with idle animation
+                if (Math.Abs(x - _animPlayerX) < 0.5f && Math.Abs(y - _animPlayerY) < 0.5f)
                 {
-                    // Draw smiley face at player position
-                    // If invincible, make the player flash by alternating visibility based on timer
-                    Color playerColor = Color.Yellow;
-                    if (_isInvincible && (int)(_invincibilityTimer * 10) % 2 == 0)
-                    {
-                        playerColor = new Color((byte)playerColor.R, (byte)playerColor.G, (byte)playerColor.B, (byte)128);
-                    }
-                    DrawCharacter(1, 100 + x * 40, 100 + y * 40, playerColor);
+                    // Simple animation: toggle between character 2 and 1 every 0.5 seconds
+                    int playerChar = (Raylib.GetTime() % 1 < 0.5) ? 2 : 1;
+                    DrawCharacter(playerChar, 100 + x * 40, 100 + y * 40, Color.White);
+                    continue;
                 }
+                
                 // Draw charger
-                else if (_chargerActive && _charger != null && _charger.Alive && 
+                if (_chargerActive && _charger != null && _charger.Alive && 
                          Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
                 {
                     Color chargerColor = _chargerColor;
