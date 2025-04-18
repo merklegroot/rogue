@@ -135,6 +135,17 @@ public class ScreenPresenter : IScreenPresenter
     // Add the _swordReach field
     private int _swordReach = 1;  // Default sword reach
 
+    // Add these fields for crossbow functionality
+    private bool _hasCrossbow = false;
+    private bool _isCrossbowFiring = false;
+    private float _crossbowCooldown = 2.0f;
+    private float _crossbowCooldownTimer = 0f;
+    private bool _crossbowOnCooldown = false;
+    private readonly List<CrossbowBolt> _crossbowBolts = [];
+    private const float BoltSpeed = 8.0f; // Bolts move 8 tiles per second
+    private const char BoltChar = '-';    // Character to represent horizontal bolt
+    private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
+
     // Define ShopItem class before it's used
     private class ShopItem
     {
@@ -594,7 +605,49 @@ public class ScreenPresenter : IScreenPresenter
             Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(200, 200, 200, 200));
         }
 
-        DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, Height * CharHeight * DisplayScale - 40, Color.White);
+        // Draw crossbow bolts
+        foreach (var bolt in _crossbowBolts)
+        {
+            // Choose character based on direction
+            char boltChar = bolt.Direction switch
+            {
+                Direction.Left or Direction.Right => '-',
+                Direction.Up or Direction.Down => '|',
+                _ => '+'
+            };
+            
+            // Draw the bolt at its current position
+            DrawCharacter(boltChar, 100 + (int)(bolt.X * 40), 100 + (int)(bolt.Y * 40), _boltColor);
+        }
+        
+        // Draw crossbow cooldown indicator if player has crossbow
+        if (_hasCrossbow && _crossbowOnCooldown)
+        {
+            // Calculate cooldown progress (0.0 to 1.0)
+            float progress = _crossbowCooldownTimer / _crossbowCooldown;
+            
+            // Draw a small cooldown bar below the player
+            int barWidth = 30;
+            int barHeight = 5;
+            int barX = 100 + _animPlayerX * 40 - barWidth / 2 + 20;  // Center below player
+            int barY = 100 + _animPlayerY * 40 + 45;  // Below player
+            
+            // Background (empty) bar
+            Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
+            
+            // Foreground (filled) bar - grows as cooldown progresses
+            Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(150, 150, 200, 200));
+        }
+
+        // Update instructions text to include crossbow if player has it
+        string instructionsText = "Use WASD to move, SPACE to swing sword";
+        if (_hasCrossbow)
+        {
+            instructionsText += ", F to fire crossbow";
+        }
+        instructionsText += ", ESC to return to menu";
+        
+        DrawText(instructionsText, 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleAnimationInput()
@@ -760,6 +813,41 @@ public class ScreenPresenter : IScreenPresenter
             _currentView = GameView.Shop;
             _selectedShopItem = 0;
         }
+
+        // Handle crossbow firing with F key
+        if (Raylib.IsKeyPressed(KeyboardKey.F) && _hasCrossbow && !_crossbowOnCooldown)
+        {
+            _isCrossbowFiring = true;
+            _crossbowOnCooldown = true;
+            _crossbowCooldownTimer = 0f;
+            
+            // Create a new bolt based on player direction
+            float boltX = _animPlayerX;
+            float boltY = _animPlayerY;
+            Direction boltDirection = _lastDirection;
+            
+            _crossbowBolts.Add(new CrossbowBolt
+            {
+                X = boltX,
+                Y = boltY,
+                Direction = boltDirection,
+                DistanceTraveled = 0f
+            });
+        }
+        
+        // Update crossbow cooldown
+        if (_crossbowOnCooldown)
+        {
+            _crossbowCooldownTimer += Raylib.GetFrameTime();
+            if (_crossbowCooldownTimer >= _crossbowCooldown)
+            {
+                _crossbowOnCooldown = false;
+                _crossbowCooldownTimer = 0f;
+            }
+        }
+        
+        // Update crossbow bolts
+        UpdateCrossbowBolts();
     }
 
     private void CollectGold()
@@ -1261,6 +1349,16 @@ public class ScreenPresenter : IScreenPresenter
             OnPurchase = () => { /* Do nothing, this is just a header */ },
             Category = ShopCategory.Header
         });
+        
+        // Add crossbow to weapons section
+        _shopInventory.Add(new ShopItem
+        {
+            Name = "Crossbow",
+            Description = "Fires bolts at enemies from a distance",
+            Price = 75,
+            OnPurchase = () => { _hasCrossbow = true; },
+            Category = ShopCategory.Weapon
+        });
     }
 
     private void DrawShop()
@@ -1372,5 +1470,80 @@ public class ScreenPresenter : IScreenPresenter
         Upgrade,
         Weapon,
         Header  // Used for section headers
+    }
+
+    private void UpdateCrossbowBolts()
+    {
+        float frameTime = Raylib.GetFrameTime();
+        
+        for (int i = _crossbowBolts.Count - 1; i >= 0; i--)
+        {
+            var bolt = _crossbowBolts[i];
+            
+            // Move the bolt based on its direction
+            float moveDistance = BoltSpeed * frameTime;
+            bolt.DistanceTraveled += moveDistance;
+            
+            switch (bolt.Direction)
+            {
+                case Direction.Left:
+                    bolt.X -= moveDistance;
+                    break;
+                case Direction.Right:
+                    bolt.X += moveDistance;
+                    break;
+                case Direction.Up:
+                    bolt.Y -= moveDistance;
+                    break;
+                case Direction.Down:
+                    bolt.Y += moveDistance;
+                    break;
+            }
+            
+            // Check if bolt hit any enemy
+            bool hitEnemy = false;
+            foreach (var enemy in _enemies)
+            {
+                if (!enemy.Alive) continue;
+                
+                // Check if bolt is within 0.5 tiles of enemy (for hit detection)
+                if (Math.Abs(bolt.X - enemy.X) < 0.5f && Math.Abs(bolt.Y - enemy.Y) < 0.5f)
+                {
+                    // Kill the enemy
+                    enemy.Alive = false;
+                    
+                    // Create explosion at enemy position
+                    _explosions.Add(new Explosion { 
+                        X = enemy.X, 
+                        Y = enemy.Y, 
+                        Timer = 0f 
+                    });
+                    
+                    // Remove the bolt
+                    hitEnemy = true;
+                    break;
+                }
+            }
+            
+            // Remove bolt if it hit an enemy or traveled too far (10 tiles)
+            if (hitEnemy || bolt.DistanceTraveled > 10)
+            {
+                _crossbowBolts.RemoveAt(i);
+            }
+            // Also remove if it went off-screen
+            else if (bolt.X < 0 || bolt.X > 19 || bolt.Y < 0 || bolt.Y > 9)
+            {
+                _crossbowBolts.RemoveAt(i);
+            }
+        }
+    }
+
+    // Add CrossbowBolt class inside the ScreenPresenter class
+    private class CrossbowBolt
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public Direction Direction { get; set; }
+        public float DistanceTraveled { get; set; }
     }
 }
