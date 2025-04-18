@@ -244,13 +244,13 @@ public class ScreenController
                 // Draw enemy (Ç - capital C with cedilla, ASCII 128 in CP437)
                 else if (x == _enemyX && y == _enemyY)
                 {
-                    DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.Red);
+                    DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
                 }
                 else
                 {
                     // Draw ground dots
                     const char groundChar = (char)250;
-                    DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.White);
+                    DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.Green);
                 }
             }
         }
