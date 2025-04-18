@@ -89,6 +89,11 @@ public class ScreenPresenter : IScreenPresenter
     private int _playerGold = 0;
     private readonly Color _goldColor = new(255, 215, 0, 255);  // Gold color
 
+    // Add gold items field
+    private readonly List<GoldItem> _goldItems = [];
+    private const int MaxGoldItems = 5;  // Maximum number of gold items on the map
+    private const char GoldChar = '$';   // Character to represent gold
+
     private readonly IRayLoader _rayLoader;
 
     public ScreenPresenter(IRayLoader rayLoader)
@@ -102,6 +107,12 @@ public class ScreenPresenter : IScreenPresenter
         _menuFont = _rayLoader.LoadRobotoFont();
 
         SpawnEnemy();
+        
+        // Spawn initial gold items
+        for (int i = 0; i < MaxGoldItems; i++)
+        {
+            SpawnGoldItem();
+        }
     }
 
     public void Update()
@@ -274,6 +285,11 @@ public class ScreenPresenter : IScreenPresenter
                         playerColor = new Color((byte)playerColor.R, (byte)playerColor.G, (byte)playerColor.B, (byte)128);
                     }
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, playerColor);
+                }
+                // Draw gold items
+                else if (_goldItems.Any(g => g.X == x && g.Y == y))
+                {
+                    DrawCharacter(GoldChar, 100 + x * 40, 100 + y * 40, _goldColor);
                 }
                 // Draw enemies
                 else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
@@ -678,6 +694,34 @@ public class ScreenPresenter : IScreenPresenter
         _enemySpawnTimer = 0;
     }
 
+    private void SpawnGoldItem()
+    {
+        // Find a position that's not occupied by the player, enemies, or other gold
+        int newX = 0;
+        int newY = 0;
+        bool isPositionValid = false;
+
+        const int maxAttempts = 10;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            newX = _random.Next(20);  // 0-19
+            newY = _random.Next(10);  // 0-9
+
+            isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
+                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
+                            !_goldItems.Any(g => g.X == newX && g.Y == newY);
+
+            if (isPositionValid)
+                break;
+        }
+
+        if (!isPositionValid)
+            return;
+
+        _goldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
+    }
+
     private void DrawText(string text, int x, int y, Color color)
     {
         Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);
@@ -777,5 +821,12 @@ public class ScreenPresenter : IScreenPresenter
         public int Y { get; set; }
         public float Timer { get; set; }
         public int Frame => (int)((Timer / ExplosionDuration) * 3);  // 3 frames of animation
+    }
+
+    private class GoldItem
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Value { get; set; }  // How much this gold is worth
     }
 }
