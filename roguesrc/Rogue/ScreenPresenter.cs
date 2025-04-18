@@ -94,6 +94,10 @@ public class ScreenPresenter : IScreenPresenter
     private const int MaxGoldItems = 3;  // Reduced from 5 to 3
     private const char GoldChar = '$';   // Character to represent gold
 
+    // Add flying gold animation fields
+    private readonly List<FlyingGold> _flyingGold = [];
+    private const float GoldFlyDuration = 0.5f;  // How long it takes gold to fly to counter
+
     private readonly IRayLoader _rayLoader;
 
     public ScreenPresenter(IRayLoader rayLoader)
@@ -393,6 +397,32 @@ public class ScreenPresenter : IScreenPresenter
             DrawCharacter(swordChar, (int)swordX, (int)swordY, _swordColor);
         }
 
+        // Draw flying gold (after everything else so it appears on top)
+        foreach (var gold in _flyingGold)
+        {
+            // Calculate progress (0.0 to 1.0)
+            float progress = gold.Timer / GoldFlyDuration;
+            if (progress > 1.0f) progress = 1.0f;
+            
+            // Calculate current position using easing function
+            // Using a quadratic ease-out for smooth deceleration
+            progress = 1 - (1 - progress) * (1 - progress);
+            
+            // Calculate end position (gold counter location)
+            int screenWidth = Width * CharWidth * DisplayScale;
+            string goldText = $"Gold: {_playerGold}";
+            int goldTextWidth = Raylib.MeasureText(goldText, MenuFontSize);
+            int endX = screenWidth - goldTextWidth - 40;  // Position before the text
+            int endY = 20;  // Same Y as gold counter
+            
+            // Interpolate between start and end positions
+            int currentX = (int)(gold.StartX + (endX - gold.StartX) * progress);
+            int currentY = (int)(gold.StartY + (endY - gold.StartY) * progress);
+            
+            // Draw the flying gold character
+            DrawCharacter(GoldChar, currentX, currentY, _goldColor);
+        }
+
         DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
 
@@ -506,6 +536,20 @@ public class ScreenPresenter : IScreenPresenter
                 _explosions.RemoveAt(i);
             }
         }
+
+        // Update flying gold animations
+        for (int i = _flyingGold.Count - 1; i >= 0; i--)
+        {
+            _flyingGold[i].Timer += Raylib.GetFrameTime();
+            if (_flyingGold[i].Timer >= GoldFlyDuration)
+            {
+                // Add the gold value to player's total when animation completes
+                _playerGold += _flyingGold[i].Value;
+                
+                // Remove the flying gold
+                _flyingGold.RemoveAt(i);
+            }
+        }
     }
 
     private void CollectGold()
@@ -515,10 +559,15 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (_goldItems[i].X == _animPlayerX && _goldItems[i].Y == _animPlayerY)
             {
-                // Add the gold's value to the player's total
-                _playerGold += _goldItems[i].Value;
+                // Create flying gold animation
+                _flyingGold.Add(new FlyingGold { 
+                    StartX = 100 + _goldItems[i].X * 40,
+                    StartY = 100 + _goldItems[i].Y * 40,
+                    Value = _goldItems[i].Value,
+                    Timer = 0f
+                });
                 
-                // Remove the collected gold
+                // Remove the collected gold from the map
                 _goldItems.RemoveAt(i);
                 
                 // Only collect one gold piece per move (in case multiple end up in same spot)
@@ -860,5 +909,13 @@ public class ScreenPresenter : IScreenPresenter
         public int X { get; set; }
         public int Y { get; set; }
         public int Value { get; set; }  // How much this gold is worth
+    }
+
+    private class FlyingGold
+    {
+        public int StartX { get; set; }  // Starting X position in pixels
+        public int StartY { get; set; }  // Starting Y position in pixels
+        public int Value { get; set; }   // How much this gold is worth
+        public float Timer { get; set; } // Animation timer
     }
 }
