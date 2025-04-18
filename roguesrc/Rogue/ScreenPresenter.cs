@@ -85,6 +85,10 @@ public class ScreenPresenter : IScreenPresenter
     private const float ExplosionDuration = 0.5f;  // How long each explosion lasts
     private readonly Color _explosionColor = new(255, 165, 0, 255);  // Orange color for explosions
 
+    // Add gold field
+    private int _playerGold = 0;
+    private readonly Color _goldColor = new(255, 215, 0, 255);  // Gold color
+
     private readonly IRayLoader _rayLoader;
 
     public ScreenPresenter(IRayLoader rayLoader)
@@ -250,6 +254,9 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Draw health bar at the top
         DrawHealthBar();
+        
+        // Draw gold counter
+        DrawGoldCounter();
 
         // Draw a field of dots
         for (int y = 0; y < 10; y++)
@@ -735,6 +742,21 @@ public class ScreenPresenter : IScreenPresenter
             // Draw the heart
             DrawCharacter(heartChar, startX + (i * heartSpacing), startY, heartColor);
         }
+    }
+
+    private void DrawGoldCounter()
+    {
+        // Calculate position for top right placement
+        int screenWidth = Width * CharWidth * DisplayScale;
+        string goldText = $"Gold: {_playerGold}";
+        int goldTextWidth = Raylib.MeasureText(goldText, MenuFontSize);
+        
+        // Position the gold counter at the top right with some padding
+        int startX = screenWidth - goldTextWidth - 20;  // 20px padding from right edge
+        const int startY = 20;  // Same vertical position as health
+        
+        // Draw gold text
+        DrawText(goldText, startX, startY, _goldColor);
     }
 
     public bool WindowShouldClose()
