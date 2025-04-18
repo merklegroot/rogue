@@ -21,11 +21,15 @@ uniform float flickerIntensity;    // Screen flicker intensity
 // Apply screen curvature
 vec2 curveRemapUV(vec2 uv)
 {
+    // Scale up the UV coordinates to fill the blank spaces
+    // This makes the content slightly larger to compensate for curvature
+    float scale = 1.08;  // Decreased from 1.15 to 1.08 (8% larger)
+    uv = (uv - 0.5) / scale + 0.5;
+    
     // Convert UV from 0..1 to -1..1
     vec2 cuv = uv * 2.0 - 1.0;
     
     // Apply curvature - modified to be much more subtle
-    // Use a different formula that produces less extreme warping
     float dist = length(cuv);
     cuv = cuv * (1.0 + dist * dist * curvature);
     

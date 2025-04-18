@@ -113,6 +113,17 @@ public class ScreenPresenter : IScreenPresenter
     private float _shaderTime = 0f;
     private int _scanlineCountLoc;
 
+    // Add health pickup fields
+    private readonly List<HealthPickup> _healthPickups = [];
+    private float _timeSinceLastHealthSpawn = 0f;
+    private const float HealthSpawnInterval = 30f;  // Spawn a health pickup every 30 seconds
+    private const char HealthChar = (char)3;  // ASCII/CP437 heart symbol (♥)
+
+    // Add sword cooldown fields
+    private float _swordCooldownTimer = 0f;
+    private const float SwordCooldown = 1.0f;  // 1 second cooldown
+    private bool _swordOnCooldown = false;
+
     private readonly IRayLoader _rayLoader;
 
     public ScreenPresenter(IRayLoader rayLoader)
@@ -161,12 +172,12 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.SetShaderValue(_crtShader, _resolutionLoc, resolution, ShaderUniformDataType.Vec2);
         
         // Fix the extreme warping by drastically reducing curvature
-        Raylib.SetShaderValue(_crtShader, _curvatureLoc, 0.1f, ShaderUniformDataType.Float);  // Decreased from 0.5 to 0.3
+        Raylib.SetShaderValue(_crtShader, _curvatureLoc, 0.05f, ShaderUniformDataType.Float);  // Decreased from 0.5 to 0.3
         Raylib.SetShaderValue(_crtShader, _scanlineLoc, 0.1f, ShaderUniformDataType.Float);
         Raylib.SetShaderValue(_crtShader, _scanlineCountLoc, 240.0f, ShaderUniformDataType.Float);
         Raylib.SetShaderValue(_crtShader, _vignetteLoc, 0.1f, ShaderUniformDataType.Float);
         Raylib.SetShaderValue(_crtShader, _brightnessLoc, 1.05f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _distortionLoc, 0.005f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _distortionLoc, 0.002f, ShaderUniformDataType.Float);
         Raylib.SetShaderValue(_crtShader, _flickerLoc, 0.01f, ShaderUniformDataType.Float);
     }
 
@@ -221,7 +232,6 @@ public class ScreenPresenter : IScreenPresenter
         
         if (_enableCrtEffect)
         {
-            Console.WriteLine("Applying shader...");
             Raylib.BeginShaderMode(_crtShader);
             Raylib.DrawTextureRec(
                 _gameTexture.Texture,
@@ -386,6 +396,11 @@ public class ScreenPresenter : IScreenPresenter
                     }
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, playerColor);
                 }
+                // Draw health pickups
+                else if (_healthPickups.Any(h => h.X == x && h.Y == y))
+                {
+                    DrawCharacter(HealthChar, 100 + x * 40, 100 + y * 40, _healthColor);
+                }
                 // Draw gold items
                 else if (_goldItems.Any(g => g.X == x && g.Y == y))
                 {
@@ -523,6 +538,25 @@ public class ScreenPresenter : IScreenPresenter
             DrawCharacter(GoldChar, currentX, currentY, fadingGoldColor);
         }
 
+        // Draw sword cooldown indicator (optional)
+        if (_swordOnCooldown)
+        {
+            // Calculate cooldown progress (0.0 to 1.0)
+            float progress = _swordCooldownTimer / SwordCooldown;
+            
+            // Draw a small cooldown bar above the player
+            int barWidth = 30;
+            int barHeight = 5;
+            int barX = 100 + _animPlayerX * 40 - barWidth / 2 + 20;  // Center above player
+            int barY = 100 + _animPlayerY * 40 - 15;  // Above player
+            
+            // Background (empty) bar
+            Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
+            
+            // Foreground (filled) bar - grows as cooldown progresses
+            Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(200, 200, 200, 200));
+        }
+
         DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
 
@@ -537,7 +571,7 @@ public class ScreenPresenter : IScreenPresenter
                 _currentView = GameView.Menu;
                 return;
             }
-            if (key == KeyboardKey.Space && !_isSwordSwinging)
+            if (key == KeyboardKey.Space && !_isSwordSwinging && !_swordOnCooldown)
             {
                 _isSwordSwinging = true;
                 _swordSwingTime = 0;
@@ -595,6 +629,24 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
 
+        // Update sword cooldown
+        if (_swordOnCooldown)
+        {
+            _swordCooldownTimer += Raylib.GetFrameTime();
+            if (_swordCooldownTimer >= SwordCooldown)
+            {
+                _swordOnCooldown = false;
+                _swordCooldownTimer = 0f;
+            }
+        }
+
+        // Handle sword swinging
+        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !_isSwordSwinging && !_swordOnCooldown)
+        {
+            _isSwordSwinging = true;
+            _swordSwingTime = 0;
+        }
+
         // Update sword swing animation
         if (_isSwordSwinging)
         {
@@ -602,6 +654,8 @@ public class ScreenPresenter : IScreenPresenter
             if (_swordSwingTime >= SwordSwingDuration)
             {
                 _isSwordSwinging = false;
+                _swordOnCooldown = true;  // Start cooldown when swing finishes
+                _swordCooldownTimer = 0f;
             }
         }
 
@@ -650,6 +704,17 @@ public class ScreenPresenter : IScreenPresenter
                 _flyingGold.RemoveAt(i);
             }
         }
+
+        // Update health pickup spawn timer
+        _timeSinceLastHealthSpawn += Raylib.GetFrameTime();
+        if (_timeSinceLastHealthSpawn >= HealthSpawnInterval)
+        {
+            SpawnHealthPickup();
+            _timeSinceLastHealthSpawn = 0f;
+        }
+        
+        // Check for health pickup collection
+        CollectHealth();
     }
 
     private void CollectGold()
@@ -903,6 +968,54 @@ public class ScreenPresenter : IScreenPresenter
         _goldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
     }
 
+    private void SpawnHealthPickup()
+    {
+        // Find a position that's not occupied by the player, enemies, gold, or other health pickups
+        int newX = 0;
+        int newY = 0;
+        bool isPositionValid = false;
+
+        const int maxAttempts = 10;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            newX = _random.Next(20);  // 0-19
+            newY = _random.Next(10);  // 0-9
+
+            isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
+                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
+                            !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
+                            !_healthPickups.Any(h => h.X == newX && h.Y == newY);
+
+            if (isPositionValid)
+                break;
+        }
+
+        if (!isPositionValid)
+            return;
+
+        _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
+    }
+
+    private void CollectHealth()
+    {
+        // Find any health pickup at the player's position
+        for (int i = _healthPickups.Count - 1; i >= 0; i--)
+        {
+            if (_healthPickups[i].X == _animPlayerX && _healthPickups[i].Y == _animPlayerY)
+            {
+                // Add health to the player
+                _currentHealth = Math.Min(10, _currentHealth + _healthPickups[i].HealAmount);
+                
+                // Remove the collected health pickup
+                _healthPickups.RemoveAt(i);
+                
+                // Only collect one health pickup per move
+                break;
+            }
+        }
+    }
+
     private void DrawText(string text, int x, int y, Color color)
     {
         Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);
@@ -1028,5 +1141,12 @@ public class ScreenPresenter : IScreenPresenter
         public int StartY { get; set; }  // Starting Y position in pixels
         public int Value { get; set; }   // How much this gold is worth
         public float Timer { get; set; } // Animation timer
+    }
+
+    private class HealthPickup
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int HealAmount { get; set; }  // How much health this pickup restores
     }
 }
