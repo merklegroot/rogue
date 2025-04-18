@@ -458,7 +458,12 @@ public class ScreenPresenter : IScreenPresenter
                 else if (_chargerActive && _charger != null && _charger.Alive && 
                          Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
                 {
-                    DrawCharacter(ChargerChar, 100 + x * 40, 100 + y * 40, _chargerColor);
+                    Color chargerColor = _chargerColor;
+                    if (_charger.IsInvincible && (int)(_charger.InvincibilityTimer * 10) % 2 == 0)
+                    {
+                        chargerColor = new Color((byte)_chargerColor.R, (byte)_chargerColor.G, (byte)_chargerColor.B, (byte)128);
+                    }
+                    DrawCharacter(ChargerChar, 100 + x * 40, 100 + y * 40, chargerColor);
                 }
                 // Draw health pickups
                 else if (_healthPickups.Any(h => h.X == x && h.Y == y))
@@ -658,7 +663,7 @@ public class ScreenPresenter : IScreenPresenter
         // Draw charger health if active
         if (_chargerActive && _charger != null && _charger.Alive)
         {
-            string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth}";
+            string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth} (Hit {_charger.HitCount} times)";
             DrawText(healthText, 20, 60, Color.Red);
         }
 
@@ -886,6 +891,43 @@ public class ScreenPresenter : IScreenPresenter
         
         // Update crossbow bolts
         UpdateCrossbowBolts();
+
+        // Check for collisions with enemies
+        foreach (var enemy in _enemies)
+        {
+            if (enemy.Alive && !_isInvincible)
+            {
+                // Check if player is colliding with this enemy
+                if (Math.Abs(_animPlayerX - enemy.X) < 0.5f && Math.Abs(_animPlayerY - enemy.Y) < 0.5f)
+                {
+                    // Player takes damage
+                    _currentHealth--;
+                    Console.WriteLine($"Player hit by enemy! Health: {_currentHealth}");
+                    
+                    // Make player invincible briefly
+                    _isInvincible = true;
+                    _invincibilityTimer = 0f;
+                    
+                    break; // Only take damage from one enemy per frame
+                }
+            }
+        }
+        
+        // Check for collisions with charger (deals more damage)
+        if (_chargerActive && _charger != null && _charger.Alive && !_isInvincible)
+        {
+            // Check if player is colliding with the charger
+            if (Math.Abs(_animPlayerX - _charger.X) < 0.5f && Math.Abs(_animPlayerY - _charger.Y) < 0.5f)
+            {
+                // Player takes more damage from charger (2 instead of 1)
+                _currentHealth -= 2;
+                Console.WriteLine($"Player hit by charger! Health: {_currentHealth}");
+                
+                // Make player invincible briefly
+                _isInvincible = true;
+                _invincibilityTimer = 0f;
+            }
+        }
     }
 
     private void CollectGold()
@@ -1012,44 +1054,7 @@ public class ScreenPresenter : IScreenPresenter
             // Check for collision with player
             if (Math.Abs(_charger.X - _animPlayerX) < 0.5f && Math.Abs(_charger.Y - _animPlayerY) < 0.5f)
             {
-                if (!_isInvincible)
-                {
-                    // Debug output before decrementing health
-                    Console.WriteLine($"Charger hit by sword! Health before: {_charger.Health}");
-                    
-                    // Charger does 2 damage instead of 1
-                    _currentHealth = Math.Max(0, _currentHealth - 2);
-                    
-                    // If health reaches zero, reset to full
-                    if (_currentHealth == 0)
-                    {
-                        _currentHealth = _maxHealth;
-                    }
-                    
-                    // Become invincible
-                    _isInvincible = true;
-                    _invincibilityTimer = 0f;
-                    
-                    // Apply stronger knockback from charger
-                    Direction knockbackDirection = _lastDirection;
-                    
-                    // Apply knockback in the opposite direction of the hit
-                    switch (knockbackDirection)
-                    {
-                        case Direction.Left:
-                            _animPlayerX = Math.Min(19, _animPlayerX + 6);  // Stronger knockback
-                            break;
-                        case Direction.Right:
-                            _animPlayerX = Math.Max(0, _animPlayerX - 6);
-                            break;
-                        case Direction.Up:
-                            _animPlayerY = Math.Min(9, _animPlayerY + 6);
-                            break;
-                        case Direction.Down:
-                            _animPlayerY = Math.Max(0, _animPlayerY - 6);
-                            break;
-                    }
-                }
+                HandleChargerDamage(true); // true for sword
             }
         }
 
@@ -1123,40 +1128,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (collisionPoints.Any(p => Math.Abs(p.x - _charger.X) < 0.5f && Math.Abs(p.y - _charger.Y) < 0.5f))
                 {
-                    // Debug output before decrementing health
-                    Console.WriteLine($"Charger hit by sword! Health before: {_charger.Health}");
-                    
-                    // Reduce charger health
-                    _charger.Health--;
-                    
-                    // Debug output after decrementing health
-                    Console.WriteLine($"Charger health after hit: {_charger.Health}");
-                    
-                    // If charger health reaches zero, kill it
-                    if (_charger.Health <= 0)
-                    {
-                        _charger.Alive = false;
-                        Console.WriteLine("Charger defeated!");
-                        
-                        // Create explosion at charger position
-                        _explosions.Add(new Explosion { 
-                            X = (int)_charger.X, 
-                            Y = (int)_charger.Y, 
-                            Timer = 0f 
-                        });
-                        
-                        // Spawn more valuable gold for killing the charger
-                        for (int i = 0; i < 3; i++)
-                        {
-                            _goldItems.Add(new GoldItem { 
-                                X = (int)_charger.X, 
-                                Y = (int)_charger.Y, 
-                                Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
-                            });
-                        }
-                        
-                        _chargerActive = false;
-                    }
+                    HandleChargerDamage(true); // true for sword
                 }
             }
         }
@@ -1168,41 +1140,19 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (Math.Abs(bolt.X - _charger.X) < 0.5f && Math.Abs(bolt.Y - _charger.Y) < 0.5f)
                 {
-                    // Debug output before decrementing health
-                    Console.WriteLine($"Charger hit by bolt! Health before: {_charger.Health}");
-                    
-                    // Reduce charger health
-                    _charger.Health--;
-                    
-                    // Debug output after decrementing health
-                    Console.WriteLine($"Charger health after hit: {_charger.Health}");
-                    
-                    // If charger health reaches zero, kill it
-                    if (_charger.Health <= 0)
-                    {
-                        _charger.Alive = false;
-                        Console.WriteLine("Charger defeated!");
-                        
-                        // Create explosion at charger position
-                        _explosions.Add(new Explosion { 
-                            X = (int)_charger.X, 
-                            Y = (int)_charger.Y, 
-                            Timer = 0f 
-                        });
-                        
-                        // Spawn more valuable gold for killing the charger
-                        for (int i = 0; i < 3; i++)
-                        {
-                            _goldItems.Add(new GoldItem { 
-                                X = (int)_charger.X, 
-                                Y = (int)_charger.Y, 
-                                Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
-                            });
-                        }
-                        
-                        _chargerActive = false;
-                    }
+                    HandleChargerDamage(false); // false for bolt
                 }
+            }
+        }
+
+        // Update charger invincibility
+        if (_chargerActive && _charger != null && _charger.Alive && _charger.IsInvincible)
+        {
+            _charger.InvincibilityTimer += Raylib.GetFrameTime();
+            if (_charger.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
+            {
+                _charger.IsInvincible = false;
+                Console.WriteLine("COLLISION FIX: Charger invincibility ended");
             }
         }
     }
@@ -1709,17 +1659,65 @@ public class ScreenPresenter : IScreenPresenter
         public float DistanceTraveled { get; set; }
     }
 
-    // Add ChargerEnemy class inside ScreenPresenter
+    // Add ChargerEnemy class inside ScreenPresenter with a hit counter
     private class ChargerEnemy
     {
         public float X { get; set; }
         public float Y { get; set; }
         public bool Alive { get; set; } = true;
         public float MoveTimer { get; set; } = 0f;
-        public int Health { get; set; } // No default value here
+        public int Health { get; set; } = 5; // Health display
+        public int HitCount { get; set; } = 0; // Count hits separately
+        public bool IsInvincible { get; set; } = false; // Add invincibility flag
+        public float InvincibilityTimer { get; set; } = 0f; // Add invincibility timer
     }
 
-    // Update the SpawnCharger method to use the constant
+    // Create a completely new method for handling charger damage
+    private void HandleChargerDamage(bool fromSword)
+    {
+        if (_chargerActive && _charger != null && _charger.Alive && !_charger.IsInvincible)
+        {
+            // Increment hit counter
+            _charger.HitCount++;
+            
+            // Update displayed health
+            _charger.Health = ChargerHealth - _charger.HitCount;
+            
+            Console.WriteLine($"COLLISION FIX: Charger hit {_charger.HitCount} times. Health display: {_charger.Health}");
+            
+            // Make charger briefly invincible to prevent multiple hits
+            _charger.IsInvincible = true;
+            _charger.InvincibilityTimer = 0f;
+            
+            // Only kill if hit exactly 5 times
+            if (_charger.HitCount >= 5)
+            {
+                Console.WriteLine("COLLISION FIX: Charger defeated after 5 hits!");
+                _charger.Alive = false;
+                
+                // Create explosion at charger position
+                _explosions.Add(new Explosion { 
+                    X = (int)_charger.X, 
+                    Y = (int)_charger.Y, 
+                    Timer = 0f 
+                });
+                
+                // Spawn more valuable gold for killing the charger
+                for (int i = 0; i < 3; i++)
+                {
+                    _goldItems.Add(new GoldItem { 
+                        X = (int)_charger.X, 
+                        Y = (int)_charger.Y, 
+                        Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
+                    });
+                }
+                
+                _chargerActive = false;
+            }
+        }
+    }
+
+    // Update the SpawnCharger method
     private void SpawnCharger()
     {
         // Find a position that's not occupied by the player or another enemy
@@ -1764,10 +1762,15 @@ public class ScreenPresenter : IScreenPresenter
         if (!isPositionValid)
             return;
 
-        _charger = new ChargerEnemy { X = newX, Y = newY, Health = ChargerHealth }; // Use the constant
+        // Create a new charger with hardcoded health value
+        _charger = new ChargerEnemy { 
+            X = newX, 
+            Y = newY, 
+            Health = 5, // Hardcoded to 5
+            Alive = true 
+        };
         _chargerActive = true;
         
-        // Debug output
-        Console.WriteLine($"Spawned charger with {_charger.Health} health");
+        Console.WriteLine($"NEW IMPLEMENTATION: Spawned charger with {_charger.Health} health");
     }
 }
