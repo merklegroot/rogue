@@ -1,12 +1,7 @@
-using Raylib_cs;
 using System.Numerics;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Collections.Concurrent;
-using System;
-using System.IO;
+using Raylib_cs;
+
+namespace Rogue;
 
 public interface IScreenPresenter
 {
@@ -23,7 +18,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly int _width;
     private readonly int _height;
     private GameView _currentView = GameView.Menu;
-    private Queue<KeyboardKey> _keyEvents = new Queue<KeyboardKey>();
+    private Queue<KeyboardKey> _keyEvents = new();
     
     // Character dimensions
     private const int CharWidth = 8;
@@ -37,9 +32,9 @@ public class ScreenPresenter : IScreenPresenter
     private const int MenuFontSize = 32;
 
     // React default background color
-    private readonly Color _backgroundColor = new Color(40, 44, 52, 255);  // #282c34
+    private readonly Color _backgroundColor = new(40, 44, 52, 255);  // #282c34
 
-    private readonly Color[] _colors = new Color[] 
+    private readonly Color[] _colors = new[] 
     {
         Color.White,
         Color.Red,
@@ -53,44 +48,48 @@ public class ScreenPresenter : IScreenPresenter
 
     private int _animPlayerX = 10;
     private int _animPlayerY = 5;
-    private float _timeSinceLastMove = 0;
+    private float _timeSinceLastMove;
 
     // Add these fields to track direction and sword state
     private Direction _lastDirection = Direction.Right;
-    private bool _isSwordSwinging = false;
-    private float _swordSwingTime = 0;
+    private bool _isSwordSwinging;
+    private float _swordSwingTime;
     private const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
 
     // Add a silvery-blue color for the sword
-    private readonly Color _swordColor = new Color(180, 210, 230, 255);  // Silvery-blue color
+    private readonly Color _swordColor = new(180, 210, 230, 255);  // Silvery-blue color
 
     // Add enemy fields
     private int _enemyX = 15;
     private int _enemyY = 5;
     private float _enemyMoveTimer = 0;
     private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
-    private readonly Random _random = new Random();
+    private readonly Random _random = new();
     private bool _enemyAlive = true;  // Add this field
     
     // Multiple enemies support
-    private List<Enemy> _enemies = new List<Enemy>();
-    private float _enemySpawnTimer = 0;
+    private readonly List<Enemy> _enemies = [];
+    private float _enemySpawnTimer;
     private const float EnemySpawnDelay = 1.0f;  // Spawn a new enemy every 1 second
     private const int MaxEnemies = 3;  // Maximum number of enemies
 
     // Add health fields
-    private int _maxHealth = 10;
+    private readonly int _maxHealth = 10;
     private int _currentHealth = 7;  // Start with 7 out of 10 health
     private readonly Color _healthColor = Color.Red;
-    private readonly Color _emptyHealthColor = new Color(100, 100, 100, 255);  // Gray color for empty hearts
+    private readonly Color _emptyHealthColor = new(100, 100, 100, 255);  // Gray color for empty hearts
     
     // Add invincibility fields
     private bool _isInvincible = false;
     private float _invincibilityTimer = 0f;
     private const float InvincibilityDuration = 1.0f;  // 1 second of invincibility after taking damage
 
-    public ScreenPresenter()
+    private readonly IRayLoader _rayLoader;
+    
+    public ScreenPresenter(IRayLoader rayLoader)
     {
+        _rayLoader = rayLoader;
+        
         _width = 40;
         _height = 16;
         
@@ -100,43 +99,13 @@ public class ScreenPresenter : IScreenPresenter
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
         
         // Load font from embedded resource
-        _menuFont = LoadFontFromEmbeddedResource("Rogue.fonts.Roboto-Regular.ttf");
+        _menuFont = _rayLoader.LoadFontFromEmbeddedResource("Rogue.fonts.Roboto-Regular.ttf");
         
         // Initialize first enemy
         _enemies.Add(new Enemy { X = _enemyX, Y = _enemyY });
     }
 
-    private Font LoadFontFromEmbeddedResource(string resourceName)
-    {
-        // Get the current assembly
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-        
-        // Open a stream to the embedded resource
-        using (var stream = assembly.GetManifestResourceStream(resourceName))
-        {
-            if (stream == null)
-            {
-                throw new InvalidOperationException($"Could not find embedded resource: {resourceName}");
-            }
-            
-            // Read the font data into a byte array
-            byte[] fontData = new byte[stream.Length];
-            stream.Read(fontData, 0, fontData.Length);
-            
-            // Create a temporary file to load the font
-            // string tempFile = Path.GetTempFileName();
-            var tempFile = "Roboto-Regular.ttf";
-            File.WriteAllBytes(tempFile, fontData);
-            
-            // Load the font using Raylib
-            Font font = Raylib.LoadFont(tempFile);
-            
-            // Delete the temporary file
-            try { File.Delete(tempFile); } catch { /* Ignore errors */ }
-            
-            return font;
-        }
-    }
+
 
     public void Update()
     {
@@ -260,10 +229,10 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawCharacterSet()
     {
         // Draw all characters in a grid
-        for (int charNum = 0; charNum < 256; charNum++)
+        for (var charNum = 0; charNum < 256; charNum++)
         {
-            int row = charNum / 32;
-            int col = charNum % 32;
+            var row = charNum / 32;
+            var col = charNum % 32;
             
             DrawCharacter(
                 charNum,
@@ -284,7 +253,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-   private void DrawAnimation()
+    private void DrawAnimation()
     {
         // Draw health bar at the top
         DrawHealthBar();
@@ -324,16 +293,16 @@ public class ScreenPresenter : IScreenPresenter
         if (_isSwordSwinging)
         {
             // Calculate animation progress (0.0 to 1.0)
-            float progress = _swordSwingTime / SwordSwingDuration;
+            var progress = _swordSwingTime / SwordSwingDuration;
             if (progress > 1.0f) progress = 1.0f;
             
             // Calculate frame (0, 1, or 2)
-            int frame = (int)(progress * 3);
+            var frame = (int)(progress * 3);
             if (frame > 2) frame = 2;
             
             // Calculate fractional position
-            float xOffset = 0;
-            float yOffset = 0;
+            var xOffset = 0f;
+            var yOffset = 0f;
             
             // Determine position based on direction and animation progress
             switch (_lastDirection)
@@ -509,7 +478,7 @@ public class ScreenPresenter : IScreenPresenter
                 newY = _random.Next(10);  // 0-9
                 
                 validPosition = (newX != _animPlayerX || newY != _animPlayerY) && 
-                               !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
+                                !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
             } while (!validPosition);
             
             _enemies.Add(new Enemy { X = newX, Y = newY });
@@ -551,7 +520,7 @@ public class ScreenPresenter : IScreenPresenter
                 
                 // Only move if the new position is not occupied by another enemy or the player
                 bool positionOccupied = (newX == _animPlayerX && newY == _animPlayerY) ||
-                                       _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY);
+                                        _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY);
                 
                 if (!positionOccupied)
                 {

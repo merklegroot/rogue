@@ -22,4 +22,8 @@
     <EmbeddedResource Include="fonts/Roboto-Regular.ttf" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RogueLib\RogueLib.csproj" />
+  </ItemGroup>
+
 </Project>

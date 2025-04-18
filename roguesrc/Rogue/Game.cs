@@ -1,5 +1,4 @@
-using System;
-using System.Threading;
+namespace Rogue;
 
 public interface IGame
 {
@@ -8,27 +7,28 @@ public interface IGame
 
 public class Game : IGame
 {
-    private readonly IScreenPresenter _screen;
+    private readonly IScreenPresenter _presenter;
     private readonly GameState _state;
 
-    public Game()
+    public Game(IScreenPresenter presenter)
     {
-        _screen = new ScreenPresenter();
-        _state = new GameState 
-        { 
-            PlayerX = 40,
-            PlayerY = 10
-        };
+        _presenter = presenter;
+        _state = new GameState { PlayerX = 40, PlayerY = 10 };
     }
 
     public void Run()
     {
-        while (!_screen.WindowShouldClose())
+        try
         {
-            _screen.Update();
-            _screen.Draw(_state);
+            while (!_presenter.WindowShouldClose())
+            {
+                _presenter.Update();
+                _presenter.Draw(_state);
+            }
         }
-
-        _screen.Cleanup();
+        finally
+        {
+            _presenter.Cleanup();
+        }
     }
-} 
+}
