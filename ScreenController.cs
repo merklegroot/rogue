@@ -47,6 +47,13 @@ public class ScreenController
     private int _animPlayerY = 5;
     private float _timeSinceLastMove = 0;
 
+    // Add these fields to track direction and sword state
+    private enum Direction { Up, Down, Left, Right }
+    private Direction _lastDirection = Direction.Right;
+    private bool _isSwordSwinging = false;
+    private float _swordSwingTime = 0;
+    private const float SwordSwingDuration = 0.2f;
+
     public ScreenController()
     {
         _width = 40;
@@ -220,6 +227,42 @@ public class ScreenController
                 }
                 else
                 {
+                    // Draw sword if swinging
+                    if (_isSwordSwinging)
+                    {
+                        bool isSwordPosition = false;
+                        
+                        switch (_lastDirection)
+                        {
+                            case Direction.Up:
+                                isSwordPosition = (x == _animPlayerX && y == _animPlayerY - 1);
+                                break;
+                            case Direction.Down:
+                                isSwordPosition = (x == _animPlayerX && y == _animPlayerY + 1);
+                                break;
+                            case Direction.Left:
+                                isSwordPosition = (x == _animPlayerX - 1 && y == _animPlayerY);
+                                break;
+                            case Direction.Right:
+                                isSwordPosition = (x == _animPlayerX + 1 && y == _animPlayerY);
+                                break;
+                        }
+                        
+                        if (isSwordPosition)
+                        {
+                            // Draw sword character based on direction
+                            char swordChar = _lastDirection switch
+                            {
+                                Direction.Up or Direction.Down => '|',   // Vertical pipe for up/down
+                                Direction.Left or Direction.Right => '-', // Dash for left/right
+                                _ => '+'
+                            };
+                            
+                            DrawCharacter(swordChar, 100 + x * 40, 100 + y * 40, Color.Red);
+                            continue;
+                        }
+                    }
+                    
                     // 249 and 250 both make a slightly different centered dot.
                     const char groundChar = (char)250;
                     DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.White);
@@ -227,7 +270,7 @@ public class ScreenController
             }
         }
 
-        DrawText("Use WASD to move, ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
+        DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleAnimationInput()
@@ -240,6 +283,11 @@ public class ScreenController
             {
                 _currentView = GameView.Menu;
                 return;
+            }
+            if (key == KeyboardKey.Space && !_isSwordSwinging)
+            {
+                _isSwordSwinging = true;
+                _swordSwingTime = 0;
             }
         }
         
@@ -261,22 +309,26 @@ public class ScreenController
             if (Raylib.IsKeyDown(KeyboardKey.W))
             {
                 _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                _lastDirection = Direction.Up;
                 moved = true;
             }
             else if (Raylib.IsKeyDown(KeyboardKey.S))
             {
                 _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                _lastDirection = Direction.Down;
                 moved = true;
             }
             
             if (Raylib.IsKeyDown(KeyboardKey.A))
             {
                 _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                _lastDirection = Direction.Left;
                 moved = true;
             }
             else if (Raylib.IsKeyDown(KeyboardKey.D))
             {
                 _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                _lastDirection = Direction.Right;
                 moved = true;
             }
             
@@ -284,6 +336,16 @@ public class ScreenController
             if (moved)
             {
                 _timeSinceLastMove = 0;
+            }
+        }
+        
+        // Update sword swing animation
+        if (_isSwordSwinging)
+        {
+            _swordSwingTime += Raylib.GetFrameTime();
+            if (_swordSwingTime >= SwordSwingDuration)
+            {
+                _isSwordSwinging = false;
             }
         }
     }
