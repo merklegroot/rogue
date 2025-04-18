@@ -11,6 +11,14 @@ public interface IScreenPresenter
     void Cleanup();
 }
 
+public enum GameView
+{
+    Menu,
+    CharacterSet,
+    Animation,
+    Shop
+}
+
 public class ScreenPresenter : IScreenPresenter
 {
     private readonly Texture2D _charset;
@@ -121,8 +129,25 @@ public class ScreenPresenter : IScreenPresenter
 
     // Add sword cooldown fields
     private float _swordCooldownTimer = 0f;
-    private const float SwordCooldown = 1.0f;  // 1 second cooldown
+    private float _swordCooldown = 1.0f;  // Changed from const to field
     private bool _swordOnCooldown = false;
+
+    // Add the _swordReach field
+    private int _swordReach = 1;  // Default sword reach
+
+    // Define ShopItem class before it's used
+    private class ShopItem
+    {
+        public required string Name { get; set; }
+        public required string Description { get; set; }
+        public int Price { get; set; }
+        public required Action OnPurchase { get; set; }
+    }
+
+    // Add shop-related fields
+    private bool _shopOpen = false;
+    private int _selectedShopItem = 0;
+    private readonly List<ShopItem> _shopInventory = [];
 
     private readonly IRayLoader _rayLoader;
 
@@ -146,6 +171,9 @@ public class ScreenPresenter : IScreenPresenter
         {
             SpawnGoldItem();
         }
+
+        // Initialize shop inventory
+        InitializeShop();
     }
 
     private void InitCrtShader()
@@ -216,6 +244,11 @@ public class ScreenPresenter : IScreenPresenter
             case GameView.Animation:
                 DrawAnimation();
                 HandleAnimationInput();
+                break;
+
+            case GameView.Shop:
+                DrawShop();
+                HandleShopInput();
                 break;
         }
         
@@ -542,7 +575,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_swordOnCooldown)
         {
             // Calculate cooldown progress (0.0 to 1.0)
-            float progress = _swordCooldownTimer / SwordCooldown;
+            float progress = _swordCooldownTimer / _swordCooldown;
             
             // Draw a small cooldown bar above the player
             int barWidth = 30;
@@ -633,7 +666,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_swordOnCooldown)
         {
             _swordCooldownTimer += Raylib.GetFrameTime();
-            if (_swordCooldownTimer >= SwordCooldown)
+            if (_swordCooldownTimer >= _swordCooldown)
             {
                 _swordOnCooldown = false;
                 _swordCooldownTimer = 0f;
@@ -715,6 +748,14 @@ public class ScreenPresenter : IScreenPresenter
         
         // Check for health pickup collection
         CollectHealth();
+
+        // Open shop with 'B' key
+        if (Raylib.IsKeyPressed(KeyboardKey.B))
+        {
+            _shopOpen = true;
+            _currentView = GameView.Shop;
+            _selectedShopItem = 0;
+        }
     }
 
     private void CollectGold()
@@ -1148,5 +1189,126 @@ public class ScreenPresenter : IScreenPresenter
         public int X { get; set; }
         public int Y { get; set; }
         public int HealAmount { get; set; }  // How much health this pickup restores
+    }
+
+    private void InitializeShop()
+    {
+        _shopInventory.Add(new ShopItem
+        {
+            Name = "Health Potion",
+            Description = "Restores 25 health",
+            Price = 10,
+            OnPurchase = () => { _currentHealth = Math.Min(10, _currentHealth + 25); }
+        });
+        
+        _shopInventory.Add(new ShopItem
+        {
+            Name = "Faster Sword",
+            Description = "Reduces sword cooldown by 0.2s",
+            Price = 25,
+            OnPurchase = () => { 
+                if (_swordCooldown > 0.3f) // Don't let it go below 0.3s
+                    _swordCooldown -= 0.2f; 
+            }
+        });
+        
+        _shopInventory.Add(new ShopItem
+        {
+            Name = "Longer Sword",
+            Description = "Increases sword reach",
+            Price = 30,
+            OnPurchase = () => { _swordReach++; }
+        });
+        
+        _shopInventory.Add(new ShopItem
+        {
+            Name = "Invincibility",
+            Description = "5 seconds of invincibility",
+            Price = 50,
+            OnPurchase = () => { 
+                _isInvincible = true;
+                _invincibilityTimer = 0f;
+                _invincibilityTimer = 5f;
+            }
+        });
+    }
+
+    private void DrawShop()
+    {
+        // Draw shop background
+        Raylib.DrawRectangle(50, 50, Width * CharWidth * DisplayScale - 100, Height * CharHeight * DisplayScale - 100, new Color(0, 0, 0, 200));
+        
+        // Draw shop title
+        DrawText("SHOP", Width * CharWidth * DisplayScale / 2 - 50, 70, Color.Gold);
+        
+        // Draw gold amount
+        DrawText($"Your Gold: {_playerGold}", Width * CharWidth * DisplayScale / 2 - 80, 110, _goldColor);
+        
+        // Draw shop items
+        int startY = 150;
+        int itemHeight = 80;
+        
+        for (int i = 0; i < _shopInventory.Count; i++)
+        {
+            var item = _shopInventory[i];
+            Color itemColor = (_selectedShopItem == i) ? Color.Yellow : Color.White;
+            Color priceColor = (_playerGold >= item.Price) ? Color.Green : Color.Red;
+            
+            // Draw selection background if this is the selected item
+            if (_selectedShopItem == i)
+            {
+                Raylib.DrawRectangle(60, startY + i * itemHeight, Width * CharWidth * DisplayScale - 120, itemHeight - 5, new Color(50, 50, 50, 100));
+            }
+            
+            // Draw item name
+            DrawText(item.Name, 80, startY + i * itemHeight + 10, itemColor);
+            
+            // Draw item description
+            DrawText(item.Description, 80, startY + i * itemHeight + 35, new Color(200, 200, 200, 255));
+            
+            // Draw item price
+            DrawText($"{item.Price} gold", Width * CharWidth * DisplayScale - 200, startY + i * itemHeight + 20, priceColor);
+        }
+        
+        // Draw instructions
+        DrawText("↑/↓: Select Item   Enter: Buy   Esc: Close Shop", 80, Height * CharHeight * DisplayScale - 80, Color.White);
+    }
+
+    private void HandleShopInput()
+    {
+        while (_keyEvents.Count > 0)
+        {
+            var key = _keyEvents.Dequeue();
+            
+            if (key == KeyboardKey.Escape)
+            {
+                _shopOpen = false;
+                _currentView = GameView.Animation;
+            }
+            else if (key == KeyboardKey.Up)
+            {
+                _selectedShopItem = Math.Max(0, _selectedShopItem - 1);
+            }
+            else if (key == KeyboardKey.Down)
+            {
+                _selectedShopItem = Math.Min(_shopInventory.Count - 1, _selectedShopItem + 1);
+            }
+            else if (key == KeyboardKey.Enter)
+            {
+                // Try to purchase the selected item
+                if (_selectedShopItem >= 0 && _selectedShopItem < _shopInventory.Count)
+                {
+                    var item = _shopInventory[_selectedShopItem];
+                    if (_playerGold >= item.Price)
+                    {
+                        // Deduct gold
+                        _playerGold -= item.Price;
+                        
+                        // Apply the purchase effect
+                        item.OnPurchase();
+                    }
+                }
+            }
+        }
     }
 }
