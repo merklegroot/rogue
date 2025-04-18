@@ -69,6 +69,7 @@ public class ScreenController
     private float _enemyMoveTimer = 0;
     private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     private readonly Random _random = new Random();
+    private bool _enemyAlive = true;  // Add this field
 
     public ScreenController()
     {
@@ -242,7 +243,7 @@ public class ScreenController
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, Color.Yellow);
                 }
                 // Draw enemy (Ç - capital C with cedilla, ASCII 128 in CP437)
-                else if (x == _enemyX && y == _enemyY)
+                else if (_enemyAlive && x == _enemyX && y == _enemyY)  // Add _enemyAlive check
                 {
                     DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
                 }
@@ -415,6 +416,8 @@ public class ScreenController
 
     private void UpdateEnemy()
     {
+        if (!_enemyAlive) return;  // Don't update if enemy is dead
+        
         _enemyMoveTimer += Raylib.GetFrameTime();
         
         if (_enemyMoveTimer >= EnemyMoveDelay)
@@ -439,6 +442,39 @@ public class ScreenController
             }
             
             _enemyMoveTimer = 0;
+        }
+
+        // Check for sword collision
+        if (_isSwordSwinging && _enemyAlive)
+        {
+            // Calculate sword position based on current direction and animation
+            float xOffset = 0;
+            float yOffset = 0;
+            
+            switch (_lastDirection)
+            {
+                case Direction.Left:
+                    xOffset = -1;
+                    break;
+                case Direction.Right:
+                    xOffset = 1;
+                    break;
+                case Direction.Up:
+                    yOffset = -1;
+                    break;
+                case Direction.Down:
+                    yOffset = 1;
+                    break;
+            }
+
+            // Check if sword position matches enemy position
+            int swordX = _animPlayerX + (int)xOffset;
+            int swordY = _animPlayerY + (int)yOffset;
+            
+            if (swordX == _enemyX && swordY == _enemyY)
+            {
+                _enemyAlive = false;
+            }
         }
     }
 
