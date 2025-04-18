@@ -98,11 +98,19 @@ public class ScreenPresenter : IScreenPresenter
     private readonly List<FlyingGold> _flyingGold = [];
     private const float GoldFlyDuration = 0.3f;  // Reduced from 0.5f to 0.3f for faster animation
 
-    // Add CRT effect fields
+    // Replace CRT effect fields with shader-related fields
     private bool _enableCrtEffect = true;
-    private readonly Color _scanlineColor = new(0, 0, 0, 100);  // Increased opacity from 50 to 100
-    private const int ScanlineSpacing = 3;  // Reduced from 4 to 3 for more frequent lines
-    private const int ScanlineHeight = 2;   // Increased from 1 to 2 pixels tall
+    private Shader _crtShader;
+    private RenderTexture2D _gameTexture;
+    private int _resolutionLoc;
+    private int _curvatureLoc;
+    private int _scanlineLoc;
+    private int _vignetteLoc;
+    private int _brightnessLoc;
+    private int _distortionLoc;
+    private int _flickerLoc;
+    private int _timeLoc;
+    private float _shaderTime = 0f;
 
     private readonly IRayLoader _rayLoader;
 
@@ -116,12 +124,70 @@ public class ScreenPresenter : IScreenPresenter
         _charset = _rayLoader.LoadCharsetTexture();
         _menuFont = _rayLoader.LoadRobotoFont();
 
+        // Initialize CRT shader
+        InitCrtShader();
+
         SpawnEnemy();
         
         // Spawn initial gold items
         for (int i = 0; i < MaxGoldItems; i++)
         {
             SpawnGoldItem();
+        }
+    }
+
+    private void InitCrtShader()
+    {
+        // Create a render texture the size of the window
+        _gameTexture = Raylib.LoadRenderTexture(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale);
+        
+        // Load the CRT shader with absolute path
+        // string shaderPath = Path.GetFullPath("resources/crt.fs");
+        var shaderPath = "resources/crt.fs";
+        
+        // Check if the shader file exists
+        if (!File.Exists(shaderPath))
+        {
+            string errorMessage = $"Shader file not found at path: {shaderPath}";
+            Console.WriteLine(errorMessage);
+            throw new FileNotFoundException(errorMessage, shaderPath);
+        }
+        
+        Console.WriteLine($"Shader file found at: {shaderPath}");
+        Console.WriteLine($"Loading shader from: {shaderPath}");
+        _crtShader = Raylib.LoadShader(null, shaderPath);
+        
+        // Get shader uniform locations
+        _resolutionLoc = Raylib.GetShaderLocation(_crtShader, "resolution");
+        _curvatureLoc = Raylib.GetShaderLocation(_crtShader, "curvature");
+        _scanlineLoc = Raylib.GetShaderLocation(_crtShader, "scanlineIntensity");
+        _vignetteLoc = Raylib.GetShaderLocation(_crtShader, "vignetteIntensity");
+        _brightnessLoc = Raylib.GetShaderLocation(_crtShader, "brightness");
+        _distortionLoc = Raylib.GetShaderLocation(_crtShader, "distortion");
+        _flickerLoc = Raylib.GetShaderLocation(_crtShader, "flickerIntensity");
+        _timeLoc = Raylib.GetShaderLocation(_crtShader, "time");
+        
+        // Set initial uniform values
+        float[] resolution = { Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale };
+        Raylib.SetShaderValue(_crtShader, _resolutionLoc, resolution, ShaderUniformDataType.Vec2);
+        Raylib.SetShaderValue(_crtShader, _curvatureLoc, 0.1f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _scanlineLoc, 1.5f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _vignetteLoc, 0.2f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _brightnessLoc, 1.1f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _distortionLoc, 0.05f, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_crtShader, _flickerLoc, 0.03f, ShaderUniformDataType.Float);
+
+        // After loading the shader
+        if (_crtShader.Id == 0)
+        {
+            Console.WriteLine("Failed to load CRT shader!");
+        }
+        else
+        {
+            Console.WriteLine("CRT shader loaded successfully with ID: " + _crtShader.Id);
+            // Check if shader compiled successfully
+            int result = Raylib.GetShaderLocation(_crtShader, "nonexistent_uniform");
+            Console.WriteLine("Shader test result: " + result);
         }
     }
 
@@ -137,7 +203,12 @@ public class ScreenPresenter : IScreenPresenter
 
     public void Draw(GameState state)
     {
-        Raylib.BeginDrawing();
+        // Update shader time
+        _shaderTime += Raylib.GetFrameTime();
+        Raylib.SetShaderValue(_crtShader, _timeLoc, _shaderTime, ShaderUniformDataType.Float);
+        
+        // Draw game to render texture
+        Raylib.BeginTextureMode(_gameTexture);
         Raylib.ClearBackground(_backgroundColor);
 
         switch (_currentView)
@@ -157,13 +228,41 @@ public class ScreenPresenter : IScreenPresenter
                 HandleAnimationInput();
                 break;
         }
-
-        // Draw CRT scan lines as a post-processing effect
+        
+        Raylib.EndTextureMode();
+        
+        // Draw render texture to screen with shader
+        Raylib.BeginDrawing();
+        Raylib.ClearBackground(Color.Black);
+        
+        if (_gameTexture.Id == 0)
+        {
+            Console.WriteLine("Render texture not created properly!");
+        }
+        
         if (_enableCrtEffect)
         {
-            DrawScanlines();
+            Console.WriteLine("Applying shader...");
+            Raylib.BeginShaderMode(_crtShader);
+            Raylib.DrawTextureRec(
+                _gameTexture.Texture,
+                new Rectangle(0, 0, _gameTexture.Texture.Width, -_gameTexture.Texture.Height),
+                new Vector2(0, 0),
+                Color.White
+            );
+            Raylib.EndShaderMode();
         }
-
+        else
+        {
+            // Draw without shader if effect is disabled
+            Raylib.DrawTextureRec(
+                _gameTexture.Texture,
+                new Rectangle(0, 0, _gameTexture.Texture.Width, -_gameTexture.Texture.Height),
+                new Vector2(0, 0),
+                Color.White
+            );
+        }
+        
         Raylib.EndDrawing();
 
         // Clear processed events
@@ -906,21 +1005,6 @@ public class ScreenPresenter : IScreenPresenter
         DrawText(goldText, startX, startY, _goldColor);
     }
 
-    private void DrawScanlines()
-    {
-        int screenWidth = Width * CharWidth * DisplayScale;
-        int screenHeight = Height * CharHeight * DisplayScale;
-        
-        // Draw horizontal scan lines
-        for (int y = 0; y < screenHeight; y += ScanlineSpacing)
-        {
-            Raylib.DrawRectangle(0, y, screenWidth, ScanlineHeight, _scanlineColor);
-        }
-        
-        // Optional: Add a slight vignette effect (darkened corners)
-        // This would require drawing a gradient rectangle or using a shader
-    }
-
     public bool WindowShouldClose()
     {
         return Raylib.WindowShouldClose();
@@ -928,6 +1012,17 @@ public class ScreenPresenter : IScreenPresenter
 
     public void Cleanup()
     {
+        // Call the existing Dispose method to handle cleanup
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        // Unload shader resources
+        Raylib.UnloadShader(_crtShader);
+        Raylib.UnloadRenderTexture(_gameTexture);
+        
+        // Existing cleanup code
         Raylib.UnloadTexture(_charset);
         Raylib.UnloadFont(_menuFont);
         Raylib.CloseWindow();
