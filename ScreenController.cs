@@ -92,20 +92,32 @@ public class ScreenController
     {
         // Draw menu text
         DrawText("Main Menu", 20, 20, Color.White);
-        DrawColoredHotkeyText("View (C)haracter Set", 20, 60, Color.White, Color.Green);
-        DrawColoredHotkeyText("E(X)it", 20, 100, Color.White, Color.Green);
+        DrawColoredHotkeyText("View (C)haracter Set", 20, 60);
+        DrawColoredHotkeyText("e(X)it", 20, 100);
     }
 
-    private void DrawColoredHotkeyText(string text, int x, int y, Color baseColor, Color hotkeyColor)
+    private record ColoredHotKeyOptions
     {
-        int currentX = x;
-        int startParenIndex = text.IndexOf('(');
-        int endParenIndex = text.IndexOf(')');
+        public Color BaseColor { get; init; } = DefaultBaseColor;
+        public Color HotkeyColor { get; init; } = DefaultHotkeyColor;
+
+        public static Color DefaultBaseColor = Color.Green;
+        public static Color DefaultHotkeyColor = Color.Yellow;
+    }
+
+    private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotKeyOptions? options = null)
+    {
+        var currentX = x;
+        var startParenIndex = text.IndexOf('(');
+        var endParenIndex = text.IndexOf(')');
+
+        var baseColor = options?.BaseColor ?? ColoredHotKeyOptions.DefaultBaseColor;
+        var hotkeyColor = options?.HotkeyColor ?? ColoredHotKeyOptions.DefaultHotkeyColor;
         
         if (startParenIndex != -1 && endParenIndex != -1 && endParenIndex > startParenIndex + 1)
         {
             // Draw text before parenthesis
-            string beforeText = text.Substring(0, startParenIndex);
+            var beforeText = text.Substring(0, startParenIndex);
             DrawText(beforeText, currentX, y, baseColor);
             currentX += Raylib.MeasureText(beforeText, MenuFontSize) - 1;  // Slight kerning adjustment
             
@@ -114,7 +126,7 @@ public class ScreenController
             currentX += Raylib.MeasureText("(", MenuFontSize) - 2;  // Tighter kerning for parentheses
             
             // Draw hotkey in different color
-            string hotkey = text.Substring(startParenIndex + 1, endParenIndex - startParenIndex - 1);
+            var hotkey = text.Substring(startParenIndex + 1, endParenIndex - startParenIndex - 1);
             DrawText(hotkey, currentX, y, hotkeyColor);
             currentX += Raylib.MeasureText(hotkey, MenuFontSize) - 2;  // Tighter kerning for hotkey
             
@@ -123,7 +135,7 @@ public class ScreenController
             currentX += Raylib.MeasureText(")", MenuFontSize) - 1;  // Slight kerning adjustment
             
             // Draw remaining text
-            string afterText = text.Substring(endParenIndex + 1);
+            var afterText = text.Substring(endParenIndex + 1);
             DrawText(afterText, currentX, y, baseColor);
         }
         else
