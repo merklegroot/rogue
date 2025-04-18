@@ -509,30 +509,44 @@ public class ScreenController
         // Check for sword collision with any enemy
         if (_isSwordSwinging)
         {
-            // Calculate sword position based on current direction and animation
-            int swordX = _animPlayerX;
-            int swordY = _animPlayerY;
+            // Define the collision area based on the direction
+            List<(int x, int y)> collisionPoints = new List<(int x, int y)>();
             
             switch (_lastDirection)
             {
                 case Direction.Left:
-                    swordX = _animPlayerX - 1;
+                    // Check left, top-left, and bottom-left
+                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY));     // Left
+                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY - 1)); // Top-left
+                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY + 1)); // Bottom-left
                     break;
+                    
                 case Direction.Right:
-                    swordX = _animPlayerX + 1;
+                    // Check right, top-right, and bottom-right
+                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY));     // Right
+                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY - 1)); // Top-right
+                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY + 1)); // Bottom-right
                     break;
+                    
                 case Direction.Up:
-                    swordY = _animPlayerY - 1;
+                    // Check up, top-left, and top-right
+                    collisionPoints.Add((_animPlayerX, _animPlayerY - 1));     // Up
+                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY - 1)); // Top-left
+                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY - 1)); // Top-right
                     break;
+                    
                 case Direction.Down:
-                    swordY = _animPlayerY + 1;
+                    // Check down, bottom-left, and bottom-right
+                    collisionPoints.Add((_animPlayerX, _animPlayerY + 1));     // Down
+                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY + 1)); // Bottom-left
+                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY + 1)); // Bottom-right
                     break;
             }
 
-            // Check if sword position matches any enemy position
+            // Check if any collision point matches any enemy position
             foreach (var enemy in _enemies)
             {
-                if (enemy.Alive && swordX == enemy.X && swordY == enemy.Y)
+                if (enemy.Alive && collisionPoints.Any(p => p.x == enemy.X && p.y == enemy.Y))
                 {
                     enemy.Alive = false;
                 }
