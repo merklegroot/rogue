@@ -90,6 +90,11 @@ public class ScreenController
     private int _currentHealth = 7;  // Start with 7 out of 10 health
     private readonly Color _healthColor = Color.Red;
     private readonly Color _emptyHealthColor = new Color(100, 100, 100, 255);  // Gray color for empty hearts
+    
+    // Add invincibility fields
+    private bool _isInvincible = false;
+    private float _invincibilityTimer = 0f;
+    private const float InvincibilityDuration = 1.0f;  // 1 second of invincibility after taking damage
 
     public ScreenController()
     {
@@ -266,7 +271,13 @@ public class ScreenController
                 if (x == _animPlayerX && y == _animPlayerY)
                 {
                     // Draw smiley face at player position
-                    DrawCharacter(1, 100 + x * 40, 100 + y * 40, Color.Yellow);
+                    // If invincible, make the player flash by alternating visibility based on timer
+                    Color playerColor = Color.Yellow;
+                    if (_isInvincible && (int)(_invincibilityTimer * 10) % 2 == 0)
+                    {
+                        playerColor = new Color((byte)playerColor.R, (byte)playerColor.G, (byte)playerColor.B, (byte)128);
+                    }
+                    DrawCharacter(1, 100 + x * 40, 100 + y * 40, playerColor);
                 }
                 // Draw enemies
                 else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
@@ -438,6 +449,17 @@ public class ScreenController
         
         // Update enemy movement
         UpdateEnemy();
+        
+        // Update invincibility timer
+        if (_isInvincible)
+        {
+            _invincibilityTimer += Raylib.GetFrameTime();
+            if (_invincibilityTimer >= InvincibilityDuration)
+            {
+                _isInvincible = false;
+                _invincibilityTimer = 0f;
+            }
+        }
     }
 
     private void UpdateEnemy()
@@ -558,6 +580,47 @@ public class ScreenController
                 if (enemy.Alive && collisionPoints.Any(p => p.x == enemy.X && p.y == enemy.Y))
                 {
                     enemy.Alive = false;
+                }
+            }
+        }
+
+        // Check for player-enemy collisions
+        foreach (var enemy in _enemies)
+        {
+            if (enemy.Alive && _animPlayerX == enemy.X && _animPlayerY == enemy.Y)
+            {
+                // Player and enemy are in the same position
+                if (!_isInvincible)
+                {
+                    // Take damage
+                    _currentHealth = Math.Max(0, _currentHealth - 1);
+                    
+                    // If health reaches zero, reset to full
+                    if (_currentHealth == 0)
+                    {
+                        _currentHealth = _maxHealth;
+                    }
+                    
+                    // Become invincible
+                    _isInvincible = true;
+                    _invincibilityTimer = 0f;
+                    
+                    // Optional: Push player back from enemy
+                    switch (_lastDirection)
+                    {
+                        case Direction.Left:
+                            _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                            break;
+                        case Direction.Right:
+                            _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                            break;
+                        case Direction.Up:
+                            _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                            break;
+                        case Direction.Down:
+                            _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                            break;
+                    }
                 }
             }
         }
