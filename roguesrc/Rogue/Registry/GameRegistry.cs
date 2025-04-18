@@ -5,7 +5,7 @@ namespace Rogue.Registry;
 
 public static class GameRegistry
 {
-    public static IServiceCollection Register(this IServiceCollection services) =>
+    public static IServiceCollection RegisterGame(this IServiceCollection services) =>
         services
             .RegisterRogueLib()
             .AddScoped<IScreenPresenter, ScreenPresenter>()

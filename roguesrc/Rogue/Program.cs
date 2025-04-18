@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Rogue;
+using Rogue.Registry;
 
 class Program
 {
@@ -17,10 +18,6 @@ class Program
         Host.CreateDefaultBuilder(args)
             .ConfigureServices((hostContext, services) =>
             {
-                // Register services
-                services.AddScoped<IScreenPresenter, ScreenPresenter>();
-                services.AddScoped<IGame, Game>();
-                services.AddScoped<IRayLoader, RayLoader>();
-                services.AddScoped<IResourceReader, ResourceReader>();
+                services.RegisterGame();
             });
 }

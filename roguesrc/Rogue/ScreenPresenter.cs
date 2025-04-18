@@ -15,10 +15,11 @@ public class ScreenPresenter : IScreenPresenter
 {
     private readonly Texture2D _charset;
     private readonly Font _menuFont;
-    private readonly int _width;
-    private readonly int _height;
+    private const int Width = 40;
+    private const int Height = 16;
+    
     private GameView _currentView = GameView.Menu;
-    private Queue<KeyboardKey> _keyEvents = new();
+    private readonly Queue<KeyboardKey> _keyEvents = new();
     
     // Character dimensions
     private const int CharWidth = 8;
@@ -60,12 +61,10 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Color _swordColor = new(180, 210, 230, 255);  // Silvery-blue color
 
     // Add enemy fields
-    private int _enemyX = 15;
-    private int _enemyY = 5;
-    private float _enemyMoveTimer = 0;
+    private readonly int _initialEnemyX = 15;
+    private readonly int _initialEnemyY = 5;
     private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     private readonly Random _random = new();
-    private bool _enemyAlive = true;  // Add this field
     
     // Multiple enemies support
     private readonly List<Enemy> _enemies = [];
@@ -90,22 +89,15 @@ public class ScreenPresenter : IScreenPresenter
     {
         _rayLoader = rayLoader;
         
-        _width = 40;
-        _height = 16;
-        
-        Raylib.InitWindow(_width * CharWidth * DisplayScale, _height * CharHeight * DisplayScale, "Rogue-like");
+        Raylib.InitWindow(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale, "Rogue-like");
         Raylib.SetTargetFPS(60);
-        
-        _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
-        
-        // Load font from embedded resource
-        _menuFont = _rayLoader.LoadFontFromEmbeddedResource("Rogue.fonts.Roboto-Regular.ttf");
+
+        _charset = _rayLoader.LoadCharsetTexture();
+        _menuFont = _rayLoader.LoadRobotoFont();
         
         // Initialize first enemy
-        _enemies.Add(new Enemy { X = _enemyX, Y = _enemyY });
+        _enemies.Add(new Enemy { X = _initialEnemyX, Y = _initialEnemyY });
     }
-
-
 
     public void Update()
     {
@@ -242,7 +234,7 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
 
-        DrawText("Press any key to return", 20, _height * CharHeight * DisplayScale - 40, Color.White);
+        DrawText("Press any key to return", 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput()
@@ -364,7 +356,7 @@ public class ScreenPresenter : IScreenPresenter
             DrawCharacter(swordChar, (int)swordX, (int)swordY, _swordColor);
         }
 
-        DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
+        DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
     
     private void HandleAnimationInput()
@@ -469,20 +461,7 @@ public class ScreenPresenter : IScreenPresenter
         // Spawn new enemy if timer expired and we're under the max living enemies
         if (_enemySpawnTimer >= EnemySpawnDelay && livingEnemies < MaxEnemies)
         {
-            // Find a position that's not occupied by the player or another enemy
-            int newX, newY;
-            bool validPosition;
-            
-            do {
-                newX = _random.Next(20);  // 0-19
-                newY = _random.Next(10);  // 0-9
-                
-                validPosition = (newX != _animPlayerX || newY != _animPlayerY) && 
-                                !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
-            } while (!validPosition);
-            
-            _enemies.Add(new Enemy { X = newX, Y = newY });
-            _enemySpawnTimer = 0;
+            SpawnEnemy();
         }
         
         // Update each enemy with its own timer
@@ -633,6 +612,24 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
+    private void SpawnEnemy()
+    {
+        // Find a position that's not occupied by the player or another enemy
+        int newX, newY;
+        bool validPosition;
+            
+        do {
+            newX = _random.Next(20);  // 0-19
+            newY = _random.Next(10);  // 0-9
+                
+            validPosition = (newX != _animPlayerX || newY != _animPlayerY) && 
+                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
+        } while (!validPosition);
+            
+        _enemies.Add(new Enemy { X = newX, Y = newY });
+        _enemySpawnTimer = 0;
+    }
+    
     private void DrawText(string text, int x, int y, Color color)
     {
         Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);

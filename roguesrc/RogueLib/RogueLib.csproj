@@ -8,6 +8,11 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
+      <PackageReference Include="Raylib-cs" Version="7.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="fonts/Roboto-Regular.ttf" />
+      <EmbeddedResource Include="images/Codepage-437-transparent.png" />
+    </ItemGroup>
 </Project>
