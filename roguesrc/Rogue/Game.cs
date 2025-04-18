@@ -1,9 +1,14 @@
 using System;
 using System.Threading;
 
-public class Game
+public interface IGame
 {
-    private readonly ScreenPresenter _screen;
+    void Run();
+}
+
+public class Game : IGame
+{
+    private readonly IScreenPresenter _screen;
     private readonly GameState _state;
 
     public Game()

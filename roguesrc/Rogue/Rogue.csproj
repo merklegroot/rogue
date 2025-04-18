@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
     <PackageReference Include="Raylib-cs" Version="7.0.1" />
   </ItemGroup>
 
@@ -15,7 +16,7 @@
     <None Update="images/Codepage-437-transparent.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="fonts/Roboto/static/Roboto-Regular.ttf">
+    <None Update="fonts/Roboto-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

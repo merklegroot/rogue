@@ -7,7 +7,15 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System;
 
-public class ScreenPresenter
+public interface IScreenPresenter
+{
+    void Update();
+    void Draw(GameState state);
+    bool WindowShouldClose();
+    void Cleanup();
+}
+
+public class ScreenPresenter : IScreenPresenter
 {
     private readonly Texture2D _charset;
     private readonly Font _menuFont;
@@ -89,7 +97,7 @@ public class ScreenPresenter
         Raylib.SetTargetFPS(60);
         
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
-        _menuFont = Raylib.LoadFont("fonts/Roboto/static/Roboto-Regular.ttf");
+        _menuFont = Raylib.LoadFont("fonts/Roboto-Regular.ttf");
         
         // Initialize first enemy
         _enemies.Add(new Enemy { X = _enemyX, Y = _enemyY });
