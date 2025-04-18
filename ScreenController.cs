@@ -89,7 +89,45 @@ public class ScreenController
     {
         // Draw menu text
         DrawText("Main Menu", 20, 20, Color.White);
-        DrawText("View (C)haracter Set", 20, 60, Color.White);
+        DrawColoredHotkeyText("View (C)haracter Set", 20, 60, Color.White, Color.Green);
+        DrawColoredHotkeyText("E(X)it", 20, 100, Color.White, Color.Green);
+    }
+
+    private void DrawColoredHotkeyText(string text, int x, int y, Color baseColor, Color hotkeyColor)
+    {
+        int currentX = x;
+        int startParenIndex = text.IndexOf('(');
+        int endParenIndex = text.IndexOf(')');
+        
+        if (startParenIndex != -1 && endParenIndex != -1 && endParenIndex > startParenIndex + 1)
+        {
+            // Draw text before parenthesis
+            string beforeText = text.Substring(0, startParenIndex);
+            DrawText(beforeText, currentX, y, baseColor);
+            currentX += Raylib.MeasureText(beforeText, 20);
+            
+            // Draw opening parenthesis
+            DrawText("(", currentX, y, baseColor);
+            currentX += Raylib.MeasureText("(", 20);
+            
+            // Draw hotkey in different color
+            string hotkey = text.Substring(startParenIndex + 1, endParenIndex - startParenIndex - 1);
+            DrawText(hotkey, currentX, y, hotkeyColor);
+            currentX += Raylib.MeasureText(hotkey, 20);
+            
+            // Draw closing parenthesis
+            DrawText(")", currentX, y, baseColor);
+            currentX += Raylib.MeasureText(")", 20);
+            
+            // Draw remaining text
+            string afterText = text.Substring(endParenIndex + 1);
+            DrawText(afterText, currentX, y, baseColor);
+        }
+        else
+        {
+            // If no parentheses found, draw the whole text in base color
+            DrawText(text, x, y, baseColor);
+        }
     }
 
     private void HandleMenuInput()
@@ -100,6 +138,11 @@ public class ScreenController
             if (key == KeyboardKey.C)
             {
                 _currentView = GameView.CharacterSet;
+                break;
+            }
+            else if (key == KeyboardKey.X)
+            {
+                Raylib.CloseWindow();
                 break;
             }
         }
