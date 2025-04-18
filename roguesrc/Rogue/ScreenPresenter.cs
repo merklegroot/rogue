@@ -98,6 +98,12 @@ public class ScreenPresenter : IScreenPresenter
     private readonly List<FlyingGold> _flyingGold = [];
     private const float GoldFlyDuration = 0.3f;  // Reduced from 0.5f to 0.3f for faster animation
 
+    // Add CRT effect fields
+    private bool _enableCrtEffect = true;
+    private readonly Color _scanlineColor = new(0, 0, 0, 100);  // Increased opacity from 50 to 100
+    private const int ScanlineSpacing = 3;  // Reduced from 4 to 3 for more frequent lines
+    private const int ScanlineHeight = 2;   // Increased from 1 to 2 pixels tall
+
     private readonly IRayLoader _rayLoader;
 
     public ScreenPresenter(IRayLoader rayLoader)
@@ -150,6 +156,12 @@ public class ScreenPresenter : IScreenPresenter
                 DrawAnimation();
                 HandleAnimationInput();
                 break;
+        }
+
+        // Draw CRT scan lines as a post-processing effect
+        if (_enableCrtEffect)
+        {
+            DrawScanlines();
         }
 
         Raylib.EndDrawing();
@@ -233,6 +245,12 @@ public class ScreenPresenter : IScreenPresenter
             if (key == KeyboardKey.X)
             {
                 Raylib.CloseWindow();
+                break;
+            }
+            // Toggle CRT effect with T key
+            if (key == KeyboardKey.T)
+            {
+                _enableCrtEffect = !_enableCrtEffect;
                 break;
             }
         }
@@ -886,6 +904,21 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw gold text
         DrawText(goldText, startX, startY, _goldColor);
+    }
+
+    private void DrawScanlines()
+    {
+        int screenWidth = Width * CharWidth * DisplayScale;
+        int screenHeight = Height * CharHeight * DisplayScale;
+        
+        // Draw horizontal scan lines
+        for (int y = 0; y < screenHeight; y += ScanlineSpacing)
+        {
+            Raylib.DrawRectangle(0, y, screenWidth, ScanlineHeight, _scanlineColor);
+        }
+        
+        // Optional: Add a slight vignette effect (darkened corners)
+        // This would require drawing a gradient rectangle or using a shader
     }
 
     public bool WindowShouldClose()
