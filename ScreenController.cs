@@ -70,6 +70,20 @@ public class ScreenController
     private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     private readonly Random _random = new Random();
     private bool _enemyAlive = true;  // Add this field
+    
+    // Multiple enemies support
+    private class Enemy
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public bool Alive { get; set; } = true;
+        public float MoveTimer { get; set; } = 0f;  // Add individual move timer for each enemy
+    }
+    
+    private List<Enemy> _enemies = new List<Enemy>();
+    private float _enemySpawnTimer = 0;
+    private const float EnemySpawnDelay = 1.0f;  // Spawn a new enemy every 1 second
+    private const int MaxEnemies = 3;  // Maximum number of enemies
 
     public ScreenController()
     {
@@ -81,6 +95,9 @@ public class ScreenController
         
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
         _menuFont = Raylib.LoadFont("fonts/Roboto/static/Roboto-Regular.ttf");
+        
+        // Initialize first enemy
+        _enemies.Add(new Enemy { X = _enemyX, Y = _enemyY });
     }
 
     public void Update()
@@ -242,8 +259,8 @@ public class ScreenController
                     // Draw smiley face at player position
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, Color.Yellow);
                 }
-                // Draw enemy (Ç - capital C with cedilla, ASCII 128 in CP437)
-                else if (_enemyAlive && x == _enemyX && y == _enemyY)  // Add _enemyAlive check
+                // Draw enemies
+                else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
                 {
                     DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
                 }
@@ -416,64 +433,109 @@ public class ScreenController
 
     private void UpdateEnemy()
     {
-        if (!_enemyAlive) return;  // Don't update if enemy is dead
+        // Update enemy spawn timer
+        _enemySpawnTimer += Raylib.GetFrameTime();
         
-        _enemyMoveTimer += Raylib.GetFrameTime();
+        // Count living enemies
+        int livingEnemies = _enemies.Count(e => e.Alive);
         
-        if (_enemyMoveTimer >= EnemyMoveDelay)
+        // Spawn new enemy if timer expired and we're under the max living enemies
+        if (_enemySpawnTimer >= EnemySpawnDelay && livingEnemies < MaxEnemies)
         {
-            // Choose a random direction (0-3)
-            int direction = _random.Next(4);
+            // Find a position that's not occupied by the player or another enemy
+            int newX, newY;
+            bool validPosition;
             
-            switch (direction)
+            do {
+                newX = _random.Next(20);  // 0-19
+                newY = _random.Next(10);  // 0-9
+                
+                validPosition = (newX != _animPlayerX || newY != _animPlayerY) && 
+                               !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
+            } while (!validPosition);
+            
+            _enemies.Add(new Enemy { X = newX, Y = newY });
+            _enemySpawnTimer = 0;
+        }
+        
+        // Update each enemy with its own timer
+        float frameTime = Raylib.GetFrameTime();
+        foreach (var enemy in _enemies)
+        {
+            if (!enemy.Alive) continue;  // Skip dead enemies
+            
+            // Update this enemy's individual timer
+            enemy.MoveTimer += frameTime;
+            
+            if (enemy.MoveTimer >= EnemyMoveDelay)
             {
-                case 0: // Up
-                    _enemyY = Math.Max(0, _enemyY - 1);
-                    break;
-                case 1: // Right
-                    _enemyX = Math.Min(19, _enemyX + 1);
-                    break;
-                case 2: // Down
-                    _enemyY = Math.Min(9, _enemyY + 1);
-                    break;
-                case 3: // Left
-                    _enemyX = Math.Max(0, _enemyX - 1);
-                    break;
+                // Choose a random direction (0-3)
+                int direction = _random.Next(4);
+                
+                int newX = enemy.X;
+                int newY = enemy.Y;
+                
+                switch (direction)
+                {
+                    case 0: // Up
+                        newY = Math.Max(0, enemy.Y - 1);
+                        break;
+                    case 1: // Right
+                        newX = Math.Min(19, enemy.X + 1);
+                        break;
+                    case 2: // Down
+                        newY = Math.Min(9, enemy.Y + 1);
+                        break;
+                    case 3: // Left
+                        newX = Math.Max(0, enemy.X - 1);
+                        break;
+                }
+                
+                // Only move if the new position is not occupied by another enemy or the player
+                bool positionOccupied = (newX == _animPlayerX && newY == _animPlayerY) ||
+                                       _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY);
+                
+                if (!positionOccupied)
+                {
+                    enemy.X = newX;
+                    enemy.Y = newY;
+                }
+                
+                // Reset this enemy's timer
+                enemy.MoveTimer = 0;
             }
-            
-            _enemyMoveTimer = 0;
         }
 
-        // Check for sword collision
-        if (_isSwordSwinging && _enemyAlive)
+        // Check for sword collision with any enemy
+        if (_isSwordSwinging)
         {
             // Calculate sword position based on current direction and animation
-            float xOffset = 0;
-            float yOffset = 0;
+            int swordX = _animPlayerX;
+            int swordY = _animPlayerY;
             
             switch (_lastDirection)
             {
                 case Direction.Left:
-                    xOffset = -1;
+                    swordX = _animPlayerX - 1;
                     break;
                 case Direction.Right:
-                    xOffset = 1;
+                    swordX = _animPlayerX + 1;
                     break;
                 case Direction.Up:
-                    yOffset = -1;
+                    swordY = _animPlayerY - 1;
                     break;
                 case Direction.Down:
-                    yOffset = 1;
+                    swordY = _animPlayerY + 1;
                     break;
             }
 
-            // Check if sword position matches enemy position
-            int swordX = _animPlayerX + (int)xOffset;
-            int swordY = _animPlayerY + (int)yOffset;
-            
-            if (swordX == _enemyX && swordY == _enemyY)
+            // Check if sword position matches any enemy position
+            foreach (var enemy in _enemies)
             {
-                _enemyAlive = false;
+                if (enemy.Alive && swordX == enemy.X && swordY == enemy.Y)
+                {
+                    enemy.Alive = false;
+                }
             }
         }
     }
