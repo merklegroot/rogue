@@ -52,7 +52,7 @@ public class ScreenController
     private Direction _lastDirection = Direction.Right;
     private bool _isSwordSwinging = false;
     private float _swordSwingTime = 0;
-    private const float SwordSwingDuration = 0.3f;  // Increased duration for multi-frame animation
+    private const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
 
     public ScreenController()
     {
@@ -254,23 +254,23 @@ public class ScreenController
             {
                 case Direction.Left:
                     // Fixed position to the left, sweeping from top to bottom
-                    xOffset = -1.0f;
-                    yOffset = progress - 0.5f;  // Start above, end below
+                    xOffset = -0.9f;  // Reduced from -1.2f to bring closer to character
+                    yOffset = (progress - 0.5f) * 1.2f;  // Kept the vertical range the same
                     break;
                 case Direction.Right:
                     // Fixed position to the right, sweeping from top to bottom
-                    xOffset = 1.0f;
-                    yOffset = progress - 0.5f;  // Start above, end below
+                    xOffset = 0.9f;  // Reduced from 1.2f to bring closer to character
+                    yOffset = (progress - 0.5f) * 1.2f;  // Kept the vertical range the same
                     break;
                 case Direction.Up:
                     // Fixed position above, sweeping from left to right
-                    yOffset = -1.0f;
-                    xOffset = progress - 0.5f;  // Start left, end right
+                    yOffset = -1.2f;  // Kept the same
+                    xOffset = (progress - 0.5f) * 1.2f;  // Kept the same
                     break;
                 case Direction.Down:
                     // Fixed position below, sweeping from left to right
-                    yOffset = 1.0f;
-                    xOffset = progress - 0.5f;  // Start left, end right
+                    yOffset = 1.2f;  // Kept the same
+                    xOffset = (progress - 0.5f) * 1.2f;  // Kept the same
                     break;
             }
             
