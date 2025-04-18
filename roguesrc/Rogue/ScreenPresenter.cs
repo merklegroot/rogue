@@ -17,10 +17,10 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Font _menuFont;
     private const int Width = 40;
     private const int Height = 16;
-    
+
     private GameView _currentView = GameView.Menu;
     private readonly Queue<KeyboardKey> _keyEvents = new();
-    
+
     // Character dimensions
     private const int CharWidth = 8;
     private const int CharHeight = 14;
@@ -35,7 +35,7 @@ public class ScreenPresenter : IScreenPresenter
     // React default background color
     private readonly Color _backgroundColor = new(40, 44, 52, 255);  // #282c34
 
-    private readonly Color[] _colors = new[] 
+    private readonly Color[] _colors = new[]
     {
         Color.White,
         Color.Red,
@@ -60,12 +60,9 @@ public class ScreenPresenter : IScreenPresenter
     // Add a silvery-blue color for the sword
     private readonly Color _swordColor = new(180, 210, 230, 255);  // Silvery-blue color
 
-    // Add enemy fields
-    private readonly int _initialEnemyX = 15;
-    private readonly int _initialEnemyY = 5;
     private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     private readonly Random _random = new();
-    
+
     // Multiple enemies support
     private readonly List<Enemy> _enemies = [];
     private float _enemySpawnTimer;
@@ -77,26 +74,25 @@ public class ScreenPresenter : IScreenPresenter
     private int _currentHealth = 7;  // Start with 7 out of 10 health
     private readonly Color _healthColor = Color.Red;
     private readonly Color _emptyHealthColor = new(100, 100, 100, 255);  // Gray color for empty hearts
-    
+
     // Add invincibility fields
     private bool _isInvincible = false;
     private float _invincibilityTimer = 0f;
     private const float InvincibilityDuration = 1.0f;  // 1 second of invincibility after taking damage
 
     private readonly IRayLoader _rayLoader;
-    
+
     public ScreenPresenter(IRayLoader rayLoader)
     {
         _rayLoader = rayLoader;
-        
+
         Raylib.InitWindow(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale, "Rogue-like");
         Raylib.SetTargetFPS(60);
 
         _charset = _rayLoader.LoadCharsetTexture();
         _menuFont = _rayLoader.LoadRobotoFont();
-        
-        // Initialize first enemy
-        _enemies.Add(new Enemy { X = _initialEnemyX, Y = _initialEnemyY });
+
+        SpawnEnemy();
     }
 
     public void Update()
@@ -120,12 +116,12 @@ public class ScreenPresenter : IScreenPresenter
                 DrawMenu();
                 HandleMenuInput();
                 break;
-            
+
             case GameView.CharacterSet:
                 DrawCharacterSet();
                 HandleCharacterSetInput();
                 break;
-                
+
             case GameView.Animation:
                 DrawAnimation();
                 HandleAnimationInput();
@@ -159,10 +155,10 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotkeyOptions? options = null)
     {
         options ??= new ColoredHotkeyOptions();
-        
+
         int startParenIndex = text.IndexOf('(');
         int endParenIndex = text.IndexOf(')');
-        
+
         // Guard clause: if no valid parentheses found, draw plain text
         if (startParenIndex == -1 || endParenIndex == -1 || endParenIndex <= startParenIndex + 1)
         {
@@ -171,25 +167,25 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         var currentX = x;
-        
+
         // Draw text before parenthesis
         var beforeText = text[..startParenIndex];
         DrawText(beforeText, currentX, y, options.BaseColor);
         currentX += Raylib.MeasureText(beforeText, MenuFontSize) - 1;  // Slight kerning adjustment
-        
+
         // Draw opening parenthesis
         DrawText("(", currentX, y, options.BaseColor);
         currentX += Raylib.MeasureText("(", MenuFontSize) - 2;  // Tighter kerning for parentheses
-        
+
         // Draw hotkey in different color
         var hotkey = text[(startParenIndex + 1)..endParenIndex];
         DrawText(hotkey, currentX, y, options.HotkeyColor);
         currentX += Raylib.MeasureText(hotkey, MenuFontSize) - 2;  // Tighter kerning for hotkey
-        
+
         // Draw closing parenthesis
         DrawText(")", currentX, y, options.BaseColor);
         currentX += Raylib.MeasureText(")", MenuFontSize) - 1;  // Slight kerning adjustment
-        
+
         // Draw remaining text
         var afterText = text[(endParenIndex + 1)..];
         DrawText(afterText, currentX, y, options.BaseColor);
@@ -225,7 +221,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             var row = charNum / 32;
             var col = charNum % 32;
-            
+
             DrawCharacter(
                 charNum,
                 20 + (col * 40),
@@ -249,7 +245,7 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Draw health bar at the top
         DrawHealthBar();
-        
+
         // Draw a field of dots
         for (int y = 0; y < 10; y++)
         {
@@ -280,22 +276,22 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
         }
-        
+
         // Draw sword if swinging (drawn after ground to appear on top)
         if (_isSwordSwinging)
         {
             // Calculate animation progress (0.0 to 1.0)
             var progress = _swordSwingTime / SwordSwingDuration;
             if (progress > 1.0f) progress = 1.0f;
-            
+
             // Calculate frame (0, 1, or 2)
             var frame = (int)(progress * 3);
             if (frame > 2) frame = 2;
-            
+
             // Calculate fractional position
             var xOffset = 0f;
             var yOffset = 0f;
-            
+
             // Determine position based on direction and animation progress
             switch (_lastDirection)
             {
@@ -320,7 +316,7 @@ public class ScreenPresenter : IScreenPresenter
                     xOffset = (progress - 0.5f) * 1.2f;  // Kept the same
                     break;
             }
-            
+
             // Get sword character based on direction and animation frame
             char swordChar = (_lastDirection, frame) switch
             {
@@ -328,37 +324,37 @@ public class ScreenPresenter : IScreenPresenter
                 (Direction.Left, 0) => '\\',
                 (Direction.Left, 1) => '-',
                 (Direction.Left, 2) => '/',
-                
+
                 // Right side: / → - → \
                 (Direction.Right, 0) => '/',
                 (Direction.Right, 1) => '-',
                 (Direction.Right, 2) => '\\',
-                
+
                 // Up: \ → | → /
                 (Direction.Up, 0) => '\\',
                 (Direction.Up, 1) => '|',
                 (Direction.Up, 2) => '/',
-                
+
                 // Down: / → | → \
                 (Direction.Down, 0) => '/',
                 (Direction.Down, 1) => '|',
                 (Direction.Down, 2) => '\\',
-                
+
                 // Fallback
                 _ => '+'
             };
-            
+
             // Calculate exact pixel position
             float swordX = 100 + (_animPlayerX + xOffset) * 40;
             float swordY = 100 + (_animPlayerY + yOffset) * 40;
-            
+
             // Draw the sword character with silvery-blue color
             DrawCharacter(swordChar, (int)swordX, (int)swordY, _swordColor);
         }
 
         DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
-    
+
     private void HandleAnimationInput()
     {
         // Handle ESC key via event queue for menu navigation
@@ -376,21 +372,21 @@ public class ScreenPresenter : IScreenPresenter
                 _swordSwingTime = 0;
             }
         }
-        
+
         // Handle movement with direct key state checks
         // This allows for continuous movement when keys are held down
-        
+
         // Add a small delay to control movement speed
         const float moveDelay = 0.1f; // seconds between moves
-        
+
         // Update time since last move
         _timeSinceLastMove += Raylib.GetFrameTime();
-        
+
         // Only move if enough time has passed
         if (_timeSinceLastMove >= moveDelay)
         {
             bool moved = false;
-            
+
             // Check WASD keys
             if (Raylib.IsKeyDown(KeyboardKey.W))
             {
@@ -404,7 +400,7 @@ public class ScreenPresenter : IScreenPresenter
                 _lastDirection = Direction.Down;
                 moved = true;
             }
-            
+
             if (Raylib.IsKeyDown(KeyboardKey.A))
             {
                 _animPlayerX = Math.Max(0, _animPlayerX - 1);
@@ -417,14 +413,14 @@ public class ScreenPresenter : IScreenPresenter
                 _lastDirection = Direction.Right;
                 moved = true;
             }
-            
+
             // Reset timer if moved
             if (moved)
             {
                 _timeSinceLastMove = 0;
             }
         }
-        
+
         // Update sword swing animation
         if (_isSwordSwinging)
         {
@@ -434,10 +430,10 @@ public class ScreenPresenter : IScreenPresenter
                 _isSwordSwinging = false;
             }
         }
-        
+
         // Update enemy movement
         UpdateEnemy();
-        
+
         // Update invincibility timer
         if (_isInvincible)
         {
@@ -454,33 +450,33 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Update enemy spawn timer
         _enemySpawnTimer += Raylib.GetFrameTime();
-        
+
         // Count living enemies
         int livingEnemies = _enemies.Count(e => e.Alive);
-        
+
         // Spawn new enemy if timer expired and we're under the max living enemies
         if (_enemySpawnTimer >= EnemySpawnDelay && livingEnemies < MaxEnemies)
         {
             SpawnEnemy();
         }
-        
+
         // Update each enemy with its own timer
         float frameTime = Raylib.GetFrameTime();
         foreach (var enemy in _enemies)
         {
             if (!enemy.Alive) continue;  // Skip dead enemies
-            
+
             // Update this enemy's individual timer
             enemy.MoveTimer += frameTime;
-            
+
             if (enemy.MoveTimer >= EnemyMoveDelay)
             {
                 // Choose a random direction (0-3)
                 int direction = _random.Next(4);
-                
+
                 int newX = enemy.X;
                 int newY = enemy.Y;
-                
+
                 switch (direction)
                 {
                     case 0: // Up
@@ -496,17 +492,17 @@ public class ScreenPresenter : IScreenPresenter
                         newX = Math.Max(0, enemy.X - 1);
                         break;
                 }
-                
+
                 // Only move if the new position is not occupied by another enemy or the player
                 bool positionOccupied = (newX == _animPlayerX && newY == _animPlayerY) ||
                                         _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY);
-                
+
                 if (!positionOccupied)
                 {
                     enemy.X = newX;
                     enemy.Y = newY;
                 }
-                
+
                 // Reset this enemy's timer
                 enemy.MoveTimer = 0;
             }
@@ -517,7 +513,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             // Define the collision area based on the direction
             List<(int x, int y)> collisionPoints = new List<(int x, int y)>();
-            
+
             switch (_lastDirection)
             {
                 case Direction.Left:
@@ -526,21 +522,21 @@ public class ScreenPresenter : IScreenPresenter
                     collisionPoints.Add((_animPlayerX - 1, _animPlayerY - 1)); // Top-left
                     collisionPoints.Add((_animPlayerX - 1, _animPlayerY + 1)); // Bottom-left
                     break;
-                    
+
                 case Direction.Right:
                     // Check right, top-right, and bottom-right
                     collisionPoints.Add((_animPlayerX + 1, _animPlayerY));     // Right
                     collisionPoints.Add((_animPlayerX + 1, _animPlayerY - 1)); // Top-right
                     collisionPoints.Add((_animPlayerX + 1, _animPlayerY + 1)); // Bottom-right
                     break;
-                    
+
                 case Direction.Up:
                     // Check up, top-left, and top-right
                     collisionPoints.Add((_animPlayerX, _animPlayerY - 1));     // Up
                     collisionPoints.Add((_animPlayerX - 1, _animPlayerY - 1)); // Top-left
                     collisionPoints.Add((_animPlayerX + 1, _animPlayerY - 1)); // Top-right
                     break;
-                    
+
                 case Direction.Down:
                     // Check down, bottom-left, and bottom-right
                     collisionPoints.Add((_animPlayerX, _animPlayerY + 1));     // Down
@@ -569,24 +565,24 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Take damage
                     _currentHealth = Math.Max(0, _currentHealth - 1);
-                    
+
                     // If health reaches zero, reset to full
                     if (_currentHealth == 0)
                     {
                         _currentHealth = _maxHealth;
                     }
-                    
+
                     // Become invincible
                     _isInvincible = true;
                     _invincibilityTimer = 0f;
-                    
+
                     // Determine knockback direction based on enemy position relative to player's movement
                     // Calculate which direction the enemy hit the player from
                     Direction knockbackDirection;
-                    
+
                     // If player was moving, assume they were hit from the direction they were moving
                     knockbackDirection = _lastDirection;
-                    
+
                     // Apply knockback in the opposite direction of the hit
                     switch (knockbackDirection)
                     {
@@ -615,21 +611,31 @@ public class ScreenPresenter : IScreenPresenter
     private void SpawnEnemy()
     {
         // Find a position that's not occupied by the player or another enemy
-        int newX, newY;
-        bool validPosition;
-            
-        do {
+        int newX = 0;
+        int newY = 0;
+        bool isPositionValid = false;
+
+        const int maxAttempts = 10;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
             newX = _random.Next(20);  // 0-19
             newY = _random.Next(10);  // 0-9
-                
-            validPosition = (newX != _animPlayerX || newY != _animPlayerY) && 
+
+            isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
                             !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
-        } while (!validPosition);
-            
+
+            if (isPositionValid)
+                break;
+        }
+
+        if (!isPositionValid)
+            return;
+
         _enemies.Add(new Enemy { X = newX, Y = newY });
         _enemySpawnTimer = 0;
     }
-    
+
     private void DrawText(string text, int x, int y, Color color)
     {
         Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);
@@ -656,8 +662,8 @@ public class ScreenPresenter : IScreenPresenter
 
         // Draw the character
         Raylib.DrawTexturePro(_charset, sourceRect, destRect, Vector2.Zero, 0, color);
-        
-        if(showBorder)
+
+        if (showBorder)
         {
             // Draw border around destination rectangle
             Raylib.DrawRectangleLines(
@@ -685,12 +691,12 @@ public class ScreenPresenter : IScreenPresenter
         const int heartSpacing = 30;  // Pixels between hearts
         const int startX = 20;
         const int startY = 20;
-        
+
         for (int i = 0; i < _maxHealth; i++)
         {
             // Determine if this heart should be filled or empty
             Color heartColor = (i < _currentHealth) ? _healthColor : _emptyHealthColor;
-            
+
             // Draw the heart
             DrawCharacter(heartChar, startX + (i * heartSpacing), startY, heartColor);
         }
