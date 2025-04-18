@@ -16,9 +16,10 @@
     <None Update="images/Codepage-437-transparent.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="fonts/Roboto-Regular.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="fonts/Roboto-Regular.ttf" />
   </ItemGroup>
 
 </Project>

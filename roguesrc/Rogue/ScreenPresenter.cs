@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
 using System;
+using System.IO;
 
 public interface IScreenPresenter
 {
@@ -97,10 +98,44 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.SetTargetFPS(60);
         
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
-        _menuFont = Raylib.LoadFont("fonts/Roboto-Regular.ttf");
+        
+        // Load font from embedded resource
+        _menuFont = LoadFontFromEmbeddedResource("Rogue.fonts.Roboto-Regular.ttf");
         
         // Initialize first enemy
         _enemies.Add(new Enemy { X = _enemyX, Y = _enemyY });
+    }
+
+    private Font LoadFontFromEmbeddedResource(string resourceName)
+    {
+        // Get the current assembly
+        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        
+        // Open a stream to the embedded resource
+        using (var stream = assembly.GetManifestResourceStream(resourceName))
+        {
+            if (stream == null)
+            {
+                throw new InvalidOperationException($"Could not find embedded resource: {resourceName}");
+            }
+            
+            // Read the font data into a byte array
+            byte[] fontData = new byte[stream.Length];
+            stream.Read(fontData, 0, fontData.Length);
+            
+            // Create a temporary file to load the font
+            // string tempFile = Path.GetTempFileName();
+            var tempFile = "Roboto-Regular.ttf";
+            File.WriteAllBytes(tempFile, fontData);
+            
+            // Load the font using Raylib
+            Font font = Raylib.LoadFont(tempFile);
+            
+            // Delete the temporary file
+            try { File.Delete(tempFile); } catch { /* Ignore errors */ }
+            
+            return font;
+        }
     }
 
     public void Update()
