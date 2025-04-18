@@ -1,6 +1,5 @@
 using Raylib_cs;
 using System.Numerics;
-using System.Collections.Generic;
 
 public enum GameView
 {
@@ -11,6 +10,7 @@ public enum GameView
 public class ScreenController
 {
     private readonly Texture2D _charset;
+    private readonly Font _menuFont;
     private readonly int _width;
     private readonly int _height;
     private GameView _currentView = GameView.Menu;
@@ -49,6 +49,7 @@ public class ScreenController
         Raylib.SetTargetFPS(60);
         
         _charset = Raylib.LoadTexture("images/Codepage-437-transparent.png");
+        _menuFont = Raylib.LoadFont("fonts/Roboto/static/Roboto-Regular.ttf");
     }
 
     public void Update()
@@ -104,20 +105,20 @@ public class ScreenController
             // Draw text before parenthesis
             string beforeText = text.Substring(0, startParenIndex);
             DrawText(beforeText, currentX, y, baseColor);
-            currentX += Raylib.MeasureText(beforeText, 20);
+            currentX += Raylib.MeasureText(beforeText, 20) - 1;  // Slight kerning adjustment
             
             // Draw opening parenthesis
             DrawText("(", currentX, y, baseColor);
-            currentX += Raylib.MeasureText("(", 20);
+            currentX += Raylib.MeasureText("(", 20) - 2;  // Tighter kerning for parentheses
             
             // Draw hotkey in different color
             string hotkey = text.Substring(startParenIndex + 1, endParenIndex - startParenIndex - 1);
             DrawText(hotkey, currentX, y, hotkeyColor);
-            currentX += Raylib.MeasureText(hotkey, 20);
+            currentX += Raylib.MeasureText(hotkey, 20) - 2;  // Tighter kerning for hotkey
             
             // Draw closing parenthesis
             DrawText(")", currentX, y, baseColor);
-            currentX += Raylib.MeasureText(")", 20);
+            currentX += Raylib.MeasureText(")", 20) - 1;  // Slight kerning adjustment
             
             // Draw remaining text
             string afterText = text.Substring(endParenIndex + 1);
@@ -177,7 +178,7 @@ public class ScreenController
 
     private void DrawText(string text, int x, int y, Color color)
     {
-        Raylib.DrawText(text, x, y, 20, color);
+        Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), 20, 1, color);
     }
 
     private void DrawCharacter(int charNum, int x, int y, Color color)
@@ -229,6 +230,7 @@ public class ScreenController
     public void Cleanup()
     {
         Raylib.UnloadTexture(_charset);
+        Raylib.UnloadFont(_menuFont);
         Raylib.CloseWindow();
     }
 }
