@@ -18,28 +18,10 @@ public class Game
 
     public void Run()
     {
-        bool movingRight = true;
-
         while (!_screen.WindowShouldClose())
         {
             _screen.Update();
             _screen.Draw(_state);
-
-            // Update position
-            if (movingRight)
-            {
-                _state.PlayerX++;
-                if (_state.PlayerX >= 79)  // Adjusted for 80-column display
-                    movingRight = false;
-            } 
-            else
-            {
-                _state.PlayerX--;
-                if (_state.PlayerX <= 0)
-                    movingRight = true;
-            }
-
-            Thread.Sleep(200);
         }
 
         _screen.Cleanup();
