@@ -152,8 +152,9 @@ public class ScreenPresenter : IScreenPresenter
     private bool _chargerActive = false;
     private ChargerEnemy? _charger = null;
     private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
-    private const char ChargerChar = 2; // ASCII/CP437 smiley face (☻)
+    private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
     private readonly Color _chargerColor = new(255, 50, 50, 255); // Bright red color
+    private const int ChargerHealth = 5; // Define charger health as a constant
 
     // Define ShopItem class before it's used
     private class ShopItem
@@ -1180,8 +1181,6 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
         }
-
-        // Player-enemy collisions handled in existing code...
     }
 
     private void SpawnEnemy()
@@ -1693,7 +1692,7 @@ public class ScreenPresenter : IScreenPresenter
         public float Y { get; set; }
         public bool Alive { get; set; } = true;
         public float MoveTimer { get; set; } = 0f;
-        public int Health { get; set; } = 3; // Charger has more health than regular enemies
+        public int Health { get; set; } // Remove default value here
     }
 
     // Add method to spawn a charger
@@ -1741,7 +1740,7 @@ public class ScreenPresenter : IScreenPresenter
         if (!isPositionValid)
             return;
 
-        _charger = new ChargerEnemy { X = newX, Y = newY, Health = 3 };
+        _charger = new ChargerEnemy { X = newX, Y = newY, Health = ChargerHealth }; // Use the constant
         _chargerActive = true;
     }
 }
