@@ -146,6 +146,15 @@ public class ScreenPresenter : IScreenPresenter
     private const char BoltChar = '-';    // Character to represent horizontal bolt
     private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
 
+    // Add these fields for tracking enemy kills and the charger
+    private int _enemiesKilled = 0;
+    private const int KillsForCharger = 10;
+    private bool _chargerActive = false;
+    private ChargerEnemy? _charger = null;
+    private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
+    private const char ChargerChar = 2; // ASCII/CP437 smiley face (☻)
+    private readonly Color _chargerColor = new(255, 50, 50, 255); // Bright red color
+
     // Define ShopItem class before it's used
     private class ShopItem
     {
@@ -443,6 +452,12 @@ public class ScreenPresenter : IScreenPresenter
                         playerColor = new Color((byte)playerColor.R, (byte)playerColor.G, (byte)playerColor.B, (byte)128);
                     }
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, playerColor);
+                }
+                // Draw charger
+                else if (_chargerActive && _charger != null && _charger.Alive && 
+                         Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
+                {
+                    DrawCharacter(ChargerChar, 100 + x * 40, 100 + y * 40, _chargerColor);
                 }
                 // Draw health pickups
                 else if (_healthPickups.Any(h => h.X == x && h.Y == y))
@@ -938,7 +953,9 @@ public class ScreenPresenter : IScreenPresenter
 
                 // Only move if the new position is not occupied by another enemy or the player
                 bool positionOccupied = (newX == _animPlayerX && newY == _animPlayerY) ||
-                                        _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY);
+                                        _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY) ||
+                                        (_chargerActive && _charger != null && _charger.Alive && 
+                                         Math.Abs(newX - _charger.X) < 0.5f && Math.Abs(newY - _charger.Y) < 0.5f);
 
                 if (!positionOccupied)
                 {
@@ -948,6 +965,80 @@ public class ScreenPresenter : IScreenPresenter
 
                 // Reset this enemy's timer
                 enemy.MoveTimer = 0;
+            }
+        }
+
+        // Update charger if active
+        if (_chargerActive && _charger != null && _charger.Alive)
+        {
+            _charger.MoveTimer += frameTime;
+            
+            if (_charger.MoveTimer >= ChargerSpeed) // Charger moves faster than regular enemies
+            {
+                // Charger always moves toward the player (unlike random movement of regular enemies)
+                float dx = _animPlayerX - _charger.X;
+                float dy = _animPlayerY - _charger.Y;
+                
+                // Determine primary direction to move (horizontal or vertical)
+                if (Math.Abs(dx) > Math.Abs(dy))
+                {
+                    // Move horizontally
+                    if (dx > 0)
+                        _charger.X = Math.Min(19, _charger.X + 1);
+                    else
+                        _charger.X = Math.Max(0, _charger.X - 1);
+                }
+                else
+                {
+                    // Move vertically
+                    if (dy > 0)
+                        _charger.Y = Math.Min(9, _charger.Y + 1);
+                    else
+                        _charger.Y = Math.Max(0, _charger.Y - 1);
+                }
+                
+                // Reset charger's timer
+                _charger.MoveTimer = 0;
+            }
+            
+            // Check for collision with player
+            if (Math.Abs(_charger.X - _animPlayerX) < 0.5f && Math.Abs(_charger.Y - _animPlayerY) < 0.5f)
+            {
+                if (!_isInvincible)
+                {
+                    // Charger does 2 damage instead of 1
+                    _currentHealth = Math.Max(0, _currentHealth - 2);
+                    
+                    // If health reaches zero, reset to full
+                    if (_currentHealth == 0)
+                    {
+                        _currentHealth = _maxHealth;
+                    }
+                    
+                    // Become invincible
+                    _isInvincible = true;
+                    _invincibilityTimer = 0f;
+                    
+                    // Apply stronger knockback from charger
+                    Direction knockbackDirection = _lastDirection;
+                    
+                    // Apply knockback in the opposite direction of the hit
+                    switch (knockbackDirection)
+                    {
+                        case Direction.Left:
+                            _animPlayerX = Math.Min(19, _animPlayerX + 6);  // Stronger knockback
+                            break;
+                        case Direction.Right:
+                            _animPlayerX = Math.Max(0, _animPlayerX - 6);
+                            break;
+                        case Direction.Up:
+                            _animPlayerY = Math.Min(9, _animPlayerY + 6);
+                            break;
+                        case Direction.Down:
+                            _animPlayerY = Math.Max(0, _animPlayerY - 6);
+                            break;
+                    }
+                }
             }
         }
 
@@ -995,6 +1086,16 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     enemy.Alive = false;
                     
+                    // Increment kill counter
+                    _enemiesKilled++;
+                    
+                    // Check if we should spawn a charger
+                    if (_enemiesKilled >= KillsForCharger && !_chargerActive)
+                    {
+                        SpawnCharger();
+                        _enemiesKilled = 0; // Reset kill counter
+                    }
+                    
                     // Create explosion at enemy position
                     _explosions.Add(new Explosion { 
                         X = enemy.X, 
@@ -1005,59 +1106,82 @@ public class ScreenPresenter : IScreenPresenter
                     // Gold will be spawned when the explosion finishes
                 }
             }
-        }
-
-        // Check for player-enemy collisions
-        foreach (var enemy in _enemies)
-        {
-            if (enemy.Alive && _animPlayerX == enemy.X && _animPlayerY == enemy.Y)
+            
+            // Check for sword collision with charger
+            if (_chargerActive && _charger != null && _charger.Alive)
             {
-                // Player and enemy are in the same position
-                if (!_isInvincible)
+                if (collisionPoints.Any(p => Math.Abs(p.x - _charger.X) < 0.5f && Math.Abs(p.y - _charger.Y) < 0.5f))
                 {
-                    // Take damage
-                    _currentHealth = Math.Max(0, _currentHealth - 1);
-
-                    // If health reaches zero, reset to full
-                    if (_currentHealth == 0)
+                    // Reduce charger health
+                    _charger.Health--;
+                    
+                    // If charger health reaches zero, kill it
+                    if (_charger.Health <= 0)
                     {
-                        _currentHealth = _maxHealth;
-                    }
-
-                    // Become invincible
-                    _isInvincible = true;
-                    _invincibilityTimer = 0f;
-
-                    // Determine knockback direction based on enemy position relative to player's movement
-                    // Calculate which direction the enemy hit the player from
-                    Direction knockbackDirection;
-
-                    // If player was moving, assume they were hit from the direction they were moving
-                    knockbackDirection = _lastDirection;
-
-                    // Apply knockback in the opposite direction of the hit
-                    switch (knockbackDirection)
-                    {
-                        case Direction.Left:
-                            // If hit from left, knock right
-                            _animPlayerX = Math.Min(19, _animPlayerX + 4);  // Doubled from 2 to 4
-                            break;
-                        case Direction.Right:
-                            // If hit from right, knock left
-                            _animPlayerX = Math.Max(0, _animPlayerX - 4);  // Doubled from 2 to 4
-                            break;
-                        case Direction.Up:
-                            // If hit from above, knock down
-                            _animPlayerY = Math.Min(9, _animPlayerY + 4);  // Doubled from 2 to 4
-                            break;
-                        case Direction.Down:
-                            // If hit from below, knock up
-                            _animPlayerY = Math.Max(0, _animPlayerY - 4);  // Doubled from 2 to 4
-                            break;
+                        _charger.Alive = false;
+                        
+                        // Create explosion at charger position
+                        _explosions.Add(new Explosion { 
+                            X = (int)_charger.X, 
+                            Y = (int)_charger.Y, 
+                            Timer = 0f 
+                        });
+                        
+                        // Spawn more valuable gold for killing the charger
+                        for (int i = 0; i < 3; i++)
+                        {
+                            _goldItems.Add(new GoldItem { 
+                                X = (int)_charger.X, 
+                                Y = (int)_charger.Y, 
+                                Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
+                            });
+                        }
+                        
+                        _chargerActive = false;
                     }
                 }
             }
         }
+        
+        // Also check for crossbow bolt collision with charger
+        foreach (var bolt in _crossbowBolts)
+        {
+            if (_chargerActive && _charger != null && _charger.Alive)
+            {
+                if (Math.Abs(bolt.X - _charger.X) < 0.5f && Math.Abs(bolt.Y - _charger.Y) < 0.5f)
+                {
+                    // Reduce charger health
+                    _charger.Health--;
+                    
+                    // If charger health reaches zero, kill it
+                    if (_charger.Health <= 0)
+                    {
+                        _charger.Alive = false;
+                        
+                        // Create explosion at charger position
+                        _explosions.Add(new Explosion { 
+                            X = (int)_charger.X, 
+                            Y = (int)_charger.Y, 
+                            Timer = 0f 
+                        });
+                        
+                        // Spawn more valuable gold for killing the charger
+                        for (int i = 0; i < 3; i++)
+                        {
+                            _goldItems.Add(new GoldItem { 
+                                X = (int)_charger.X, 
+                                Y = (int)_charger.Y, 
+                                Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
+                            });
+                        }
+                        
+                        _chargerActive = false;
+                    }
+                }
+            }
+        }
+
+        // Player-enemy collisions handled in existing code...
     }
 
     private void SpawnEnemy()
@@ -1560,5 +1684,64 @@ public class ScreenPresenter : IScreenPresenter
         public float Y { get; set; }
         public Direction Direction { get; set; }
         public float DistanceTraveled { get; set; }
+    }
+
+    // Add ChargerEnemy class inside ScreenPresenter
+    private class ChargerEnemy
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public bool Alive { get; set; } = true;
+        public float MoveTimer { get; set; } = 0f;
+        public int Health { get; set; } = 3; // Charger has more health than regular enemies
+    }
+
+    // Add method to spawn a charger
+    private void SpawnCharger()
+    {
+        // Find a position that's not occupied by the player or another enemy
+        float newX = 0;
+        float newY = 0;
+        bool isPositionValid = false;
+
+        const int maxAttempts = 10;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            // Try to spawn at the edge of the map
+            int side = _random.Next(4); // 0: top, 1: right, 2: bottom, 3: left
+            
+            switch (side)
+            {
+                case 0: // Top
+                    newX = _random.Next(20);
+                    newY = 0;
+                    break;
+                case 1: // Right
+                    newX = 19;
+                    newY = _random.Next(10);
+                    break;
+                case 2: // Bottom
+                    newX = _random.Next(20);
+                    newY = 9;
+                    break;
+                case 3: // Left
+                    newX = 0;
+                    newY = _random.Next(10);
+                    break;
+            }
+
+            isPositionValid = (Math.Abs(newX - _animPlayerX) > 3 || Math.Abs(newY - _animPlayerY) > 3) &&
+                              !_enemies.Any(e => e.Alive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
+
+            if (isPositionValid)
+                break;
+        }
+
+        if (!isPositionValid)
+            return;
+
+        _charger = new ChargerEnemy { X = newX, Y = newY, Health = 3 };
+        _chargerActive = true;
     }
 }
