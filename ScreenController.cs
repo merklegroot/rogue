@@ -605,20 +605,31 @@ public class ScreenController
                     _isInvincible = true;
                     _invincibilityTimer = 0f;
                     
-                    // Optional: Push player back from enemy
-                    switch (_lastDirection)
+                    // Determine knockback direction based on enemy position relative to player's movement
+                    // Calculate which direction the enemy hit the player from
+                    Direction knockbackDirection;
+                    
+                    // If player was moving, assume they were hit from the direction they were moving
+                    knockbackDirection = _lastDirection;
+                    
+                    // Apply knockback in the opposite direction of the hit
+                    switch (knockbackDirection)
                     {
                         case Direction.Left:
-                            _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                            // If hit from left, knock right
+                            _animPlayerX = Math.Min(19, _animPlayerX + 4);  // Doubled from 2 to 4
                             break;
                         case Direction.Right:
-                            _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                            // If hit from right, knock left
+                            _animPlayerX = Math.Max(0, _animPlayerX - 4);  // Doubled from 2 to 4
                             break;
                         case Direction.Up:
-                            _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                            // If hit from above, knock down
+                            _animPlayerY = Math.Min(9, _animPlayerY + 4);  // Doubled from 2 to 4
                             break;
                         case Direction.Down:
-                            _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                            // If hit from below, knock up
+                            _animPlayerY = Math.Max(0, _animPlayerY - 4);  // Doubled from 2 to 4
                             break;
                     }
                 }
