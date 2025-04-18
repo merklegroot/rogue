@@ -91,7 +91,7 @@ public class ScreenPresenter : IScreenPresenter
 
     // Add gold items field
     private readonly List<GoldItem> _goldItems = [];
-    private const int MaxGoldItems = 5;  // Maximum number of gold items on the map
+    private const int MaxGoldItems = 3;  // Reduced from 5 to 3
     private const char GoldChar = '$';   // Character to represent gold
 
     private readonly IRayLoader _rayLoader;
@@ -459,6 +459,9 @@ public class ScreenPresenter : IScreenPresenter
             if (moved)
             {
                 _timeSinceLastMove = 0;
+                
+                // Check for gold collection after movement
+                CollectGold();
             }
         }
 
@@ -492,7 +495,34 @@ public class ScreenPresenter : IScreenPresenter
             _explosions[i].Timer += Raylib.GetFrameTime();
             if (_explosions[i].Timer >= ExplosionDuration)
             {
+                // Spawn gold at the explosion location when the explosion finishes
+                _goldItems.Add(new GoldItem { 
+                    X = _explosions[i].X, 
+                    Y = _explosions[i].Y, 
+                    Value = _random.Next(3, 8)  // Enemies drop more valuable gold (3-7)
+                });
+                
+                // Remove the explosion
                 _explosions.RemoveAt(i);
+            }
+        }
+    }
+
+    private void CollectGold()
+    {
+        // Find any gold at the player's position
+        for (int i = _goldItems.Count - 1; i >= 0; i--)
+        {
+            if (_goldItems[i].X == _animPlayerX && _goldItems[i].Y == _animPlayerY)
+            {
+                // Add the gold's value to the player's total
+                _playerGold += _goldItems[i].Value;
+                
+                // Remove the collected gold
+                _goldItems.RemoveAt(i);
+                
+                // Only collect one gold piece per move (in case multiple end up in same spot)
+                break;
             }
         }
     }
@@ -609,6 +639,8 @@ public class ScreenPresenter : IScreenPresenter
                         Y = enemy.Y, 
                         Timer = 0f 
                     });
+                    
+                    // Gold will be spawned when the explosion finishes
                 }
             }
         }
