@@ -43,6 +43,9 @@ public class ScreenController
         Color.Pink
     };
 
+    private int _animPlayerX = 10;
+    private int _animPlayerY = 5;
+
     public ScreenController()
     {
         _width = 40;
@@ -208,21 +211,22 @@ public class ScreenController
         {
             for (int x = 0; x < 20; x++)
             {
-                // Draw dots everywhere except at position (10, 5)
-                if (x == 10 && y == 5)
+                // Draw dots everywhere except at player position
+                if (x == _animPlayerX && y == _animPlayerY)
                 {
-                    // Draw smiley face at center
+                    // Draw smiley face at player position
                     DrawCharacter(1, 100 + x * 40, 100 + y * 40, Color.Yellow);
                 }
                 else
                 {
-                    // Draw dots
-                    DrawCharacter(0x2E, 100 + x * 40, 100 + y * 40, Color.White);
+                    // 249 and 250 both make a slightly different centered dot.
+                    const char groundChar = (char)250;
+                    DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.White);
                 }
             }
         }
 
-        DrawText("Press ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
+        DrawText("Use WASD to move, ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleAnimationInput()
@@ -230,10 +234,32 @@ public class ScreenController
         while (_keyEvents.Count > 0)
         {
             var key = _keyEvents.Dequeue();
-            if (key == KeyboardKey.Escape)
+            
+            switch (key)
             {
-                _currentView = GameView.Menu;
-                break;
+                case KeyboardKey.Escape:
+                    _currentView = GameView.Menu;
+                    break;
+                    
+                case KeyboardKey.W:
+                    // Move up (decrease Y)
+                    _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                    break;
+                    
+                case KeyboardKey.A:
+                    // Move left (decrease X)
+                    _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                    break;
+                    
+                case KeyboardKey.S:
+                    // Move down (increase Y)
+                    _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                    break;
+                    
+                case KeyboardKey.D:
+                    // Move right (increase X)
+                    _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                    break;
             }
         }
     }
@@ -243,7 +269,7 @@ public class ScreenController
         Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);
     }
 
-    private void DrawCharacter(int charNum, int x, int y, Color color)
+    private void DrawCharacter(int charNum, int x, int y, Color color, bool showBorder = false)
     {
         var sourceX = charNum % 32;
         var sourceY = charNum / 32;
@@ -265,23 +291,26 @@ public class ScreenController
         // Draw the character
         Raylib.DrawTexturePro(_charset, sourceRect, destRect, Vector2.Zero, 0, color);
         
-        // Draw border around destination rectangle
-        Raylib.DrawRectangleLines(
-            (int)destRect.X,
-            (int)destRect.Y,
-            (int)destRect.Width,
-            (int)destRect.Height,
-            Color.Gray
-        );
+        if(showBorder)
+        {
+            // Draw border around destination rectangle
+            Raylib.DrawRectangleLines(
+                (int)destRect.X,
+                (int)destRect.Y,
+                (int)destRect.Width,
+                (int)destRect.Height,
+                Color.Gray
+            );
 
-        // Draw border around source rectangle (scaled to match destination)
-        Raylib.DrawRectangleLines(
-            (int)destRect.X - 1,
-            (int)destRect.Y - 1,
-            (int)destRect.Width + 2,
-            (int)destRect.Height + 2,
-            Color.DarkGray
-        );
+            // Draw border around source rectangle (scaled to match destination)
+            Raylib.DrawRectangleLines(
+                (int)destRect.X - 1,
+                (int)destRect.Y - 1,
+                (int)destRect.Width + 2,
+                (int)destRect.Height + 2,
+                Color.DarkGray
+            );
+        }
     }
 
     public bool WindowShouldClose()
