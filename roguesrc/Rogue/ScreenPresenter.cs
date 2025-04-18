@@ -986,10 +986,12 @@ public class ScreenPresenter : IScreenPresenter
 
     private void CollectGold()
     {
-        // Find any gold at the player's position
+        // Find any gold within one square of the player's position
         for (int i = _goldItems.Count - 1; i >= 0; i--)
         {
-            if (_goldItems[i].X == _animPlayerX && _goldItems[i].Y == _animPlayerY)
+            // Check if gold is at the player's position or one square away
+            if (Math.Abs(_goldItems[i].X - _animPlayerX) <= 1 && 
+                Math.Abs(_goldItems[i].Y - _animPlayerY) <= 1)
             {
                 // Create flying gold animation
                 _flyingGold.Add(new FlyingGold { 
@@ -1003,6 +1005,27 @@ public class ScreenPresenter : IScreenPresenter
                 _goldItems.RemoveAt(i);
                 
                 // Only collect one gold piece per move (in case multiple end up in same spot)
+                break;
+            }
+        }
+    }
+
+    private void CollectHealth()
+    {
+        // Find any health pickup within one square of the player's position
+        for (int i = _healthPickups.Count - 1; i >= 0; i--)
+        {
+            // Check if health pickup is at the player's position or one square away
+            if (Math.Abs(_healthPickups[i].X - _animPlayerX) <= 1 && 
+                Math.Abs(_healthPickups[i].Y - _animPlayerY) <= 1)
+            {
+                // Add health to the player
+                _currentHealth = Math.Min(_maxHealth, _currentHealth + _healthPickups[i].HealAmount);
+                
+                // Remove the collected health pickup
+                _healthPickups.RemoveAt(i);
+                
+                // Only collect one health pickup per move
                 break;
             }
         }
@@ -1294,25 +1317,6 @@ public class ScreenPresenter : IScreenPresenter
             return;
 
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
-    }
-
-    private void CollectHealth()
-    {
-        // Find any health pickup at the player's position
-        for (int i = _healthPickups.Count - 1; i >= 0; i--)
-        {
-            if (_healthPickups[i].X == _animPlayerX && _healthPickups[i].Y == _animPlayerY)
-            {
-                // Add health to the player
-                _currentHealth = Math.Min(10, _currentHealth + _healthPickups[i].HealAmount);
-                
-                // Remove the collected health pickup
-                _healthPickups.RemoveAt(i);
-                
-                // Only collect one health pickup per move
-                break;
-            }
-        }
     }
 
     private void DrawText(string text, int x, int y, Color color)
