@@ -45,6 +45,7 @@ public class ScreenController
 
     private int _animPlayerX = 10;
     private int _animPlayerY = 5;
+    private float _timeSinceLastMove = 0;
 
     public ScreenController()
     {
@@ -231,35 +232,58 @@ public class ScreenController
 
     private void HandleAnimationInput()
     {
+        // Handle ESC key via event queue for menu navigation
         while (_keyEvents.Count > 0)
         {
             var key = _keyEvents.Dequeue();
-            
-            switch (key)
+            if (key == KeyboardKey.Escape)
             {
-                case KeyboardKey.Escape:
-                    _currentView = GameView.Menu;
-                    break;
-                    
-                case KeyboardKey.W:
-                    // Move up (decrease Y)
-                    _animPlayerY = Math.Max(0, _animPlayerY - 1);
-                    break;
-                    
-                case KeyboardKey.A:
-                    // Move left (decrease X)
-                    _animPlayerX = Math.Max(0, _animPlayerX - 1);
-                    break;
-                    
-                case KeyboardKey.S:
-                    // Move down (increase Y)
-                    _animPlayerY = Math.Min(9, _animPlayerY + 1);
-                    break;
-                    
-                case KeyboardKey.D:
-                    // Move right (increase X)
-                    _animPlayerX = Math.Min(19, _animPlayerX + 1);
-                    break;
+                _currentView = GameView.Menu;
+                return;
+            }
+        }
+        
+        // Handle movement with direct key state checks
+        // This allows for continuous movement when keys are held down
+        
+        // Add a small delay to control movement speed
+        const float moveDelay = 0.1f; // seconds between moves
+        
+        // Update time since last move
+        _timeSinceLastMove += Raylib.GetFrameTime();
+        
+        // Only move if enough time has passed
+        if (_timeSinceLastMove >= moveDelay)
+        {
+            bool moved = false;
+            
+            // Check WASD keys
+            if (Raylib.IsKeyDown(KeyboardKey.W))
+            {
+                _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                moved = true;
+            }
+            else if (Raylib.IsKeyDown(KeyboardKey.S))
+            {
+                _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                moved = true;
+            }
+            
+            if (Raylib.IsKeyDown(KeyboardKey.A))
+            {
+                _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                moved = true;
+            }
+            else if (Raylib.IsKeyDown(KeyboardKey.D))
+            {
+                _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                moved = true;
+            }
+            
+            // Reset timer if moved
+            if (moved)
+            {
+                _timeSinceLastMove = 0;
             }
         }
     }
