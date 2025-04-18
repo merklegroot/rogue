@@ -212,7 +212,7 @@ public class ScreenController
         }
     }
 
-    private void DrawAnimation()
+   private void DrawAnimation()
     {
         // Draw a field of dots
         for (int y = 0; y < 10; y++)
@@ -227,73 +227,89 @@ public class ScreenController
                 }
                 else
                 {
-                    // Draw sword if swinging
-                    if (_isSwordSwinging)
-                    {
-                        bool isSwordPosition = false;
-                        
-                        switch (_lastDirection)
-                        {
-                            case Direction.Up:
-                                isSwordPosition = (x == _animPlayerX && y == _animPlayerY - 1);
-                                break;
-                            case Direction.Down:
-                                isSwordPosition = (x == _animPlayerX && y == _animPlayerY + 1);
-                                break;
-                            case Direction.Left:
-                                isSwordPosition = (x == _animPlayerX - 1 && y == _animPlayerY);
-                                break;
-                            case Direction.Right:
-                                isSwordPosition = (x == _animPlayerX + 1 && y == _animPlayerY);
-                                break;
-                        }
-                        
-                        if (isSwordPosition)
-                        {
-                            // Calculate animation frame (0, 1, or 2)
-                            int frame = (int)(_swordSwingTime / SwordSwingDuration * 3);
-                            if (frame > 2) frame = 2;  // Clamp to max frame
-                            
-                            // Get sword character based on direction and animation frame
-                            char swordChar = (_lastDirection, frame) switch
-                            {
-                                // Horizontal animations (left to right: / - \)
-                                (Direction.Left, 0) => '/',
-                                (Direction.Left, 1) => '-',
-                                (Direction.Left, 2) => '\\',
-                                
-                                (Direction.Right, 0) => '\\',
-                                (Direction.Right, 1) => '-',
-                                (Direction.Right, 2) => '/',
-                                
-                                // Vertical animations (top to bottom: \ | /)
-                                (Direction.Up, 0) => '\\',
-                                (Direction.Up, 1) => '|',
-                                (Direction.Up, 2) => '/',
-                                
-                                (Direction.Down, 0) => '/',
-                                (Direction.Down, 1) => '|',
-                                (Direction.Down, 2) => '\\',
-                                
-                                // Fallback
-                                _ => '+'
-                            };
-                            
-                            DrawCharacter(swordChar, 100 + x * 40, 100 + y * 40, Color.Red);
-                            continue;
-                        }
-                    }
-                    
-                    // 249 and 250 both make a slightly different centered dot.
+                    // Draw ground dots
                     const char groundChar = (char)250;
                     DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.White);
                 }
             }
         }
+        
+        // Draw sword if swinging (drawn after ground to appear on top)
+        if (_isSwordSwinging)
+        {
+            // Calculate animation progress (0.0 to 1.0)
+            float progress = _swordSwingTime / SwordSwingDuration;
+            if (progress > 1.0f) progress = 1.0f;
+            
+            // Calculate frame (0, 1, or 2)
+            int frame = (int)(progress * 3);
+            if (frame > 2) frame = 2;
+            
+            // Calculate fractional position
+            float xOffset = 0;
+            float yOffset = 0;
+            
+            // Determine position based on direction and animation progress
+            switch (_lastDirection)
+            {
+                case Direction.Left:
+                    // Fixed position to the left, sweeping from top to bottom
+                    xOffset = -1.0f;
+                    yOffset = progress - 0.5f;  // Start above, end below
+                    break;
+                case Direction.Right:
+                    // Fixed position to the right, sweeping from top to bottom
+                    xOffset = 1.0f;
+                    yOffset = progress - 0.5f;  // Start above, end below
+                    break;
+                case Direction.Up:
+                    // Fixed position above, sweeping from left to right
+                    yOffset = -1.0f;
+                    xOffset = progress - 0.5f;  // Start left, end right
+                    break;
+                case Direction.Down:
+                    // Fixed position below, sweeping from left to right
+                    yOffset = 1.0f;
+                    xOffset = progress - 0.5f;  // Start left, end right
+                    break;
+            }
+            
+            // Get sword character based on direction and animation frame
+            char swordChar = (_lastDirection, frame) switch
+            {
+                // Horizontal animations (top to bottom: / | \)
+                (Direction.Left, 0) => '/',
+                (Direction.Left, 1) => '|',
+                (Direction.Left, 2) => '\\',
+                
+                (Direction.Right, 0) => '\\',
+                (Direction.Right, 1) => '|',
+                (Direction.Right, 2) => '/',
+                
+                // Vertical animations (left to right: \ - /)
+                (Direction.Up, 0) => '\\',
+                (Direction.Up, 1) => '-',
+                (Direction.Up, 2) => '/',
+                
+                (Direction.Down, 0) => '/',
+                (Direction.Down, 1) => '-',
+                (Direction.Down, 2) => '\\',
+                
+                // Fallback
+                _ => '+'
+            };
+            
+            // Calculate exact pixel position
+            float swordX = 100 + (_animPlayerX + xOffset) * 40;
+            float swordY = 100 + (_animPlayerY + yOffset) * 40;
+            
+            // Draw the sword character
+            DrawCharacter(swordChar, (int)swordX, (int)swordY, Color.Red);
+        }
 
         DrawText("Use WASD to move, SPACE to swing sword, ESC to return to menu", 20, _height * CharHeight * DisplayScale - 40, Color.White);
     }
-
+    
     private void HandleAnimationInput()
     {
         // Handle ESC key via event queue for menu navigation
