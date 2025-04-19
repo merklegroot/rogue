@@ -18,7 +18,7 @@ public class ScreenPresenter : IScreenPresenter
     private const int Width = 40;
     private const int Height = 16;
 
-    private GameView _currentView = GameView.Menu;
+    private GameScreenEnum _currentScreenEnum = GameScreenEnum.Menu;
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
     // Character dimensions
@@ -272,24 +272,24 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.BeginTextureMode(_gameTexture);
         Raylib.ClearBackground(_backgroundColor);
 
-        switch (_currentView)
+        switch (_currentScreenEnum)
         {
-            case GameView.Menu:
+            case GameScreenEnum.Menu:
                 DrawMenu();
                 HandleMenuInput();
                 break;
 
-            case GameView.CharacterSet:
+            case GameScreenEnum.CharacterSet:
                 DrawCharacterSet();
                 HandleCharacterSetInput();
                 break;
 
-            case GameView.Animation:
+            case GameScreenEnum.Animation:
                 DrawAnimation();
                 HandleAnimationInput();
                 break;
 
-            case GameView.Shop:
+            case GameScreenEnum.Shop:
                 DrawShop();
                 HandleShopInput();
                 break;
@@ -421,12 +421,12 @@ public class ScreenPresenter : IScreenPresenter
             var key = _keyEvents.Dequeue();
             if (key == KeyboardKey.C)
             {
-                _currentView = GameView.CharacterSet;
+                _currentScreenEnum = GameScreenEnum.CharacterSet;
                 break;
             }
             if (key == KeyboardKey.A)
             {
-                _currentView = GameView.Animation;
+                _currentScreenEnum = GameScreenEnum.Animation;
                 break;
             }
             if (key == KeyboardKey.X)
@@ -466,7 +466,7 @@ public class ScreenPresenter : IScreenPresenter
     {
         if (_keyEvents.Count > 0)
         {
-            _currentView = GameView.Menu;
+            _currentScreenEnum = GameScreenEnum.Menu;
         }
     }
 
@@ -480,60 +480,9 @@ public class ScreenPresenter : IScreenPresenter
             _playerIdleAnimFrame = (_playerIdleAnimFrame + 1) % PlayerIdleFrameCount;
         }
         
-        // Draw health bar at the top
         DrawHealthBar();
-        
-        // Draw gold counter
         DrawGoldCounter();
-
-        // Draw the game world
-        for (int y = 0; y < 10; y++)
-        {
-            for (int x = 0; x < 20; x++)
-            {
-                // Draw player with idle animation
-                if (Math.Abs(x - _animPlayerX) < 0.5f && Math.Abs(y - _animPlayerY) < 0.5f)
-                {
-                    // Simple animation: toggle between character 2 and 1 every 0.5 seconds
-                    int playerChar = (Raylib.GetTime() % 1 < 0.5) ? 2 : 1;
-                    DrawCharacter(playerChar, 100 + x * 40, 100 + y * 40, Color.White);
-                    continue;
-                }
-                
-                // Draw charger
-                if (_chargerActive && _charger != null && _charger.Alive && 
-                         Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
-                {
-                    Color chargerColor = _chargerColor;
-                    if (_charger.IsInvincible && (int)(_charger.InvincibilityTimer * 10) % 2 == 0)
-                    {
-                        chargerColor = new Color((byte)_chargerColor.R, (byte)_chargerColor.G, (byte)_chargerColor.B, (byte)128);
-                    }
-                    DrawCharacter(ChargerChar, 100 + x * 40, 100 + y * 40, chargerColor);
-                }
-                // Draw health pickups
-                else if (_healthPickups.Any(h => h.X == x && h.Y == y))
-                {
-                    DrawCharacter(HealthChar, 100 + x * 40, 100 + y * 40, _healthColor);
-                }
-                // Draw gold items
-                else if (_goldItems.Any(g => g.X == x && g.Y == y))
-                {
-                    DrawCharacter(GoldChar, 100 + x * 40, 100 + y * 40, _goldColor);
-                }
-                // Draw enemies
-                else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
-                {
-                    DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
-                }
-                else
-                {
-                    // Draw ground dots
-                    const char groundChar = (char)250;
-                    DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.Green);
-                }
-            }
-        }
+        DrawWorld();
         
         // Draw explosions (after ground and enemies, but before sword)
         foreach (var explosion in _explosions)
@@ -725,6 +674,57 @@ public class ScreenPresenter : IScreenPresenter
         DrawText(instructionsText, 20, Height * CharHeight * DisplayScale - 60, Color.White);
     }
 
+    private void DrawWorld()
+    {
+        for (int y = 0; y < 10; y++)
+        {
+            for (int x = 0; x < 20; x++)
+            {
+                // Draw player with idle animation
+                if (Math.Abs(x - _animPlayerX) < 0.5f && Math.Abs(y - _animPlayerY) < 0.5f)
+                {
+                    // Simple animation: toggle between character 2 and 1 every 0.5 seconds
+                    int playerChar = (Raylib.GetTime() % 1 < 0.5) ? 2 : 1;
+                    DrawCharacter(playerChar, 100 + x * 40, 100 + y * 40, Color.White);
+                    continue;
+                }
+                
+                // Draw charger
+                if (_chargerActive && _charger != null && _charger.Alive && 
+                         Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
+                {
+                    Color chargerColor = _chargerColor;
+                    if (_charger.IsInvincible && (int)(_charger.InvincibilityTimer * 10) % 2 == 0)
+                    {
+                        chargerColor = new Color((byte)_chargerColor.R, (byte)_chargerColor.G, (byte)_chargerColor.B, (byte)128);
+                    }
+                    DrawCharacter(ChargerChar, 100 + x * 40, 100 + y * 40, chargerColor);
+                }
+                // Draw health pickups
+                else if (_healthPickups.Any(h => h.X == x && h.Y == y))
+                {
+                    DrawCharacter(HealthChar, 100 + x * 40, 100 + y * 40, _healthColor);
+                }
+                // Draw gold items
+                else if (_goldItems.Any(g => g.X == x && g.Y == y))
+                {
+                    DrawCharacter(GoldChar, 100 + x * 40, 100 + y * 40, _goldColor);
+                }
+                // Draw enemies
+                else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
+                {
+                    DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
+                }
+                else
+                {
+                    // Draw ground dots
+                    const char groundChar = (char)250;
+                    DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.Green);
+                }
+            }
+        }
+    }
+    
     private void HandleAnimationInput()
     {
         // Handle ESC key via event queue for menu navigation
@@ -733,7 +733,7 @@ public class ScreenPresenter : IScreenPresenter
             var key = _keyEvents.Dequeue();
             if (key == KeyboardKey.Escape)
             {
-                _currentView = GameView.Menu;
+                _currentScreenEnum = GameScreenEnum.Menu;
                 return;
             }
             if (key == KeyboardKey.Space && !_isSwordSwinging && !_swordOnCooldown)
@@ -899,7 +899,7 @@ public class ScreenPresenter : IScreenPresenter
         if (Raylib.IsKeyPressed(KeyboardKey.B))
         {
             _shopOpen = true;
-            _currentView = GameView.Shop;
+            _currentScreenEnum = GameScreenEnum.Shop;
             _selectedShopItem = 0;
         }
 
@@ -1583,7 +1583,7 @@ public class ScreenPresenter : IScreenPresenter
             if (key == KeyboardKey.Escape)
             {
                 _shopOpen = false;
-                _currentView = GameView.Animation;
+                _currentScreenEnum = GameScreenEnum.Animation;
             }
             else if (key == KeyboardKey.Up)
             {

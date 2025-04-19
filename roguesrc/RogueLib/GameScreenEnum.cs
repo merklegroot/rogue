@@ -1,6 +1,6 @@
 namespace RogueLib;
 
-public enum GameView
+public enum GameScreenEnum
 {
     Menu,
     CharacterSet,
