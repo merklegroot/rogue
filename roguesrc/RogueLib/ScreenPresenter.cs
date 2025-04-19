@@ -345,21 +345,33 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawMenu()
     {
+        // Draw debug grid to help with alignment
+        DrawDebugGrid();
+        
         // Draw a fancy title
         string title = "ROGUE ADVENTURE";
         int titleSize = 48;
-        int titleWidth = Raylib.MeasureText(title, titleSize);
+        
+        // Use MeasureTextEx instead of MeasureText to account for spacing
+        Vector2 titleSize2D = Raylib.MeasureTextEx(_menuFont, title, titleSize, 1);
+        int titleWidth = (int)titleSize2D.X;
+        
         int centerX = (Width * CharWidth * DisplayScale) / 2;
         
         // Draw title with shadow effect
         Raylib.DrawTextEx(_menuFont, title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
         Raylib.DrawTextEx(_menuFont, title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
         
-        // Draw a decorative line under the title
-        Raylib.DrawRectangle(centerX - 150, 100, 300, 2, Color.Gold);
+        // Draw a decorative line under the title - with correct width
+        int lineY = 40 + titleSize + 10; // Position it directly under the title with a small gap
+        int lineWidth = titleWidth - 20; // Make the line slightly shorter than the title text
+        Raylib.DrawRectangle(centerX - lineWidth/2, lineY, lineWidth, 2, Color.Gold);
+        
+        // Draw center marker
+        Raylib.DrawRectangle(centerX - 1, 0, 2, Height * CharHeight * DisplayScale, new Color(255, 0, 0, 100));
         
         // Draw menu options centered with more spacing
-        int menuStartY = 150;
+        int menuStartY = lineY + 30; // Start menu options below the line
         int menuSpacing = 60;
         
         DrawColoredHotkeyText("Start (A)dventure", centerX - 120, menuStartY);
@@ -373,6 +385,44 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw a small decorative element
         DrawCharacter(2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
+    }
+
+    private void DrawDebugGrid()
+    {
+        int screenWidth = Width * CharWidth * DisplayScale;
+        int screenHeight = Height * CharHeight * DisplayScale;
+        
+        // Draw vertical grid lines every 50 pixels
+        for (int x = 0; x < screenWidth; x += 50)
+        {
+            Raylib.DrawLine(x, 0, x, screenHeight, new Color(100, 100, 100, 50));
+            
+            // Draw coordinate labels
+            if (x % 100 == 0)
+            {
+                Raylib.DrawText(x.ToString(), x + 2, 2, 16, new Color(100, 100, 100, 150));
+            }
+        }
+        
+        // Draw horizontal grid lines every 50 pixels
+        for (int y = 0; y < screenHeight; y += 50)
+        {
+            Raylib.DrawLine(0, y, screenWidth, y, new Color(100, 100, 100, 50));
+            
+            // Draw coordinate labels
+            if (y % 100 == 0)
+            {
+                Raylib.DrawText(y.ToString(), 2, y + 2, 16, new Color(100, 100, 100, 150));
+            }
+        }
+        
+        // Draw a vertical line at the center of the screen
+        int centerX = screenWidth / 2;
+        Raylib.DrawLine(centerX, 0, centerX, screenHeight, new Color(255, 0, 0, 100));
+        
+        // Draw a horizontal line at the center of the screen
+        int centerY = screenHeight / 2;
+        Raylib.DrawLine(0, centerY, screenWidth, centerY, new Color(255, 0, 0, 100));
     }
 
     private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotkeyOptions? options = null)
