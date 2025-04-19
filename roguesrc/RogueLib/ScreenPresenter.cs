@@ -1,5 +1,6 @@
 using System.Numerics;
 using Raylib_cs;
+using RogueLib.Constants;
 
 namespace RogueLib;
 
@@ -29,8 +30,6 @@ public class ScreenPresenter : IScreenPresenter
     private const int CharVGap = 2;
     private const int SidePadding = 8;
     private const int TopPadding = 10;
-
-    private const int MenuFontSize = 32;
 
     // React default background color
     private readonly Color _backgroundColor = new(40, 44, 52, 255);  // #282c34
@@ -203,6 +202,8 @@ public class ScreenPresenter : IScreenPresenter
 
         _charset = _rayLoader.LoadCharsetTexture();
         _menuFont = _rayLoader.LoadRobotoFont();
+        // // var screenRes = new ScreenRes(rayLoader);
+        // _menuFont = screenRes.MenuFont;
 
         // Initialize CRT shader
         InitCrtShader();
@@ -334,15 +335,6 @@ public class ScreenPresenter : IScreenPresenter
         _keyEvents.Clear();
     }
 
-    private record ColoredHotkeyOptions
-    {
-        public Color BaseColor { get; init; } = DefaultBaseColor;
-        public Color HotkeyColor { get; init; } = DefaultHotkeyColor;
-
-        public static Color DefaultBaseColor = Color.Green;
-        public static Color DefaultHotkeyColor = Color.Yellow;
-    }
-
     private void DrawMenu()
     {
         // Draw debug grid to help with alignment
@@ -447,23 +439,23 @@ public class ScreenPresenter : IScreenPresenter
         DrawText(beforeText, currentX, y, options.BaseColor);
         
         // Use MeasureTextEx for more accurate width measurement
-        Vector2 beforeSize = Raylib.MeasureTextEx(_menuFont, beforeText, MenuFontSize, 1);
+        Vector2 beforeSize = Raylib.MeasureTextEx(_menuFont, beforeText, ScreenConstants.MenuFontSize, 1);
         currentX += (int)beforeSize.X - 4;  // Reduce spacing before parenthesis
 
         // Draw opening parenthesis
         DrawText("(", currentX, y, options.BaseColor);
-        Vector2 parenSize = Raylib.MeasureTextEx(_menuFont, "(", MenuFontSize, 1);
+        Vector2 parenSize = Raylib.MeasureTextEx(_menuFont, "(", ScreenConstants.MenuFontSize, 1);
         currentX += (int)parenSize.X - 2;  // Tighter spacing after opening parenthesis
 
         // Draw hotkey in different color
         var hotkey = text[(startParenIndex + 1)..endParenIndex];
         DrawText(hotkey, currentX, y, options.HotkeyColor);
-        Vector2 hotkeySize = Raylib.MeasureTextEx(_menuFont, hotkey, MenuFontSize, 1);
+        Vector2 hotkeySize = Raylib.MeasureTextEx(_menuFont, hotkey, ScreenConstants.MenuFontSize, 1);
         currentX += (int)hotkeySize.X - 2;  // Tighter spacing after hotkey
 
         // Draw closing parenthesis
         DrawText(")", currentX, y, options.BaseColor);
-        Vector2 closeParenSize = Raylib.MeasureTextEx(_menuFont, ")", MenuFontSize, 1);
+        Vector2 closeParenSize = Raylib.MeasureTextEx(_menuFont, ")", ScreenConstants.MenuFontSize, 1);
         currentX += (int)closeParenSize.X - 2;  // Tighter spacing after closing parenthesis
 
         // Draw remaining text
@@ -662,7 +654,7 @@ public class ScreenPresenter : IScreenPresenter
             // Calculate end position (gold counter location)
             int screenWidth = Width * CharWidth * DisplayScale;
             string goldText = $"Gold: {_playerGold}";
-            int goldTextWidth = Raylib.MeasureText(goldText, MenuFontSize);
+            int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
             int endX = screenWidth - goldTextWidth - 40;  // Position before the text
             int endY = 20;  // Same Y as gold counter
             
@@ -1400,7 +1392,7 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawText(string text, int x, int y, Color color)
     {
-        Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), MenuFontSize, 1, color);
+        Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), ScreenConstants.MenuFontSize, 1, color);
     }
 
     private void DrawCharacter(int charNum, int x, int y, Color color, bool showBorder = false)
@@ -1469,7 +1461,7 @@ public class ScreenPresenter : IScreenPresenter
         // Calculate position for top right placement
         int screenWidth = Width * CharWidth * DisplayScale;
         string goldText = $"Gold: {_playerGold}";
-        int goldTextWidth = Raylib.MeasureText(goldText, MenuFontSize);
+        int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
         
         // Position the gold counter at the top right with some padding
         int startX = screenWidth - goldTextWidth - 20;  // 20px padding from right edge
