@@ -10,5 +10,6 @@ public static class RogueLibRegistry
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IScreenPresenter, ScreenPresenter>()
             .AddScoped<IGame, Game>()
+            .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>();
 }

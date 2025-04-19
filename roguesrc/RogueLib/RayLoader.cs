@@ -4,9 +4,9 @@ namespace RogueLib;
 
 public interface IRayLoader
 {
-    Font LoadRobotoFont();
-    Texture2D LoadCharsetTexture();
-    Shader LoadCrtShader();
+    Font LoadRobotoFont(IRayConnection connection);
+    Texture2D LoadCharsetTexture(IRayConnection connection);
+    Shader LoadCrtShader(IRayConnection connection);
 }
 
 public class RayLoader : IRayLoader
@@ -16,13 +16,13 @@ public class RayLoader : IRayLoader
     public RayLoader(IResourceReader resourceReader) =>
         _resourceReader = resourceReader;
 
-    public Font LoadRobotoFont() =>
+    public Font LoadRobotoFont(IRayConnection connection) =>
         LoadFontFromEmbeddedResource("Roboto-Regular.ttf");
 
-    public Texture2D LoadCharsetTexture() =>
+    public Texture2D LoadCharsetTexture(IRayConnection connection) =>
         LoadTextureFromEmbeddedResource("Codepage-437-transparent.png");
 
-    public Shader LoadCrtShader() =>
+    public Shader LoadCrtShader(IRayConnection connection) =>
         LoadShaderFromEmbeddedResource("crt.fs");
     
     private Shader LoadShaderFromEmbeddedResource(string resourceName) =>

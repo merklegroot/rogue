@@ -6,6 +6,7 @@ namespace RogueLib;
 
 public interface IScreenPresenter
 {
+    void Initialize(IRayConnection rayConnection);
     void Update();
     void Draw(GameState state);
     bool WindowShouldClose();
@@ -14,8 +15,8 @@ public interface IScreenPresenter
 
 public class ScreenPresenter : IScreenPresenter
 {
-    private readonly Texture2D _charset;
-    private readonly Font _menuFont;
+    private Texture2D _charset;
+    private Font _menuFont;
     private const int Width = 40;
     private const int Height = 16;
 
@@ -193,20 +194,23 @@ public class ScreenPresenter : IScreenPresenter
     public ScreenPresenter(IRayLoader rayLoader)
     {
         _rayLoader = rayLoader;
+    }
 
+    public void Initialize(IRayConnection rayConnection)
+    {
         // Disable the default ESC key behavior that closes the window
         Raylib.SetExitKey(KeyboardKey.Null);  // This disables the ESC key from closing the window
 
         Raylib.InitWindow(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale, "Rogue-like");
         Raylib.SetTargetFPS(60);
 
-        _charset = _rayLoader.LoadCharsetTexture();
-        _menuFont = _rayLoader.LoadRobotoFont();
+        _charset = _rayLoader.LoadCharsetTexture(rayConnection);
+        _menuFont = _rayLoader.LoadRobotoFont(rayConnection);
         // // var screenRes = new ScreenRes(rayLoader);
         // _menuFont = screenRes.MenuFont;
 
         // Initialize CRT shader
-        InitCrtShader();
+        InitCrtShader(rayConnection);
 
         SpawnEnemy();
         
@@ -220,13 +224,13 @@ public class ScreenPresenter : IScreenPresenter
         InitializeShop();
     }
 
-    private void InitCrtShader()
+    private void InitCrtShader(IRayConnection rayConnection)
     {
         // Create a render texture the size of the window
         _gameTexture = Raylib.LoadRenderTexture(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale);
         
         // Load the CRT shader
-        _crtShader = _rayLoader.LoadCrtShader();
+        _crtShader = _rayLoader.LoadCrtShader(rayConnection);
         
         // Get shader uniform locations
         _resolutionLoc = Raylib.GetShaderLocation(_crtShader, "resolution");
