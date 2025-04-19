@@ -1,6 +1,9 @@
+namespace RogueLib;
+
 public enum GameView
 {
     Menu,
     CharacterSet,
-    Animation
+    Animation,
+    Shop
 }

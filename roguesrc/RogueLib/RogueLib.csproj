@@ -14,5 +14,7 @@
     <ItemGroup>
       <EmbeddedResource Include="fonts/Roboto-Regular.ttf" />
       <EmbeddedResource Include="images/Codepage-437-transparent.png" />
+      <EmbeddedResource Include="resources/crt.fs" />
     </ItemGroup>
+
 </Project>

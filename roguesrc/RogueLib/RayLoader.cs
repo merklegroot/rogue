@@ -1,11 +1,12 @@
 using Raylib_cs;
 
-namespace Rogue;
+namespace RogueLib;
 
 public interface IRayLoader
 {
     Font LoadRobotoFont();
     Texture2D LoadCharsetTexture();
+    Shader LoadCrtShader();
 }
 
 public class RayLoader : IRayLoader
@@ -19,10 +20,15 @@ public class RayLoader : IRayLoader
         LoadFontFromEmbeddedResource("Roboto-Regular.ttf");
 
     public Texture2D LoadCharsetTexture() =>
-        // Raylib.LoadTexture("images/Codepage-437-transparent.png");
         LoadTextureFromEmbeddedResource("Codepage-437-transparent.png");
 
-    private Texture2D LoadTextureFromEmbeddedResource(string resourceName)
+    public Shader LoadCrtShader() =>
+        LoadShaderFromEmbeddedResource("crt.fs");
+    
+    private Shader LoadShaderFromEmbeddedResource(string resourceName) =>
+        LoadFromEmbeddedResource(resourceName, (fileName) => Raylib.LoadShader(null, fileName));
+    
+    private T LoadFromEmbeddedResource<T>(string resourceName, Func<string, T> load)
     {
         var extension = Path.GetExtension(resourceName);
         
@@ -36,7 +42,7 @@ public class RayLoader : IRayLoader
             File.WriteAllBytes(tempFile, fontData);
 
             // Load the font using Raylib
-            return Raylib.LoadTexture(tempFile);
+            return load(tempFile);
         }
         finally
         {
@@ -46,27 +52,9 @@ public class RayLoader : IRayLoader
         }
     }
     
-    private Font LoadFontFromEmbeddedResource(string resourceName)
-    {
-        var extension = Path.GetExtension(resourceName);
-        
-        var assembly = typeof(RayLoader).Assembly;
-        var fontData = _resourceReader.ReadResourceBytes(resourceName, assembly);
-            
-        // Create a temporary file to load the font
-        var tempFile = $"{Guid.NewGuid()}{extension}";
-        try
-        {
-            File.WriteAllBytes(tempFile, fontData);
+    private Texture2D LoadTextureFromEmbeddedResource(string resourceName) =>
+        LoadFromEmbeddedResource(resourceName, Raylib.LoadTexture);
 
-            // Load the font using Raylib
-            return Raylib.LoadFont(tempFile);
-        }
-        finally
-        {
-            // Delete the temporary file
-            try { File.Delete(tempFile); }
-            catch { /* Ignore errors */ }
-        }
-    }
+    private Font LoadFontFromEmbeddedResource(string resourceName) =>
+        LoadFromEmbeddedResource(resourceName, Raylib.LoadFont);
 }

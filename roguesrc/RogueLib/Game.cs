@@ -1,4 +1,4 @@
-namespace Rogue;
+namespace RogueLib;
 
 public interface IGame
 {

@@ -13,19 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="images/Codepage-437-transparent.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\RogueLib\RogueLib.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="resources/crt.fs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>

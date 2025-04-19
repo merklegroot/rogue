@@ -1,7 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 
-namespace Rogue;
+namespace RogueLib;
 
 public interface IScreenPresenter
 {
@@ -9,14 +9,6 @@ public interface IScreenPresenter
     void Draw(GameState state);
     bool WindowShouldClose();
     void Cleanup();
-}
-
-public enum GameView
-{
-    Menu,
-    CharacterSet,
-    Animation,
-    Shop
 }
 
 public class ScreenPresenter : IScreenPresenter
@@ -233,7 +225,7 @@ public class ScreenPresenter : IScreenPresenter
         _gameTexture = Raylib.LoadRenderTexture(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale);
         
         // Load the CRT shader
-        _crtShader = Raylib.LoadShader(null, "resources/crt.fs");
+        _crtShader = _rayLoader.LoadCrtShader();
         
         // Get shader uniform locations
         _resolutionLoc = Raylib.GetShaderLocation(_crtShader, "resolution");

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Rogue;
 using Rogue.Registry;
+using RogueLib;
 
 class Program
 {

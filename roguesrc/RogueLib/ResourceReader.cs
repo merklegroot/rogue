@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Rogue;
+namespace RogueLib;
 
 public interface IResourceReader
 {
