@@ -439,25 +439,32 @@ public class ScreenPresenter : IScreenPresenter
             return;
         }
 
+        // Calculate positions using MeasureTextEx for more accurate spacing
         var currentX = x;
 
         // Draw text before parenthesis
         var beforeText = text[..startParenIndex];
         DrawText(beforeText, currentX, y, options.BaseColor);
-        currentX += Raylib.MeasureText(beforeText, MenuFontSize) - 1;  // Slight kerning adjustment
+        
+        // Use MeasureTextEx for more accurate width measurement
+        Vector2 beforeSize = Raylib.MeasureTextEx(_menuFont, beforeText, MenuFontSize, 1);
+        currentX += (int)beforeSize.X - 4;  // Reduce spacing before parenthesis
 
         // Draw opening parenthesis
         DrawText("(", currentX, y, options.BaseColor);
-        currentX += Raylib.MeasureText("(", MenuFontSize) - 2;  // Tighter kerning for parentheses
+        Vector2 parenSize = Raylib.MeasureTextEx(_menuFont, "(", MenuFontSize, 1);
+        currentX += (int)parenSize.X - 2;  // Tighter spacing after opening parenthesis
 
         // Draw hotkey in different color
         var hotkey = text[(startParenIndex + 1)..endParenIndex];
         DrawText(hotkey, currentX, y, options.HotkeyColor);
-        currentX += Raylib.MeasureText(hotkey, MenuFontSize) - 2;  // Tighter kerning for hotkey
+        Vector2 hotkeySize = Raylib.MeasureTextEx(_menuFont, hotkey, MenuFontSize, 1);
+        currentX += (int)hotkeySize.X - 2;  // Tighter spacing after hotkey
 
         // Draw closing parenthesis
         DrawText(")", currentX, y, options.BaseColor);
-        currentX += Raylib.MeasureText(")", MenuFontSize) - 1;  // Slight kerning adjustment
+        Vector2 closeParenSize = Raylib.MeasureTextEx(_menuFont, ")", MenuFontSize, 1);
+        currentX += (int)closeParenSize.X - 2;  // Tighter spacing after closing parenthesis
 
         // Draw remaining text
         var afterText = text[(endParenIndex + 1)..];
