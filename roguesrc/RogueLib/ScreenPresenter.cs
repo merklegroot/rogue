@@ -472,18 +472,31 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawAnimation()
     {
-        // Update player idle animation timer
+        UpdatePlayerIdleAnimation();
+        DrawHealthBar();
+        DrawGoldCounter();
+        DrawWorld();
+        DrawExplosions();
+        DrawSwordAnimation();
+        DrawFlyingGold();
+        DrawCooldownIndicators();
+        DrawCrossbowBolts();
+        DrawChargerHealth();
+        DrawInstructions();
+    }
+
+    private void UpdatePlayerIdleAnimation()
+    {
         _playerIdleAnimTimer += Raylib.GetFrameTime();
         if (_playerIdleAnimTimer >= PlayerIdleFrameDuration)
         {
             _playerIdleAnimTimer -= PlayerIdleFrameDuration;
             _playerIdleAnimFrame = (_playerIdleAnimFrame + 1) % PlayerIdleFrameCount;
         }
-        
-        DrawHealthBar();
-        DrawGoldCounter();
-        DrawWorld();
-        
+    }
+
+    private void DrawExplosions()
+    {
         // Draw explosions (after ground and enemies, but before sword)
         foreach (var explosion in _explosions)
         {
@@ -496,7 +509,10 @@ public class ScreenPresenter : IScreenPresenter
             
             DrawCharacter(explosionChar, 100 + explosion.X * 40, 100 + explosion.Y * 40, _explosionColor);
         }
+    }
 
+    private void DrawSwordAnimation()
+    {
         // Draw sword if swinging (drawn after ground to appear on top)
         if (_isSwordSwinging)
         {
@@ -571,7 +587,10 @@ public class ScreenPresenter : IScreenPresenter
             // Draw the sword character with silvery-blue color
             DrawCharacter(swordChar, (int)swordX, (int)swordY, _swordColor);
         }
+    }
 
+    private void DrawFlyingGold()
+    {
         // Draw flying gold (after everything else so it appears on top)
         foreach (var gold in _flyingGold)
         {
@@ -601,8 +620,11 @@ public class ScreenPresenter : IScreenPresenter
             // Draw the flying gold character with fading effect
             DrawCharacter(GoldChar, currentX, currentY, fadingGoldColor);
         }
+    }
 
-        // Draw sword cooldown indicator (optional)
+    private void DrawCooldownIndicators()
+    {
+        // Draw sword cooldown indicator
         if (_swordOnCooldown)
         {
             // Calculate cooldown progress (0.0 to 1.0)
@@ -619,21 +641,6 @@ public class ScreenPresenter : IScreenPresenter
             
             // Foreground (filled) bar - grows as cooldown progresses
             Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(200, 200, 200, 200));
-        }
-
-        // Draw crossbow bolts
-        foreach (var bolt in _crossbowBolts)
-        {
-            // Choose character based on direction
-            char boltChar = bolt.Direction switch
-            {
-                Direction.Left or Direction.Right => '-',
-                Direction.Up or Direction.Down => '|',
-                _ => '+'
-            };
-            
-            // Draw the bolt at its current position
-            DrawCharacter(boltChar, 100 + (int)(bolt.X * 40), 100 + (int)(bolt.Y * 40), _boltColor);
         }
         
         // Draw crossbow cooldown indicator if player has crossbow
@@ -654,14 +661,37 @@ public class ScreenPresenter : IScreenPresenter
             // Foreground (filled) bar - grows as cooldown progresses
             Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(150, 150, 200, 200));
         }
+    }
 
+    private void DrawCrossbowBolts()
+    {
+        foreach (var bolt in _crossbowBolts)
+        {
+            // Choose character based on direction
+            char boltChar = bolt.Direction switch
+            {
+                Direction.Left or Direction.Right => '-',
+                Direction.Up or Direction.Down => '|',
+                _ => '+'
+            };
+            
+            // Draw the bolt at its current position
+            DrawCharacter(boltChar, 100 + (int)(bolt.X * 40), 100 + (int)(bolt.Y * 40), _boltColor);
+        }
+    }
+
+    private void DrawChargerHealth()
+    {
         // Draw charger health if active
         if (_chargerActive && _charger != null && _charger.Alive)
         {
             string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth} (Hit {_charger.HitCount} times)";
             DrawText(healthText, 20, 60, Color.Red);
         }
+    }
 
+    private void DrawInstructions()
+    {
         // Move the instructions text up by 20 pixels
         string instructionsText = "Use WASD to move, SPACE to swing sword";
         if (_hasCrossbow)
