@@ -1388,35 +1388,22 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
     }
-
+    
     private void DrawHealthBar(IRayConnection rayConnection)
     {
-        // Draw health bar at the top of the screen
-        int barWidth = 200;
-        int barHeight = 20;
-        int barX = 20;
-        int barY = 20;
-        
-        // Draw background (empty) bar
-        Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
-        
-        // Calculate filled portion based on current health
-        float healthPercentage = (float)_currentHealth / _maxHealth;
-        int filledWidth = (int)(barWidth * healthPercentage);
-        
-        // Choose color based on health percentage
-        Color healthColor = healthPercentage > 0.6f ? Color.Green :
-                            healthPercentage > 0.3f ? Color.Orange : Color.Red;
-        
-        // Draw filled portion
-        Raylib.DrawRectangle(barX, barY, filledWidth, barHeight, healthColor);
-        
-        // Draw border
-        Raylib.DrawRectangleLines(barX, barY, barWidth, barHeight, Color.White);
-        
-        // Draw health text
-        string healthText = $"Health: {_currentHealth}/{_maxHealth}";
-        DrawText(rayConnection, healthText, barX + 10, barY + 3, Color.White);
+        const int heartChar = 3;  // ASCII/CP437 code for heart symbol (♥)
+        const int heartSpacing = 30;  // Pixels between hearts
+        const int startX = 20;
+        const int startY = 20;
+
+        for (int i = 0; i < _maxHealth; i++)
+        {
+            // Determine if this heart should be filled or empty
+            Color heartColor = (i < _currentHealth) ? _healthColor : _emptyHealthColor;
+
+            // Draw the heart
+            DrawCharacter(rayConnection, heartChar, startX + (i * heartSpacing), startY, heartColor);
+        }
     }
 
     private void DrawGoldCounter(IRayConnection rayConnection)
