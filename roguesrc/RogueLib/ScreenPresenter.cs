@@ -740,7 +740,7 @@ public class ScreenPresenter : IScreenPresenter
                     continue;
                 
                 // Get the character at this position in the map
-                char mapChar = '.'; // Default to floor
+                char mapChar = ' '; // Default to empty space (not a dot)
                 if (y < _map.Count && x < _map[y].Length)
                 {
                     mapChar = _map[y][x];
@@ -752,7 +752,7 @@ public class ScreenPresenter : IScreenPresenter
                 
                 // Draw the appropriate tile based on the map character
                 Color tileColor = Color.DarkGray;
-                int tileChar = 250; // Default floor tile
+                int tileChar = 0; // Default to space (empty) instead of 250 (dot)
                 
                 var wallColor = Color.Brown;
 
@@ -798,7 +798,7 @@ public class ScreenPresenter : IScreenPresenter
                         tileColor = Color.Gray;
                         break;
                     default:
-                        tileChar = 250; // Default floor
+                        tileChar = 0; // Empty space
                         break;
                 }
                 
