@@ -63,8 +63,8 @@ public class ScreenPresenter : IScreenPresenter
     // Multiple enemies support
     private readonly List<Enemy> _enemies = [];
     private float _enemySpawnTimer;
-    private const float EnemySpawnDelay = 0.3f;  // Reduced from 1.0f to 0.3f - spawn every 0.3 seconds
-    private const int MaxEnemies = 15;  // Increased from 3 to 15 - allow up to 15 enemies
+    private const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
+    private const int MaxEnemies = 3;  // Back to original: maximum of 3 enemies
 
     // Add health fields
     private readonly int _maxHealth = 10;
