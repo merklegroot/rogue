@@ -524,7 +524,16 @@ public class ScreenPresenter : IScreenPresenter
                 _ => (char)42  // Large explosion (asterisk)
             };
             
-            DrawCharacter(rayConnection, explosionChar, 100 + explosion.X * 40, 100 + explosion.Y * 40, _explosionColor);
+            // Calculate position with camera offset
+            int explosionX = 100 + (int)((explosion.X - _cameraX) * 40) + 400;
+            int explosionY = 100 + (int)((explosion.Y - _cameraY) * 40) + 200;
+            
+            // Only draw if on screen
+            if (explosionX >= 0 && explosionX < Width * CharWidth * DisplayScale &&
+                explosionY >= 0 && explosionY < Height * CharHeight * DisplayScale)
+            {
+                DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, _explosionColor);
+            }
         }
     }
 
@@ -550,23 +559,23 @@ public class ScreenPresenter : IScreenPresenter
             {
                 case Direction.Left:
                     // Fixed position to the left, sweeping from top to bottom
-                    xOffset = -0.9f;  // Reduced from -1.2f to bring closer to character
-                    yOffset = (progress - 0.5f) * 1.2f;  // Kept the vertical range the same
+                    xOffset = -0.9f;
+                    yOffset = (progress - 0.5f) * 1.2f;
                     break;
                 case Direction.Right:
                     // Fixed position to the right, sweeping from top to bottom
-                    xOffset = 0.9f;  // Reduced from 1.2f to bring closer to character
-                    yOffset = (progress - 0.5f) * 1.2f;  // Kept the vertical range the same
+                    xOffset = 0.9f;
+                    yOffset = (progress - 0.5f) * 1.2f;
                     break;
                 case Direction.Up:
                     // Fixed position above, sweeping from left to right
-                    yOffset = -1.2f;  // Kept the same
-                    xOffset = (progress - 0.5f) * 1.2f;  // Kept the same
+                    yOffset = -1.2f;
+                    xOffset = (progress - 0.5f) * 1.2f;
                     break;
                 case Direction.Down:
                     // Fixed position below, sweeping from left to right
-                    yOffset = 1.2f;  // Kept the same
-                    xOffset = (progress - 0.5f) * 1.2f;  // Kept the same
+                    yOffset = 1.2f;
+                    xOffset = (progress - 0.5f) * 1.2f;
                     break;
             }
 
@@ -597,9 +606,9 @@ public class ScreenPresenter : IScreenPresenter
                 _ => '+'
             };
 
-            // Calculate exact pixel position
-            float swordX = 100 + (_animPlayerX + xOffset) * 40;
-            float swordY = 100 + (_animPlayerY + yOffset) * 40;
+            // Calculate exact pixel position with camera offset
+            float swordX = 100 + ((_animPlayerX + xOffset) - _cameraX) * 40 + 400;
+            float swordY = 100 + ((_animPlayerY + yOffset) - _cameraY) * 40 + 200;
 
             // Draw the sword character with silvery-blue color
             DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, _swordColor);
@@ -650,8 +659,10 @@ public class ScreenPresenter : IScreenPresenter
             // Draw a small cooldown bar above the player
             int barWidth = 30;
             int barHeight = 5;
-            int barX = 100 + _animPlayerX * 40 - barWidth / 2 + 20;  // Center above player
-            int barY = 100 + _animPlayerY * 40 - 15;  // Above player
+            
+            // Calculate position with camera offset
+            int barX = 100 + (int)((_animPlayerX - _cameraX) * 40) + 400 - barWidth / 2 + 20;  // Center above player
+            int barY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200 - 15;  // Above player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
@@ -669,8 +680,10 @@ public class ScreenPresenter : IScreenPresenter
             // Draw a small cooldown bar below the player
             int barWidth = 30;
             int barHeight = 5;
-            int barX = 100 + _animPlayerX * 40 - barWidth / 2 + 20;  // Center below player
-            int barY = 100 + _animPlayerY * 40 + 45;  // Below player
+            
+            // Calculate position with camera offset
+            int barX = 100 + (int)((_animPlayerX - _cameraX) * 40) + 400 - barWidth / 2 + 20;  // Center below player
+            int barY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200 + 45;  // Below player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
