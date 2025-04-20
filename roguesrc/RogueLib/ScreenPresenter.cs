@@ -2042,9 +2042,9 @@ public class ScreenPresenter : IScreenPresenter
         // Check if the tile is a wall or other non-walkable object
         char mapChar = _map[y][x];
 
-        var wallTiles = new List<char> { '|', '-', '╔', '╗', '╝', '╚', '═', '║', '=' };
+        var walkableTiles = new List<char> { '.', 'X', '╬' };
 
-        return !wallTiles.Contains(mapChar);
+        return walkableTiles.Contains(mapChar);
     }
 
     // Add a new method to update the camera position
