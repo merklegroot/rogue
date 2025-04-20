@@ -210,8 +210,13 @@ public class ScreenPresenter : IScreenPresenter
 
     public void Initialize(IRayConnection rayConnection)
     {
-        // No need to initialize Raylib or load resources - that's done in RayConnectionFactory
+        // Load the map from the embedded resource
+        _map = _rayLoader.LoadMap();
         
+        // Initialize player position on a floor tile
+        InitializePlayerPosition();
+        
+        // Rest of initialization code...
         SpawnEnemy();
         
         // Spawn initial gold items
@@ -2237,5 +2242,37 @@ public class ScreenPresenter : IScreenPresenter
         // Place player in the center of the new room
         _animPlayerX = roomX + roomWidth / 2;
         _animPlayerY = roomY + roomHeight / 2;
+    }
+
+    // Add this method to initialize the player position on a floor tile
+    private void InitializePlayerPosition()
+    {
+        // Create a list of all valid spawn positions (floor tiles only)
+        var floorTiles = new List<(int x, int y)>();
+        
+        // Scan the entire map for floor tiles ('.')
+        for (int y = 0; y < _map.Count; y++)
+        {
+            string line = _map[y];
+            for (int x = 0; x < line.Length; x++)
+            {
+                if (line[x] == '.')  // Only consider floor tiles
+                {
+                    floorTiles.Add((x, y));
+                }
+            }
+        }
+        
+        // If no floor tiles found, keep default position
+        if (floorTiles.Count == 0)
+            return;
+        
+        // Pick a random floor tile
+        var randomIndex = _random.Next(floorTiles.Count);
+        var (newX, newY) = floorTiles[randomIndex];
+        
+        // Set player position
+        _animPlayerX = newX;
+        _animPlayerY = newY;
     }
 }
