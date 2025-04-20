@@ -777,7 +777,7 @@ public class ScreenPresenter : IScreenPresenter
                         playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
                     }
                     
-                    DrawCharacter(rayConnection, playerChar, 100 + _animPlayerX * 40, 100 + _animPlayerY * 40, playerColor);
+                    DrawCharacter(rayConnection, playerChar, 100 + (int)(_animPlayerX * 40), 100 + (int)(_animPlayerY * 40), playerColor);
                 }
                 
                 // Draw enemies
@@ -785,7 +785,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     if (enemy.Alive && Math.Abs(x - enemy.X) < 0.5f && Math.Abs(y - enemy.Y) < 0.5f)
                     {
-                        DrawCharacter(rayConnection, ScreenConstants.EnemyChar, 100 + enemy.X * 40, 100 + enemy.Y * 40, _enemyColor);
+                        DrawCharacter(rayConnection, ScreenConstants.EnemyChar, 100 + (int)(enemy.X * 40), 100 + (int)(enemy.Y * 40), _enemyColor);
                     }
                 }
                 
@@ -1390,7 +1390,7 @@ public class ScreenPresenter : IScreenPresenter
             // Check if position is valid (not on player, not on a wall, not on another enemy)
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
                             !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                            IsWalkableTile(newX, newY);
+                            IsWalkableTile(newX, newY);  // Add this check
 
             if (isPositionValid)
                 break;
@@ -1419,7 +1419,8 @@ public class ScreenPresenter : IScreenPresenter
 
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
                             !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                            !_goldItems.Any(g => g.X == newX && g.Y == newY);
+                            !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
+                            IsWalkableTile(newX, newY);  // Add this check
 
             if (isPositionValid)
                 break;
@@ -1448,7 +1449,8 @@ public class ScreenPresenter : IScreenPresenter
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
                             !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
                             !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
-                            !_healthPickups.Any(h => h.X == newX && h.Y == newY);
+                            !_healthPickups.Any(h => h.X == newX && h.Y == newY) &&
+                            IsWalkableTile(newX, newY);  // Add this check
 
             if (isPositionValid)
                 break;
