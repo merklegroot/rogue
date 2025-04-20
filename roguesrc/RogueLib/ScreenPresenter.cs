@@ -539,6 +539,28 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawSwordAnimation(IRayConnection rayConnection)
     {
+        // Handle sword swinging
+        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !_isSwordSwinging && !_swordOnCooldown)
+        {
+            _isSwordSwinging = true;
+            _swordSwingTime = 0;
+            
+            // Check for sword collisions immediately when swing starts
+            CheckSwordCollisions();
+        }
+
+        // Update sword swing animation
+        if (_isSwordSwinging)
+        {
+            _swordSwingTime += Raylib.GetFrameTime();
+            if (_swordSwingTime >= SwordSwingDuration)
+            {
+                _isSwordSwinging = false;
+                _swordOnCooldown = true;  // Start cooldown when swing finishes
+                _swordCooldownTimer = 0f;
+            }
+        }
+
         // Draw sword if swinging (drawn after ground to appear on top)
         if (_isSwordSwinging)
         {
@@ -891,6 +913,9 @@ public class ScreenPresenter : IScreenPresenter
             {
                 _isSwordSwinging = true;
                 _swordSwingTime = 0;
+                
+                // Check for sword collisions immediately when swing starts
+                CheckSwordCollisions();
             }
             // Add debug option to get free gold with G key
             if (key == KeyboardKey.G)
@@ -979,28 +1004,6 @@ public class ScreenPresenter : IScreenPresenter
             {
                 _swordOnCooldown = false;
                 _swordCooldownTimer = 0f;
-            }
-        }
-
-        // Handle sword swinging
-        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !_isSwordSwinging && !_swordOnCooldown)
-        {
-            _isSwordSwinging = true;
-            _swordSwingTime = 0;
-        }
-
-        // Update sword swing animation
-        if (_isSwordSwinging)
-        {
-            _swordSwingTime += Raylib.GetFrameTime();
-            if (_swordSwingTime >= SwordSwingDuration)
-            {
-                _isSwordSwinging = false;
-                _swordOnCooldown = true;  // Start cooldown when swing finishes
-                _swordCooldownTimer = 0f;
-                
-                // Check for sword collision with enemies when the swing finishes
-                CheckSwordCollisions();
             }
         }
 
