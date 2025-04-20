@@ -144,6 +144,13 @@ public class ScreenPresenter : IScreenPresenter
     // Add a single field for player animation
     private int _playerChar = 2; // Default player character
 
+    // Add knockback fields
+    private bool _isKnockedBack = false;
+    private float _knockbackTimer = 0f;
+    private const float KnockbackDuration = 0.08f;
+    private Direction _knockbackDirection = Direction.Right;
+    private const float KnockbackDistance = 0.5f; // How far to knock the player back
+
     // Add this method to update the player animation
     private void UpdatePlayerAnimation()
     {
@@ -288,18 +295,17 @@ public class ScreenPresenter : IScreenPresenter
         DrawDebugGrid();
         
         // Draw a fancy title
-        string title = "ROGUE ADVENTURE";
         int titleSize = 48;
         
         // Use MeasureTextEx instead of MeasureText to account for spacing
-        Vector2 titleSize2D = Raylib.MeasureTextEx(rayConnection.MenuFont, title, titleSize, 1);
+        Vector2 titleSize2D = Raylib.MeasureTextEx(rayConnection.MenuFont, ScreenConstants.Title, titleSize, 1);
         int titleWidth = (int)titleSize2D.X;
         
         int centerX = (Width * CharWidth * DisplayScale) / 2;
         
         // Draw title with shadow effect
-        Raylib.DrawTextEx(rayConnection.MenuFont, title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
-        Raylib.DrawTextEx(rayConnection.MenuFont, title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
+        Raylib.DrawTextEx(rayConnection.MenuFont, ScreenConstants.Title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
+        Raylib.DrawTextEx(rayConnection.MenuFont, ScreenConstants.Title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
         
         // Draw a decorative line under the title - with correct width
         int lineY = 40 + titleSize + 10; // Position it directly under the title with a small gap
@@ -981,6 +987,9 @@ public class ScreenPresenter : IScreenPresenter
                     _isInvincible = true;
                     _invincibilityTimer = 0f;
                     
+                    // Apply knockback in the opposite direction of the enemy
+                    ApplyKnockback(new Vector2(enemy.X, enemy.Y));
+                    
                     break; // Only take damage from one enemy per frame
                 }
             }
@@ -999,6 +1008,46 @@ public class ScreenPresenter : IScreenPresenter
                 // Make player invincible briefly
                 _isInvincible = true;
                 _invincibilityTimer = 0f;
+                
+                // Apply stronger knockback from the charger
+                ApplyKnockback(new Vector2(_charger.X, _charger.Y), 1.0f); // Double knockback distance
+            }
+        }
+
+        // Update knockback effect
+        if (_isKnockedBack)
+        {
+            _knockbackTimer += Raylib.GetFrameTime();
+            
+            // Apply knockback movement during the knockback duration
+            if (_knockbackTimer < KnockbackDuration)
+            {
+                // Calculate knockback distance for this frame
+                float frameKnockback = KnockbackDistance * Raylib.GetFrameTime() * (1.0f / KnockbackDuration);
+                
+                // Move player in knockback direction
+                switch (_knockbackDirection)
+                {
+                    case Direction.Left:
+                        _animPlayerX = Math.Max(0, _animPlayerX - 1);  // Move a full tile left
+                        break;
+                    case Direction.Right:
+                        _animPlayerX = Math.Min(19, _animPlayerX + 1); // Move a full tile right
+                        break;
+                    case Direction.Up:
+                        _animPlayerY = Math.Max(0, _animPlayerY - 1);  // Move a full tile up
+                        break;
+                    case Direction.Down:
+                        _animPlayerY = Math.Min(9, _animPlayerY + 1);  // Move a full tile down
+                        break;
+                }
+            }
+            
+            // End knockback effect
+            if (_knockbackTimer >= KnockbackDuration)
+            {
+                _isKnockedBack = false;
+                _knockbackTimer = 0f;
             }
         }
     }
@@ -1822,5 +1871,40 @@ public class ScreenPresenter : IScreenPresenter
         _chargerActive = true;
         
         Console.WriteLine($"NEW IMPLEMENTATION: Spawned charger with {_charger.Health} health");
+    }
+
+    // Add this new method for applying knockback
+    private void ApplyKnockback(Vector2 sourcePosition, float multiplier = 1.0f)
+    {
+        // Determine knockback direction (away from the source)
+        float dx = _animPlayerX - sourcePosition.X;
+        float dy = _animPlayerY - sourcePosition.Y;
+        
+        // If player is exactly on the enemy, use the player's facing direction
+        if (Math.Abs(dx) < 0.1f && Math.Abs(dy) < 0.1f)
+        {
+            _knockbackDirection = _lastDirection switch
+            {
+                Direction.Left => Direction.Right,
+                Direction.Right => Direction.Left,
+                Direction.Up => Direction.Down,
+                Direction.Down => Direction.Up,
+                _ => Direction.Right
+            };
+        }
+        else if (Math.Abs(dx) > Math.Abs(dy))
+        {
+            // Knockback horizontally
+            _knockbackDirection = dx > 0 ? Direction.Right : Direction.Left;
+        }
+        else
+        {
+            // Knockback vertically
+            _knockbackDirection = dy > 0 ? Direction.Down : Direction.Up;
+        }
+        
+        // Start knockback effect
+        _isKnockedBack = true;
+        _knockbackTimer = 0f;
     }
 }
