@@ -998,6 +998,9 @@ public class ScreenPresenter : IScreenPresenter
                 _isSwordSwinging = false;
                 _swordOnCooldown = true;  // Start cooldown when swing finishes
                 _swordCooldownTimer = 0f;
+                
+                // Check for sword collision with enemies when the swing finishes
+                CheckSwordCollisions();
             }
         }
 
@@ -2063,6 +2066,73 @@ public class ScreenPresenter : IScreenPresenter
             _cameraY += deltaY > 0 ? 
                 Math.Min(deltaY - CameraDeadZone, 0.5f) : 
                 Math.Max(deltaY + CameraDeadZone, -0.5f);
+        }
+    }
+
+    private void CheckSwordCollisions()
+    {
+        // Calculate sword position based on player position and direction
+        float swordX = _animPlayerX;
+        float swordY = _animPlayerY;
+        
+        // Adjust position based on direction and sword reach
+        switch (_lastDirection)
+        {
+            case Direction.Left:
+                swordX -= _swordReach;
+                break;
+            case Direction.Right:
+                swordX += _swordReach;
+                break;
+            case Direction.Up:
+                swordY -= _swordReach;
+                break;
+            case Direction.Down:
+                swordY += _swordReach;
+                break;
+        }
+        
+        // Check for collision with regular enemies
+        foreach (var enemy in _enemies)
+        {
+            if (enemy.Alive)
+            {
+                // Check if sword is within 0.5 tiles of enemy (for hit detection)
+                if (Math.Abs(swordX - enemy.X) < 0.5f && Math.Abs(swordY - enemy.Y) < 0.5f)
+                {
+                    // Kill the enemy
+                    enemy.Alive = false;
+                    
+                    // Create explosion at enemy position
+                    _explosions.Add(new Explosion { 
+                        X = enemy.X, 
+                        Y = enemy.Y, 
+                        Timer = 0f 
+                    });
+                    
+                    // Increment kill counter
+                    _enemiesKilled++;
+                    
+                    // Check if we should spawn a charger
+                    if (_enemiesKilled >= KillsForCharger && !_chargerActive)
+                    {
+                        SpawnCharger();
+                    }
+                    
+                    break; // Only hit one enemy per swing
+                }
+            }
+        }
+        
+        // Check for collision with charger
+        if (_chargerActive && _charger != null && _charger.Alive)
+        {
+            // Check if sword is within 0.5 tiles of charger
+            if (Math.Abs(swordX - _charger.X) < 0.5f && Math.Abs(swordY - _charger.Y) < 0.5f)
+            {
+                // Handle charger damage
+                HandleChargerDamage(true);
+            }
         }
     }
 }
