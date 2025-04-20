@@ -1,186 +1,203 @@
 import random
+import hashlib
+from collections import deque
 
-def generate_random_map(width=40, height=20):
+class InfiniteRogueMap:
     """
-    Generate a random map with two rectangular rooms with doors.
-    
-    Args:
-        width (int): Width of the map
-        height (int): Height of the map
-    
-    Returns:
-        str: String representation of the map
+    A procedurally generated infinite map in the style of classic Rogue.
+    Uses a seed to deterministically generate map sections on demand.
     """
-    # Initialize empty map with spaces
-    map_grid = [[' ' for _ in range(width)] for _ in range(height)]
     
-    # Generate first room
-    room1_width = random.randint(7, min(15, width - 4))
-    room1_height = random.randint(5, min(8, height - 4))
-    room1_x = random.randint(1, width // 2 - room1_width - 1)
-    room1_y = random.randint(1, height - room1_height - 1)
-    
-    # Draw the first room
-    draw_room(map_grid, room1_x, room1_y, room1_width, room1_height)
-    
-    # Generate second room (ensuring it doesn't overlap with the first)
-    room2_width = random.randint(7, min(15, width - 4))
-    room2_height = random.randint(5, min(8, height - 4))
-    
-    # Try to place the second room in the right half of the map
-    max_attempts = 20
-    for _ in range(max_attempts):
-        room2_x = random.randint(width // 2, width - room2_width - 1)
-        room2_y = random.randint(1, height - room2_height - 1)
+    def __init__(self, seed=None):
+        """
+        Initialize the infinite map with a seed.
         
-        # Check if rooms overlap
-        if not rooms_overlap(room1_x, room1_y, room1_width, room1_height,
-                            room2_x, room2_y, room2_width, room2_height):
-            break
-    
-    # Draw the second room
-    draw_room(map_grid, room2_x, room2_y, room2_width, room2_height)
-    
-    # Convert map to string
-    map_str = '\n'.join([''.join(row) for row in map_grid])
-    return map_str
-
-def draw_room(map_grid, room_x, room_y, room_width, room_height):
-    """
-    Draw a rectangular room on the map grid and add doors.
-    
-    Args:
-        map_grid (list): 2D list representing the map
-        room_x (int): X coordinate of the top-left corner of the room
-        room_y (int): Y coordinate of the top-left corner of the room
-        room_width (int): Width of the room
-        room_height (int): Height of the room
-    """
-    # Draw the room walls
-    for x in range(room_x, room_x + room_width):
-        for y in range(room_y, room_y + room_height):
-            # Corners
-            if x == room_x and y == room_y:
-                map_grid[y][x] = '╔'
-            elif x == room_x + room_width - 1 and y == room_y:
-                map_grid[y][x] = '╗'
-            elif x == room_x and y == room_y + room_height - 1:
-                map_grid[y][x] = '╚'
-            elif x == room_x + room_width - 1 and y == room_y + room_height - 1:
-                map_grid[y][x] = '╝'
-            # Horizontal walls
-            elif y == room_y or y == room_y + room_height - 1:
-                map_grid[y][x] = '═'
-            # Vertical walls
-            elif x == room_x or x == room_x + room_width - 1:
-                map_grid[y][x] = '║'
-            # Floor
-            else:
-                map_grid[y][x] = '.'
-    
-    # Add doors to the walls
-    add_doors_to_room(map_grid, room_x, room_y, room_width, room_height)
-
-def rooms_overlap(x1, y1, w1, h1, x2, y2, w2, h2, padding=1):
-    """
-    Check if two rooms overlap (including a padding space between them).
-    
-    Args:
-        x1, y1: Top-left coordinates of first room
-        w1, h1: Width and height of first room
-        x2, y2: Top-left coordinates of second room
-        w2, h2: Width and height of second room
-        padding: Minimum space between rooms
+        Args:
+            seed: Random seed for map generation
+        """
+        self.seed = seed if seed is not None else random.randint(0, 1000000)
+        self.room_cache = {}  # Cache of generated rooms by coordinates
+        self.hallway_cache = {}  # Cache of generated hallways
+        self.processing_sections = set()  # Track sections being processed to avoid recursion
         
-    Returns:
-        bool: True if rooms overlap, False otherwise
-    """
-    # Check if one room is to the left of the other
-    if x1 + w1 + padding <= x2 or x2 + w2 + padding <= x1:
-        return False
-    
-    # Check if one room is above the other
-    if y1 + h1 + padding <= y2 or y2 + h2 + padding <= y1:
-        return False
-    
-    # If neither of the above, the rooms overlap
-    return True
-
-def add_doors_to_room(map_grid, room_x, room_y, room_width, room_height):
-    """
-    Add doors to the walls of a room.
-    Doors are more likely to spawn near the center of walls.
-    Proximity of other doors reduces the chance of another door.
-    Doors may not be placed directly adjacent to another door.
-    
-    Args:
-        map_grid (list): 2D list representing the map
-        room_x (int): X coordinate of the top-left corner of the room
-        room_y (int): Y coordinate of the top-left corner of the room
-        room_width (int): Width of the room
-        room_height (int): Height of the room
-    """
-    # Define door character
-    door_char = '╬'
-    
-    # Track door positions for proximity calculations
-    door_positions = []
-    
-    # Process each wall
-    walls = [
-        # Top wall (excluding corners)
-        [(room_x + i, room_y) for i in range(1, room_width - 1)],
-        # Bottom wall (excluding corners)
-        [(room_x + i, room_y + room_height - 1) for i in range(1, room_width - 1)],
-        # Left wall (excluding corners)
-        [(room_x, room_y + i) for i in range(1, room_height - 1)],
-        # Right wall (excluding corners)
-        [(room_x + room_width - 1, room_y + i) for i in range(1, room_height - 1)]
-    ]
-    
-    for wall in walls:
-        # Determine number of doors for this wall (0-2)
-        num_doors = random.choices([0, 1, 2], weights=[0.3, 0.5, 0.2])[0]
+        # Map tile characters
+        self.FLOOR = '.'
+        self.WALL_H = '═'
+        self.WALL_V = '║'
+        self.CORNER_TL = '╔'
+        self.CORNER_TR = '╗'
+        self.CORNER_BL = '╚'
+        self.CORNER_BR = '╝'
+        self.DOOR = '╬'
+        self.HALLWAY = 'X'
+        self.EMPTY = ' '
         
-        if num_doors > 0 and len(wall) > 0:
-            # Calculate center of the wall
-            center_idx = len(wall) // 2
+        # Room size constraints
+        self.MIN_ROOM_WIDTH = 5
+        self.MAX_ROOM_WIDTH = 12
+        self.MIN_ROOM_HEIGHT = 4
+        self.MAX_ROOM_HEIGHT = 8
+        
+        # Section size (each section can contain one room)
+        self.SECTION_SIZE = 20
+    
+    def get_tile(self, x, y):
+        """
+        Get the map tile at the specified coordinates.
+        
+        Args:
+            x (int): X coordinate
+            y (int): Y coordinate
             
-            # Calculate weights based on distance from center
+        Returns:
+            str: Character representing the map tile
+        """
+        # Determine which section this coordinate belongs to
+        section_x = x // self.SECTION_SIZE
+        section_y = y // self.SECTION_SIZE
+        
+        # Get or generate the room for this section
+        room = self._get_or_generate_room(section_x, section_y)
+        
+        # Check if the coordinate is within the room
+        if room and self._is_in_room(x, y, room):
+            return self._get_room_tile(x, y, room)
+        
+        # Check if the coordinate is in a hallway
+        hallway_tile = self._get_hallway_tile(x, y)
+        if hallway_tile:
+            return hallway_tile
+        
+        # Otherwise, it's empty space
+        return self.EMPTY
+    
+    def _get_or_generate_room(self, section_x, section_y):
+        """
+        Get a cached room or generate a new one for the given section.
+        
+        Args:
+            section_x (int): Section X coordinate
+            section_y (int): Section Y coordinate
+            
+        Returns:
+            dict: Room data or None if no room in this section
+        """
+        section_key = (section_x, section_y)
+        
+        # Return cached room if available
+        if section_key in self.room_cache:
+            return self.room_cache[section_key]
+        
+        # Check if we're already processing this section (avoid recursion)
+        if section_key in self.processing_sections:
+            return None
+        
+        # Mark this section as being processed
+        self.processing_sections.add(section_key)
+        
+        # Generate a new room with deterministic randomness
+        room_rng = self._get_section_rng(section_x, section_y)
+        
+        # Decide if this section should have a room (80% chance)
+        if room_rng.random() > 0.2:
+            # Determine room size
+            room_width = room_rng.randint(self.MIN_ROOM_WIDTH, self.MAX_ROOM_WIDTH)
+            room_height = room_rng.randint(self.MIN_ROOM_HEIGHT, self.MAX_ROOM_HEIGHT)
+            
+            # Position the room within the section (with some randomness)
+            margin_x = self.SECTION_SIZE - room_width
+            margin_y = self.SECTION_SIZE - room_height
+            
+            room_x = section_x * self.SECTION_SIZE + room_rng.randint(1, max(1, margin_x - 1))
+            room_y = section_y * self.SECTION_SIZE + room_rng.randint(1, max(1, margin_y - 1))
+            
+            # Generate doors
+            doors = self._generate_doors(room_x, room_y, room_width, room_height, room_rng)
+            
+            room = {
+                'x': room_x,
+                'y': room_y,
+                'width': room_width,
+                'height': room_height,
+                'doors': doors,
+                'section': (section_x, section_y)
+            }
+            
+            # Cache the room
+            self.room_cache[section_key] = room
+            
+            # Remove from processing set
+            self.processing_sections.remove(section_key)
+            
+            return room
+        
+        # No room in this section
+        self.room_cache[section_key] = None
+        
+        # Remove from processing set
+        self.processing_sections.remove(section_key)
+        
+        return None
+    
+    def _schedule_hallway_generation(self, room, section_x, section_y):
+        """
+        Schedule hallway generation for a room to avoid recursion.
+        This will be called after all rooms are generated.
+        
+        Args:
+            room: Room data
+            section_x, section_y: Section coordinates
+        """
+        # We'll handle this by generating hallways only when needed
+        pass
+    
+    def _generate_doors(self, room_x, room_y, room_width, room_height, rng):
+        """
+        Generate doors for a room.
+        
+        Args:
+            room_x, room_y: Room position
+            room_width, room_height: Room dimensions
+            rng: Random number generator
+            
+        Returns:
+            list: List of door positions (x, y)
+        """
+        doors = []
+        
+        # Process each wall
+        walls = [
+            # Top wall (excluding corners)
+            [(room_x + i, room_y) for i in range(1, room_width - 1)],
+            # Bottom wall (excluding corners)
+            [(room_x + i, room_y + room_height - 1) for i in range(1, room_width - 1)],
+            # Left wall (excluding corners)
+            [(room_x, room_y + i) for i in range(1, room_height - 1)],
+            # Right wall (excluding corners)
+            [(room_x + room_width - 1, room_y + i) for i in range(1, room_height - 1)]
+        ]
+        
+        for wall in walls:
+            # Determine number of doors for this wall (0-2)
+            num_doors = rng.choices([0, 1, 2], weights=[0.3, 0.5, 0.2])[0]
+            
+            if num_doors == 0 or len(wall) < 3:
+                continue
+            
+            # Calculate weights for door positions (higher weight for center positions)
+            valid_positions = list(range(len(wall)))
             weights = []
-            valid_positions = []
             
-            for i, pos in enumerate(wall):
-                x, y = pos
-                
-                # Check if position is adjacent to an existing door
-                adjacent_to_door = False
-                for door_x, door_y in door_positions:
-                    dx = abs(x - door_x)
-                    dy = abs(y - door_y)
-                    if dx + dy <= 1:  # Manhattan distance of 1 or less means adjacent
-                        adjacent_to_door = True
-                        break
-                
-                if adjacent_to_door:
-                    continue  # Skip this position
-                
-                # Add to valid positions
-                valid_positions.append(i)
-                
-                # Higher weight for positions closer to center
-                center_distance = abs(i - center_idx)
-                weight = max(1, 10 - center_distance * 2)
-                
-                # Reduce weight if close to existing doors (but not adjacent)
-                for door_pos in door_positions:
-                    dx = abs(x - door_pos[0])
-                    dy = abs(y - door_pos[1])
-                    distance = dx + dy
-                    if 1 < distance < 3:  # Not adjacent but still close
-                        weight = weight * 0.3  # Significant reduction if door is nearby
-                
+            wall_center = len(wall) / 2
+            for i in range(len(wall)):
+                # Distance from center (0 to 1, where 0 is center)
+                distance_from_center = abs(i - wall_center) / wall_center
+                # Weight is higher for positions closer to center
+                weight = 1.0 - (distance_from_center * 0.7)
                 weights.append(weight)
+            
+            # Track door positions for this wall
+            door_positions = []
             
             # Select door positions based on weights
             for _ in range(num_doors):
@@ -188,12 +205,12 @@ def add_doors_to_room(map_grid, room_x, room_y, room_width, room_height):
                     break
                     
                 # Choose position based on weights
-                chosen_idx_idx = random.choices(range(len(valid_positions)), weights=weights)[0]
+                chosen_idx_idx = rng.choices(range(len(valid_positions)), weights=weights)[0]
                 chosen_idx = valid_positions[chosen_idx_idx]
                 door_x, door_y = wall[chosen_idx]
                 
-                # Place door
-                map_grid[door_y][door_x] = door_char
+                # Add door
+                doors.append((door_x, door_y))
                 door_positions.append((door_x, door_y))
                 
                 # Update valid positions and weights
@@ -224,6 +241,426 @@ def add_doors_to_room(map_grid, room_x, room_y, room_width, room_height):
                 
                 valid_positions = new_valid_positions
                 weights = new_weights
+        
+        return doors
+    
+    def _generate_hallways_for_room(self, room, section_x, section_y):
+        """
+        Generate hallways connecting this room to adjacent sections.
+        
+        Args:
+            room: Room data
+            section_x, section_y: Section coordinates
+        """
+        # Check adjacent sections
+        adjacent_sections = [
+            (section_x + 1, section_y),  # Right
+            (section_x - 1, section_y),  # Left
+            (section_x, section_y + 1),  # Down
+            (section_x, section_y - 1)   # Up
+        ]
+        
+        for adj_x, adj_y in adjacent_sections:
+            adj_key = (adj_x, adj_y)
+            
+            # Skip if we're already processing this section
+            if adj_key in self.processing_sections:
+                continue
+                
+            # Get the room in the adjacent section if it exists in cache
+            if adj_key in self.room_cache:
+                adj_room = self.room_cache[adj_key]
+                if adj_room:
+                    # Connect the rooms with hallways
+                    self._connect_rooms_with_hallway(room, adj_room)
+    
+    def _connect_rooms_with_hallway(self, room1, room2):
+        """
+        Connect two rooms with a hallway between their doors.
+        
+        Args:
+            room1, room2: Room data
+        """
+        # Skip if already connected
+        room_pair = tuple(sorted([(room1['x'], room1['y']), (room2['x'], room2['y'])]))
+        if room_pair in self.hallway_cache:
+            return
+        
+        # Find the best door pair to connect
+        best_door_pair = None
+        best_distance = float('inf')
+        
+        for door1 in room1['doors']:
+            for door2 in room2['doors']:
+                dx = abs(door1[0] - door2[0])
+                dy = abs(door1[1] - door2[1])
+                distance = dx + dy
+                
+                if distance < best_distance:
+                    best_distance = distance
+                    best_door_pair = (door1, door2)
+        
+        if best_door_pair:
+            # Create a hallway between these doors
+            door1, door2 = best_door_pair
+            
+            # Get all rooms for pathfinding
+            rooms = [room for room in self.room_cache.values() if room is not None]
+            
+            # Create a pathfinding grid
+            hallway_path = self._find_path_avoiding_rooms(door1, door2, rooms)
+            
+            if hallway_path:
+                # Cache the hallway
+                self.hallway_cache[room_pair] = hallway_path
+    
+    def _find_path_avoiding_rooms(self, start, end, rooms):
+        """
+        Find a path between two points that avoids going through rooms (except at doors).
+        Uses A* pathfinding algorithm.
+        
+        Args:
+            start: Starting point (x, y)
+            end: Ending point (x, y)
+            rooms: List of room data
+            
+        Returns:
+            list: List of coordinates in the path
+        """
+        # Create a set of all wall and floor positions to avoid
+        blocked_positions = set()
+        door_positions = set()
+        wall_positions = set()
+        
+        for room in rooms:
+            # Add all wall positions
+            for x in range(room['x'], room['x'] + room['width']):
+                for y in range(room['y'], room['y'] + room['height']):
+                    # Skip doors
+                    if (x, y) in room['doors']:
+                        door_positions.add((x, y))
+                        continue
+                    
+                    # Check if it's a wall
+                    is_wall = (
+                        x == room['x'] or 
+                        x == room['x'] + room['width'] - 1 or
+                        y == room['y'] or 
+                        y == room['y'] + room['height'] - 1
+                    )
+                    
+                    if is_wall:
+                        wall_positions.add((x, y))
+                    
+                    # Add to blocked positions (both walls and floors)
+                    blocked_positions.add((x, y))
+        
+        # Remove start and end from blocked positions
+        blocked_positions.discard(start)
+        blocked_positions.discard(end)
+        
+        # A* pathfinding
+        open_set = [(self._heuristic(start, end), 0, start, [])]  # (f, g, pos, path)
+        closed_set = set()
+        
+        while open_set:
+            # Get the node with the lowest f score
+            open_set.sort()
+            _, g, current, path = open_set.pop(0)
+            
+            # Check if we've reached the goal
+            if current == end:
+                return path + [current]
+            
+            # Skip if we've already processed this node
+            if current in closed_set:
+                continue
+            
+            # Add to closed set
+            closed_set.add(current)
+            
+            # Generate neighbors
+            x, y = current
+            neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+            
+            for neighbor in neighbors:
+                # Skip if blocked (except for doors)
+                if neighbor in blocked_positions and neighbor not in door_positions:
+                    continue
+                
+                # Skip if already processed
+                if neighbor in closed_set:
+                    continue
+                
+                # Calculate scores
+                new_g = g + 1
+                new_f = new_g + self._heuristic(neighbor, end)
+                
+                # Add to open set
+                open_set.append((new_f, new_g, neighbor, path + [current]))
+        
+        # If no path is found, try a simpler approach
+        return self._create_simple_hallway(start, end, blocked_positions, door_positions, wall_positions)
+    
+    def _create_simple_hallway(self, start, end, blocked_positions, door_positions, wall_positions):
+        """
+        Create a simple L-shaped hallway, avoiding blocked positions.
+        
+        Args:
+            start: Starting point (x, y)
+            end: Ending point (x, y)
+            blocked_positions: Set of positions to avoid
+            door_positions: Set of door positions (can pass through)
+            wall_positions: Set of wall positions (never pass through)
+            
+        Returns:
+            list: List of coordinates in the hallway path
+        """
+        path = []
+        current_x, current_y = start
+        target_x, target_y = end
+        
+        # Decide whether to go horizontal or vertical first
+        hallway_rng = self._get_path_rng(start, end)
+        go_horizontal_first = hallway_rng.choice([True, False])
+        
+        if go_horizontal_first:
+            # Try to go horizontal first
+            while current_x != target_x:
+                next_x = current_x + (1 if current_x < target_x else -1)
+                next_pos = (next_x, current_y)
+                
+                # If blocked and not a door, try going vertical instead
+                if next_pos in blocked_positions and next_pos not in door_positions:
+                    break
+                
+                # Never go through walls (except doors)
+                if next_pos in wall_positions and next_pos not in door_positions:
+                    break
+                
+                current_x = next_x
+                path.append((current_x, current_y))
+            
+            # Then go vertical
+            while current_y != target_y:
+                next_y = current_y + (1 if current_y < target_y else -1)
+                next_pos = (current_x, next_y)
+                
+                # If blocked and not a door, we can't proceed
+                if next_pos in blocked_positions and next_pos not in door_positions:
+                    # Try a different approach
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                # Never go through walls (except doors)
+                if next_pos in wall_positions and next_pos not in door_positions:
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                current_y = next_y
+                path.append((current_x, current_y))
+            
+            # Finally, go horizontal to reach the target
+            while current_x != target_x:
+                next_x = current_x + (1 if current_x < target_x else -1)
+                next_pos = (next_x, current_y)
+                
+                # If blocked and not a door, we can't proceed
+                if next_pos in blocked_positions and next_pos not in door_positions:
+                    # Try a different approach
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                # Never go through walls (except doors)
+                if next_pos in wall_positions and next_pos not in door_positions:
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                current_x = next_x
+                path.append((current_x, current_y))
+        else:
+            # Try to go vertical first
+            while current_y != target_y:
+                next_y = current_y + (1 if current_y < target_y else -1)
+                next_pos = (current_x, next_y)
+                
+                # If blocked and not a door, try going horizontal instead
+                if next_pos in blocked_positions and next_pos not in door_positions:
+                    break
+                
+                # Never go through walls (except doors)
+                if next_pos in wall_positions and next_pos not in door_positions:
+                    break
+                
+                current_y = next_y
+                path.append((current_x, current_y))
+            
+            # Then go horizontal
+            while current_x != target_x:
+                next_x = current_x + (1 if current_x < target_x else -1)
+                next_pos = (next_x, current_y)
+                
+                # If blocked and not a door, we can't proceed
+                if next_pos in blocked_positions and next_pos not in door_positions:
+                    # Try a different approach
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                # Never go through walls (except doors)
+                if next_pos in wall_positions and next_pos not in door_positions:
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                current_x = next_x
+                path.append((current_x, current_y))
+            
+            # Finally, go vertical to reach the target
+            while current_y != target_y:
+                next_y = current_y + (1 if current_y < target_y else -1)
+                next_pos = (current_x, next_y)
+                
+                # If blocked and not a door, we can't proceed
+                if next_pos in blocked_positions and next_pos not in door_positions:
+                    # Try a different approach
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                # Never go through walls (except doors)
+                if next_pos in wall_positions and next_pos not in door_positions:
+                    return self._create_zigzag_hallway(start, end, blocked_positions, door_positions, wall_positions)
+                
+                current_y = next_y
+                path.append((current_x, current_y))
+        
+        return path
+    
+    def _create_zigzag_hallway(self, start, end, blocked_positions, door_positions, wall_positions):
+        """
+        Create a zigzag hallway with multiple turns to avoid obstacles.
+        
+        Args:
+            start: Starting point (x, y)
+            end: Ending point (x, y)
+            blocked_positions: Set of positions to avoid
+            door_positions: Set of door positions (can pass through)
+            wall_positions: Set of wall positions (never pass through)
+            
+        Returns:
+            list: List of coordinates in the hallway path
+        """
+        # Use BFS to find a path
+        queue = deque([(start, [])])
+        visited = {start}
+        
+        while queue:
+            current, path = queue.popleft()
+            
+            # Check if we've reached the goal
+            if current == end:
+                return path + [current]
+            
+            # Generate neighbors
+            x, y = current
+            neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+            
+            for neighbor in neighbors:
+                # Skip if blocked (except for doors)
+                if neighbor in blocked_positions and neighbor not in door_positions:
+                    continue
+                
+                # Never go through walls (except doors)
+                if neighbor in wall_positions and neighbor not in door_positions:
+                    continue
+                
+                # Skip if already visited
+                if neighbor in visited:
+                    continue
+                
+                visited.add(neighbor)
+                queue.append((neighbor, path + [current]))
+        
+        # If no path is found, return an empty path
+        return []
+    
+    def _heuristic(self, a, b):
+        """Manhattan distance heuristic for A* pathfinding"""
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    
+    def _is_in_room(self, x, y, room):
+        """Check if coordinates are within a room"""
+        return (room['x'] <= x < room['x'] + room['width'] and 
+                room['y'] <= y < room['y'] + room['height'])
+    
+    def _get_room_tile(self, x, y, room):
+        """Get the tile type for a position within a room"""
+        # Check if it's a door
+        if (x, y) in room['doors']:
+            return self.DOOR
+        
+        # Check if it's a corner
+        if x == room['x'] and y == room['y']:
+            return self.CORNER_TL
+        elif x == room['x'] + room['width'] - 1 and y == room['y']:
+            return self.CORNER_TR
+        elif x == room['x'] and y == room['y'] + room['height'] - 1:
+            return self.CORNER_BL
+        elif x == room['x'] + room['width'] - 1 and y == room['y'] + room['height'] - 1:
+            return self.CORNER_BR
+        
+        # Check if it's a wall
+        if x == room['x'] or x == room['x'] + room['width'] - 1:
+            return self.WALL_V
+        if y == room['y'] or y == room['y'] + room['height'] - 1:
+            return self.WALL_H
+        
+        # Otherwise it's a floor
+        return self.FLOOR
+    
+    def _get_hallway_tile(self, x, y):
+        """Check if coordinates are in a hallway"""
+        for hallway_path in self.hallway_cache.values():
+            if (x, y) in hallway_path:
+                return self.HALLWAY
+        return None
+    
+    def _get_section_rng(self, section_x, section_y):
+        """Get a deterministic RNG for a section based on the seed"""
+        section_seed = f"{self.seed}_{section_x}_{section_y}"
+        hash_val = int(hashlib.md5(section_seed.encode()).hexdigest(), 16)
+        return random.Random(hash_val)
+    
+    def _get_path_rng(self, start, end):
+        """Get a deterministic RNG for a path based on endpoints"""
+        path_seed = f"{self.seed}_{start[0]}_{start[1]}_{end[0]}_{end[1]}"
+        hash_val = int(hashlib.md5(path_seed.encode()).hexdigest(), 16)
+        return random.Random(hash_val)
+    
+    def generate_map_section(self, center_x, center_y, width=40, height=20):
+        """
+        Generate a section of the map as a string.
+        
+        Args:
+            center_x, center_y: Center coordinates
+            width, height: Dimensions of the map section
+            
+        Returns:
+            str: String representation of the map section
+        """
+        start_x = center_x - width // 2
+        start_y = center_y - height // 2
+        
+        # First, generate all rooms in the visible area
+        for y in range(start_y, start_y + height):
+            for x in range(start_x, start_x + width):
+                section_x = x // self.SECTION_SIZE
+                section_y = y // self.SECTION_SIZE
+                self._get_or_generate_room(section_x, section_y)
+        
+        # Then generate hallways between all rooms
+        for section_key, room in self.room_cache.items():
+            if room:  # Skip empty sections
+                section_x, section_y = section_key
+                self._generate_hallways_for_room(room, section_x, section_y)
+        
+        # Generate the map grid
+        map_grid = [[self.get_tile(start_x + x, start_y + y) for x in range(width)] 
+                    for y in range(height)]
+        
+        # Convert to string
+        return '\n'.join([''.join(row) for row in map_grid])
 
 
 map_file_name = "../resources/map.txt"
@@ -234,7 +671,14 @@ def save_map_to_file(map_str, filename=map_file_name):
         f.write(map_str)
 
 if __name__ == "__main__":
-    random_map = generate_random_map()
-    print(random_map)
-    save_map_to_file(random_map)
+    # Create an infinite map with a random seed
+    random_seed = random.randint(0, 1000000)
+    infinite_map = InfiniteRogueMap(seed=random_seed)
+    
+    # Generate a section of the map with doubled dimensions
+    map_section = infinite_map.generate_map_section(0, 0, width=120, height=60)
+    
+    print(f"Using random seed: {random_seed}")
+    print(map_section)
+    save_map_to_file(map_section)
     print(f"Map saved to {map_file_name}")
