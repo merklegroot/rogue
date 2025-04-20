@@ -1434,91 +1434,109 @@ public class ScreenPresenter : IScreenPresenter
 
     private void SpawnEnemy()
     {
-        // Find a position that's not occupied by the player or another enemy
-        // and is a walkable tile
-        int newX = 0;
-        int newY = 0;
-        bool isPositionValid = false;
-
-        const int maxAttempts = 20; // Increased from 10 to 20 for better chances
-
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        // Create a list of all valid spawn positions (floor tiles only)
+        var validPositions = new List<(int x, int y)>();
+        
+        // Scan the entire map for floor tiles ('.')
+        for (int y = 0; y < _map.Count; y++)
         {
-            newX = _random.Next(20);  // 0-19
-            newY = _random.Next(10);  // 0-9
-
-            isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                              !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                              IsWalkableTile(newX, newY);  // Check if the tile is walkable
-
-            if (isPositionValid)
-                break;
+            string line = _map[y];
+            for (int x = 0; x < line.Length; x++)
+            {
+                if (line[x] == '.')  // Only consider floor tiles
+                {
+                    // Check if position is not occupied by player or other enemies
+                    if ((x != _animPlayerX || y != _animPlayerY) &&
+                        !_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
+                    {
+                        validPositions.Add((x, y));
+                    }
+                }
+            }
         }
-
-        if (!isPositionValid)
-            return;  // Don't spawn if we couldn't find a valid position
-
+        
+        // If no valid positions found, don't spawn
+        if (validPositions.Count == 0)
+            return;
+        
+        // Pick a random valid position
+        var randomIndex = _random.Next(validPositions.Count);
+        var (newX, newY) = validPositions[randomIndex];
+        
+        // Spawn the enemy
         _enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
     }
 
     private void SpawnGoldItem()
     {
-        // Find a position that's not occupied by the player, enemies, or other gold
-        // and is a walkable tile
-        int newX = 0;
-        int newY = 0;
-        bool isPositionValid = false;
-
-        const int maxAttempts = 20; // Increased from 10 to 20
-
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        // Create a list of all valid spawn positions (floor tiles only)
+        var validPositions = new List<(int x, int y)>();
+        
+        // Scan the entire map for floor tiles ('.')
+        for (int y = 0; y < _map.Count; y++)
         {
-            newX = _random.Next(20);  // 0-19
-            newY = _random.Next(10);  // 0-9
-
-            isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                              !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                              !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
-                              IsWalkableTile(newX, newY);  // Check if the tile is walkable
-
-            if (isPositionValid)
-                break;
+            string line = _map[y];
+            for (int x = 0; x < line.Length; x++)
+            {
+                if (line[x] == '.')  // Only consider floor tiles
+                {
+                    // Check if position is not occupied by player, enemies, or other gold
+                    if ((x != _animPlayerX || y != _animPlayerY) &&
+                        !_enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
+                        !_goldItems.Any(g => g.X == x && g.Y == y))
+                    {
+                        validPositions.Add((x, y));
+                    }
+                }
+            }
         }
-
-        if (!isPositionValid)
+        
+        // If no valid positions found, don't spawn
+        if (validPositions.Count == 0)
             return;
-
+        
+        // Pick a random valid position
+        var randomIndex = _random.Next(validPositions.Count);
+        var (newX, newY) = validPositions[randomIndex];
+        
+        // Spawn the gold
         _goldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
     }
 
     private void SpawnHealthPickup()
     {
-        // Find a position that's not occupied by the player, enemies, gold, or other health pickups
-        // and is a walkable tile
-        int newX = 0;
-        int newY = 0;
-        bool isPositionValid = false;
-
-        const int maxAttempts = 20; // Increased from 10 to 20
-
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        // Create a list of all valid spawn positions (floor tiles only)
+        var validPositions = new List<(int x, int y)>();
+        
+        // Scan the entire map for floor tiles ('.')
+        for (int y = 0; y < _map.Count; y++)
         {
-            newX = _random.Next(20);  // 0-19
-            newY = _random.Next(10);  // 0-9
-
-            isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                              !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                              !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
-                              !_healthPickups.Any(h => h.X == newX && h.Y == newY) &&
-                              IsWalkableTile(newX, newY);  // Check if the tile is walkable
-
-            if (isPositionValid)
-                break;
+            string line = _map[y];
+            for (int x = 0; x < line.Length; x++)
+            {
+                if (line[x] == '.')  // Only consider floor tiles
+                {
+                    // Check if position is not occupied by player, enemies, gold, or other health pickups
+                    if ((x != _animPlayerX || y != _animPlayerY) &&
+                        !_enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
+                        !_goldItems.Any(g => g.X == x && g.Y == y) &&
+                        !_healthPickups.Any(h => h.X == x && h.Y == y))
+                    {
+                        validPositions.Add((x, y));
+                    }
+                }
+            }
         }
-
-        if (!isPositionValid)
+        
+        // If no valid positions found, don't spawn
+        if (validPositions.Count == 0)
             return;
-
+        
+        // Pick a random valid position
+        var randomIndex = _random.Next(validPositions.Count);
+        var (newX, newY) = validPositions[randomIndex];
+        
+        // Spawn the health pickup
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
     }
 
