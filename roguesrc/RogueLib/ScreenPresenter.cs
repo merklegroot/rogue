@@ -195,7 +195,7 @@ public class ScreenPresenter : IScreenPresenter
     // Add these camera variables to the class fields
     private float _cameraX = 0;
     private float _cameraY = 0;
-    private const float CameraDeadZone = 3.0f; // How far player can move from center before camera follows
+    private const float CameraDeadZone = 5.0f; // Increased from 3.0f to 5.0f
 
     public ScreenPresenter(IRayLoader rayLoader)
     {
