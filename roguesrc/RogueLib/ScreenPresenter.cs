@@ -764,6 +764,7 @@ public class ScreenPresenter : IScreenPresenter
                         tileColor = wallColor;
                         break;
                     case '-': // Horizontal wall
+                    case '═': // Horizontal wall
                         tileChar = 0xCD; // ═
                         tileColor = wallColor;
                         break;
@@ -2011,14 +2012,18 @@ public class ScreenPresenter : IScreenPresenter
     private bool IsWalkableTile(int x, int y)
     {
         // Check if position is within map bounds
-        if (y >= _map.Count || x >= _map[y].Length)
-            return true; // Default to walkable if outside map bounds
+        if (y < 0 || y >= _map.Count)
+            return false; // Out of bounds vertically
+        
+        // Check if x is within the bounds of the current line
+        if (x < 0 || x >= _map[y].Length)
+            return false; // Out of bounds horizontally
         
         // Check if the tile is a wall or other non-walkable object
         char mapChar = _map[y][x];
-        
-        // Consider '|' and '-' as walls (non-walkable)
-        // But '+' (doors) should be walkable
-        return mapChar != '|' && mapChar != '-';
+
+        var wallTiles = new List<char> { '|', '-', '╔', '╗', '╝', '╚', '═', '║'};
+
+        return !wallTiles.Contains(mapChar);
     }
 }
