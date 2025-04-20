@@ -155,6 +155,9 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Color _playerColor = new(0, 200, 255, 255);  // Cyan-blue for player
     private readonly Color _enemyColor = new(255, 100, 100, 255); // Red for enemies
 
+    // Add this field with the other private fields
+    private bool _gameJustStarted = true;
+
     // Add this method to update the player animation
     private void UpdatePlayerAnimation()
     {
@@ -1063,6 +1066,13 @@ public class ScreenPresenter : IScreenPresenter
         
         // Check for health pickup collection
         CollectHealth();
+
+        // Ensure player is on a walkable tile when game starts
+        if (_gameJustStarted)
+        {
+            _gameJustStarted = false;
+            EnsurePlayerOnWalkableTile();
+        }
 
         // Open shop with 'B' key
         if (Raylib.IsKeyPressed(KeyboardKey.B))
@@ -2137,5 +2147,95 @@ public class ScreenPresenter : IScreenPresenter
                 HandleChargerDamage(true);
             }
         }
+    }
+
+    // Add this new method to ensure player spawns on a walkable tile
+    private void EnsurePlayerOnWalkableTile()
+    {
+        // If player is already on a walkable tile, do nothing
+        if (IsWalkableTile((int)_animPlayerX, (int)_animPlayerY))
+        {
+            return;
+        }
+        
+        // Search for a walkable tile in an expanding spiral pattern
+        int maxSearchRadius = 20;  // Maximum search distance
+        
+        for (int radius = 1; radius <= maxSearchRadius; radius++)
+        {
+            // Check in a square pattern around the player
+            for (int offsetX = -radius; offsetX <= radius; offsetX++)
+            {
+                for (int offsetY = -radius; offsetY <= radius; offsetY++)
+                {
+                    // Skip if not on the perimeter of the square
+                    if (Math.Abs(offsetX) != radius && Math.Abs(offsetY) != radius)
+                        continue;
+                    
+                    int testX = (int)_animPlayerX + offsetX;
+                    int testY = (int)_animPlayerY + offsetY;
+                    
+                    if (IsWalkableTile(testX, testY))
+                    {
+                        // Found a walkable tile, move player there
+                        _animPlayerX = testX;
+                        _animPlayerY = testY;
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // If no walkable tile found, force create a room at player position
+        // This is a fallback that should rarely be needed
+        int roomWidth = 7;
+        int roomHeight = 5;
+        int roomX = (int)_animPlayerX - roomWidth / 2;
+        int roomY = (int)_animPlayerY - roomHeight / 2;
+        
+        // Create a simple room
+        for (int y = 0; y < roomHeight; y++)
+        {
+            while (_map.Count <= roomY + y)
+            {
+                _map.Add(new string(' ', roomX + roomWidth));
+            }
+            
+            string line = _map[roomY + y];
+            while (line.Length <= roomX + roomWidth)
+            {
+                line += ' ';
+            }
+            
+            char[] lineChars = line.ToCharArray();
+            
+            for (int x = 0; x < roomWidth; x++)
+            {
+                if (y == 0 || y == roomHeight - 1)
+                {
+                    // Top and bottom walls
+                    lineChars[roomX + x] = (y == 0 && x == 0) ? '╔' :
+                                          (y == 0 && x == roomWidth - 1) ? '╗' :
+                                          (y == roomHeight - 1 && x == 0) ? '╚' :
+                                          (y == roomHeight - 1 && x == roomWidth - 1) ? '╝' : '═';
+                }
+                else if (x == 0 || x == roomWidth - 1)
+                {
+                    // Side walls
+                    lineChars[roomX + x] = '║';
+                }
+                else
+                {
+                    // Floor
+                    lineChars[roomX + x] = '.';
+                }
+            }
+            
+            _map[roomY + y] = new string(lineChars);
+        }
+        
+        // Place player in the center of the new room
+        _animPlayerX = roomX + roomWidth / 2;
+        _animPlayerY = roomY + roomHeight / 2;
     }
 }

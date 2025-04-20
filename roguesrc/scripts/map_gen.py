@@ -663,7 +663,7 @@ class InfiniteRogueMap:
         return '\n'.join([''.join(row) for row in map_grid])
 
 
-map_file_name = "../resources/map.txt"
+map_file_name = "../RogueLib/resources/map.txt"
 
 def save_map_to_file(map_str, filename=map_file_name):
     """Save the generated map to a file"""
