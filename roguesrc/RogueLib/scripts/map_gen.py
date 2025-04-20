@@ -2,7 +2,7 @@ import random
 
 def generate_random_map(width=40, height=20):
     """
-    Generate a random map with a single rectangular room with doors.
+    Generate a random map with two rectangular rooms with doors.
     
     Args:
         width (int): Width of the map
@@ -14,14 +14,48 @@ def generate_random_map(width=40, height=20):
     # Initialize empty map with spaces
     map_grid = [[' ' for _ in range(width)] for _ in range(height)]
     
-    # Generate random room dimensions (ensuring minimum size of 5x5)
-    room_width = random.randint(7, min(15, width - 4))
-    room_height = random.randint(5, min(8, height - 4))
+    # Generate first room
+    room1_width = random.randint(7, min(15, width - 4))
+    room1_height = random.randint(5, min(8, height - 4))
+    room1_x = random.randint(1, width // 2 - room1_width - 1)
+    room1_y = random.randint(1, height - room1_height - 1)
     
-    # Generate random room position (ensuring it fits within map boundaries)
-    room_x = random.randint(1, width - room_width - 1)
-    room_y = random.randint(1, height - room_height - 1)
+    # Draw the first room
+    draw_room(map_grid, room1_x, room1_y, room1_width, room1_height)
     
+    # Generate second room (ensuring it doesn't overlap with the first)
+    room2_width = random.randint(7, min(15, width - 4))
+    room2_height = random.randint(5, min(8, height - 4))
+    
+    # Try to place the second room in the right half of the map
+    max_attempts = 20
+    for _ in range(max_attempts):
+        room2_x = random.randint(width // 2, width - room2_width - 1)
+        room2_y = random.randint(1, height - room2_height - 1)
+        
+        # Check if rooms overlap
+        if not rooms_overlap(room1_x, room1_y, room1_width, room1_height,
+                            room2_x, room2_y, room2_width, room2_height):
+            break
+    
+    # Draw the second room
+    draw_room(map_grid, room2_x, room2_y, room2_width, room2_height)
+    
+    # Convert map to string
+    map_str = '\n'.join([''.join(row) for row in map_grid])
+    return map_str
+
+def draw_room(map_grid, room_x, room_y, room_width, room_height):
+    """
+    Draw a rectangular room on the map grid and add doors.
+    
+    Args:
+        map_grid (list): 2D list representing the map
+        room_x (int): X coordinate of the top-left corner of the room
+        room_y (int): Y coordinate of the top-left corner of the room
+        room_width (int): Width of the room
+        room_height (int): Height of the room
+    """
     # Draw the room walls
     for x in range(room_x, room_x + room_width):
         for y in range(room_y, room_y + room_height):
@@ -46,10 +80,31 @@ def generate_random_map(width=40, height=20):
     
     # Add doors to the walls
     add_doors_to_room(map_grid, room_x, room_y, room_width, room_height)
+
+def rooms_overlap(x1, y1, w1, h1, x2, y2, w2, h2, padding=1):
+    """
+    Check if two rooms overlap (including a padding space between them).
     
-    # Convert map to string
-    map_str = '\n'.join([''.join(row) for row in map_grid])
-    return map_str
+    Args:
+        x1, y1: Top-left coordinates of first room
+        w1, h1: Width and height of first room
+        x2, y2: Top-left coordinates of second room
+        w2, h2: Width and height of second room
+        padding: Minimum space between rooms
+        
+    Returns:
+        bool: True if rooms overlap, False otherwise
+    """
+    # Check if one room is to the left of the other
+    if x1 + w1 + padding <= x2 or x2 + w2 + padding <= x1:
+        return False
+    
+    # Check if one room is above the other
+    if y1 + h1 + padding <= y2 or y2 + h2 + padding <= y1:
+        return False
+    
+    # If neither of the above, the rooms overlap
+    return True
 
 def add_doors_to_room(map_grid, room_x, room_y, room_width, room_height):
     """
@@ -66,7 +121,7 @@ def add_doors_to_room(map_grid, room_x, room_y, room_width, room_height):
         room_height (int): Height of the room
     """
     # Define door character
-    door_char = '+'
+    door_char = '╬'
     
     # Track door positions for proximity calculations
     door_positions = []
