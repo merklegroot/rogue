@@ -28,12 +28,12 @@ public class Game : IGame
             while (!_presenter.WindowShouldClose())
             {
                 _presenter.Update();
-                _presenter.Draw(_state);
+                _presenter.Draw(rayConnection, _state);
             }
         }
         finally
         {
-            _presenter.Cleanup();
+            rayConnection.Dispose();
         }
     }
 }
