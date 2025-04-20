@@ -738,23 +738,47 @@ public class ScreenPresenter : IScreenPresenter
                 Color tileColor = Color.DarkGray;
                 int tileChar = 250; // Default floor tile
                 
+                var wallColor = Color.Brown;
+
                 switch (mapChar)
                 {
+                    case '╔': // Top left corner
+                        tileChar = 0xC9; // ╔
+                        tileColor = wallColor;
+                        break;
+                    case '╗': // Top right corner
+                        tileChar = 0xBB; // ╗
+                        tileColor = wallColor;
+                        break;
+                    case '╚': // Bottom left corner
+                        tileChar = 0xC8; // ╚
+                        tileColor = wallColor;
+                        break;
+                    case '╝': // Bottom right corner
+                        tileChar = 0xBC; // ╝
+                        tileColor = wallColor;
+                        break;
+                    case '║': // Vertical wall
                     case '|': // Vertical wall
-                        tileChar = 186; // ║
-                        tileColor = Color.Gray;
+                        tileChar = 0xBA; // ║
+                        tileColor = wallColor;
                         break;
                     case '-': // Horizontal wall
-                        tileChar = 205; // ═
-                        tileColor = Color.Gray;
+                        tileChar = 0xCD; // ═
+                        tileColor = wallColor;
                         break;
-                    case '+': // Door
-                        tileChar = 43; // +
+                    case '╬': // door
+                    case '+': // door
+                        tileChar = 0xCE; // ╬
                         tileColor = Color.Brown;
                         break;
                     case '.': // Floor
                         tileChar = 250; // ·
-                        tileColor = Color.DarkGray;
+                        tileColor = Color.Green;
+                        break;
+                    case 'X': // Hallway
+                        tileChar = 0xB1; // partially filled square
+                        tileColor = Color.Gray;
                         break;
                     default:
                         tileChar = 250; // Default floor
@@ -801,7 +825,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     if (Math.Abs(x - gold.X) < 0.5f && Math.Abs(y - gold.Y) < 0.5f)
                     {
-                        DrawCharacter(rayConnection, 36, 100 + gold.X * 40, 100 + gold.Y * 40, _goldColor); // $ symbol
+                        DrawCharacter(rayConnection, 36, 100 + (int)(gold.X * 40), 100 + (int)(gold.Y * 40), _goldColor); // $ symbol
                     }
                 }
                 
@@ -810,7 +834,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     if (Math.Abs(x - health.X) < 0.5f && Math.Abs(y - health.Y) < 0.5f)
                     {
-                        DrawCharacter(rayConnection, 3, 100 + health.X * 40, 100 + health.Y * 40, _healthColor); // Heart symbol
+                        DrawCharacter(rayConnection, 3, 100 + (int)(health.X * 40), 100 + (int)(health.Y * 40), _healthColor); // Heart symbol
                     }
                 }
             }
@@ -1990,8 +2014,11 @@ public class ScreenPresenter : IScreenPresenter
         if (y >= _map.Count || x >= _map[y].Length)
             return true; // Default to walkable if outside map bounds
         
-        // Check if the tile is a wall
+        // Check if the tile is a wall or other non-walkable object
         char mapChar = _map[y][x];
+        
+        // Consider '|' and '-' as walls (non-walkable)
+        // But '+' (doors) should be walkable
         return mapChar != '|' && mapChar != '-';
     }
 }
