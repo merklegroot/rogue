@@ -7,6 +7,20 @@ public interface IRayLoader
     Font LoadRobotoFont();
     Texture2D LoadCharsetTexture();
     Shader LoadCrtShader();
+
+        /// <summary>
+    /// Loads the map from the embedded resource.
+    /// The map looks similar to this:
+    /// 
+    /// -------------------
+    /// |.................|
+    /// |.................|
+    /// |.................|----
+    /// |.....................|
+    /// |.....................|
+    /// -----------------------
+    /// </summary>
+    List<string> LoadMap();
 }
 
 public class RayLoader : IRayLoader
@@ -15,6 +29,16 @@ public class RayLoader : IRayLoader
     
     public RayLoader(IResourceReader resourceReader) =>
         _resourceReader = resourceReader;
+
+    public List<string> LoadMap()
+    {
+        var mapText = _resourceReader.ReadResourceString("map.txt", typeof(RayLoader).Assembly);
+        var lines = mapText.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+            .Where(line => !string.IsNullOrEmpty(line))
+            .ToList();
+
+        return lines;
+    }
 
     public Font LoadRobotoFont() =>
         LoadFontFromEmbeddedResource("Roboto-Regular.ttf");

@@ -151,6 +151,10 @@ public class ScreenPresenter : IScreenPresenter
     private Direction _knockbackDirection = Direction.Right;
     private const float KnockbackDistance = 0.5f; // How far to knock the player back
 
+    // Add these color fields near the other color definitions
+    private readonly Color _playerColor = new(0, 200, 255, 255);  // Cyan-blue for player
+    private readonly Color _enemyColor = new(255, 100, 100, 255); // Red for enemies
+
     // Add this method to update the player animation
     private void UpdatePlayerAnimation()
     {
@@ -185,9 +189,15 @@ public class ScreenPresenter : IScreenPresenter
 
     private readonly IRayLoader _rayLoader;
 
+    // Add a field to store the loaded map
+    private List<string> _map;
+
     public ScreenPresenter(IRayLoader rayLoader)
     {
         _rayLoader = rayLoader;
+        
+        // Load the map from the embedded resource
+        _map = rayLoader.LoadMap();
     }
 
     public void Initialize(IRayConnection rayConnection)
@@ -708,51 +718,100 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawWorld(IRayConnection rayConnection)
     {
-        for (int y = 0; y < 10; y++)
+        // Calculate map dimensions
+        int mapHeight = _map.Count;
+        int mapWidth = _map.Max(line => line.Length);
+        
+        // Draw the map
+        for (int y = 0; y < mapHeight; y++)
         {
-            for (int x = 0; x < 20; x++)
+            for (int x = 0; x < mapWidth; x++)
             {
+                // Get the character at this position in the map
+                char mapChar = '.'; // Default to floor
+                if (y < _map.Count && x < _map[y].Length)
+                {
+                    mapChar = _map[y][x];
+                }
+                
+                // Draw the appropriate tile based on the map character
+                Color tileColor = Color.DarkGray;
+                int tileChar = 250; // Default floor tile
+                
+                switch (mapChar)
+                {
+                    case '|': // Vertical wall
+                        tileChar = 186; // ║
+                        tileColor = Color.Gray;
+                        break;
+                    case '-': // Horizontal wall
+                        tileChar = 205; // ═
+                        tileColor = Color.Gray;
+                        break;
+                    case '+': // Door
+                        tileChar = 43; // +
+                        tileColor = Color.Brown;
+                        break;
+                    case '.': // Floor
+                        tileChar = 250; // ·
+                        tileColor = Color.DarkGray;
+                        break;
+                    default:
+                        tileChar = 250; // Default floor
+                        break;
+                }
+                
+                // Draw the tile
+                DrawCharacter(rayConnection, tileChar, 100 + x * 40, 100 + y * 40, tileColor);
+                
                 // Draw player with idle animation
                 if (Math.Abs(x - _animPlayerX) < 0.5f && Math.Abs(y - _animPlayerY) < 0.5f)
                 {
                     // Simple animation: toggle between character 2 and 1 every 0.5 seconds
                     int playerChar = (Raylib.GetTime() % 1 < 0.5) ? 2 : 1;
-                    DrawCharacter(rayConnection, playerChar, 100 + x * 40, 100 + y * 40, Color.White);
-                    continue;
-                }
-                
-                // Draw charger
-                if (_chargerActive && _charger != null && _charger.Alive && 
-                         Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
-                {
-                    Color chargerColor = _chargerColor;
-                    if (_charger.IsInvincible && (int)(_charger.InvincibilityTimer * 10) % 2 == 0)
+                    
+                    // If player is invincible, make them flash
+                    Color playerColor = _playerColor;
+                    if (_isInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
                     {
-                        chargerColor = new Color((byte)_chargerColor.R, (byte)_chargerColor.G, (byte)_chargerColor.B, (byte)128);
+                        playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
                     }
                     
-                    DrawCharacter(rayConnection, ChargerChar, 100 + x * 40, 100 + y * 40, chargerColor);
+                    DrawCharacter(rayConnection, playerChar, 100 + _animPlayerX * 40, 100 + _animPlayerY * 40, playerColor);
                 }
-                // Draw health pickups
-                else if (_healthPickups.Any(h => h.X == x && h.Y == y))
-                {
-                    DrawCharacter(rayConnection, HealthChar, 100 + x * 40, 100 + y * 40, _healthColor);
-                }
-                // Draw gold items
-                else if (_goldItems.Any(g => g.X == x && g.Y == y))
-                {
-                    DrawCharacter(rayConnection, GoldChar, 100 + x * 40, 100 + y * 40, _goldColor);
-                }
+                
                 // Draw enemies
-                else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
+                foreach (var enemy in _enemies)
                 {
-                    DrawCharacter(rayConnection, 128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
+                    if (enemy.Alive && Math.Abs(x - enemy.X) < 0.5f && Math.Abs(y - enemy.Y) < 0.5f)
+                    {
+                        DrawCharacter(rayConnection, ScreenConstants.EnemyChar, 100 + enemy.X * 40, 100 + enemy.Y * 40, _enemyColor);
+                    }
                 }
-                else
+                
+                // Draw charger if active
+                if (_chargerActive && _charger != null && _charger.Alive && 
+                    Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
                 {
-                    // Draw ground dots
-                    const char groundChar = (char)250;
-                    DrawCharacter(rayConnection, groundChar, 100 + x * 40, 100 + y * 40, Color.Green);
+                    DrawCharacter(rayConnection, 6, 100 + (int)(_charger.X * 40), 100 + (int)(_charger.Y * 40), _chargerColor);
+                }
+                
+                // Draw gold items
+                foreach (var gold in _goldItems)
+                {
+                    if (Math.Abs(x - gold.X) < 0.5f && Math.Abs(y - gold.Y) < 0.5f)
+                    {
+                        DrawCharacter(rayConnection, 36, 100 + gold.X * 40, 100 + gold.Y * 40, _goldColor); // $ symbol
+                    }
+                }
+                
+                // Draw health pickups
+                foreach (var health in _healthPickups)
+                {
+                    if (Math.Abs(x - health.X) < 0.5f && Math.Abs(y - health.Y) < 0.5f)
+                    {
+                        DrawCharacter(rayConnection, 3, 100 + health.X * 40, 100 + health.Y * 40, _healthColor); // Heart symbol
+                    }
                 }
             }
         }
@@ -805,28 +864,40 @@ public class ScreenPresenter : IScreenPresenter
             bool moved = false;
 
             // Check WASD keys
-            if (Raylib.IsKeyDown(KeyboardKey.W))
+            if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up))
             {
-                _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                if (IsWalkableTile(_animPlayerX, _animPlayerY - 1))
+                {
+                    _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                }
                 _lastDirection = Direction.Up;
                 moved = true;
             }
-            else if (Raylib.IsKeyDown(KeyboardKey.S))
+            else if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))
             {
-                _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                if (IsWalkableTile(_animPlayerX, _animPlayerY + 1))
+                {
+                    _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                }
                 _lastDirection = Direction.Down;
                 moved = true;
             }
 
-            if (Raylib.IsKeyDown(KeyboardKey.A))
+            if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left))
             {
-                _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                if (IsWalkableTile(_animPlayerX - 1, _animPlayerY))
+                {
+                    _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                }
                 _lastDirection = Direction.Left;
                 moved = true;
             }
-            else if (Raylib.IsKeyDown(KeyboardKey.D))
+            else if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right))
             {
-                _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                if (IsWalkableTile(_animPlayerX + 1, _animPlayerY))
+                {
+                    _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                }
                 _lastDirection = Direction.Right;
                 moved = true;
             }
@@ -1304,20 +1375,22 @@ public class ScreenPresenter : IScreenPresenter
 
     private void SpawnEnemy()
     {
-        // Find a position that's not occupied by the player or another enemy
+        // Find a position that's not occupied by the player or a wall
         int newX = 0;
         int newY = 0;
         bool isPositionValid = false;
 
-        const int maxAttempts = 10;
+        const int maxAttempts = 20;
 
         for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
             newX = _random.Next(20);  // 0-19
             newY = _random.Next(10);  // 0-9
 
+            // Check if position is valid (not on player, not on a wall, not on another enemy)
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY);
+                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
+                            IsWalkableTile(newX, newY);
 
             if (isPositionValid)
                 break;
@@ -1906,5 +1979,17 @@ public class ScreenPresenter : IScreenPresenter
         // Start knockback effect
         _isKnockedBack = true;
         _knockbackTimer = 0f;
+    }
+
+    // Add a helper method to check if a tile is walkable
+    private bool IsWalkableTile(int x, int y)
+    {
+        // Check if position is within map bounds
+        if (y >= _map.Count || x >= _map[y].Length)
+            return true; // Default to walkable if outside map bounds
+        
+        // Check if the tile is a wall
+        char mapChar = _map[y][x];
+        return mapChar != '|' && mapChar != '-';
     }
 }

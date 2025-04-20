@@ -5,6 +5,7 @@ namespace RogueLib;
 public interface IResourceReader
 {
     byte[] ReadResourceBytes(string resourceName, Assembly assembly);
+    string ReadResourceString(string resourceName, Assembly assembly);
 }
 
 public class ResourceReader : IResourceReader
@@ -25,6 +26,12 @@ public class ResourceReader : IResourceReader
         _ = stream.Read(data, 0, data.Length);
         
         return data;
+    }
+
+    public string ReadResourceString(string resourceName, Assembly assembly)
+    {
+        var data = ReadResourceBytes(resourceName, assembly);
+        return System.Text.Encoding.UTF8.GetString(data);
     }
     
     private string? FindResource(string partialName, Assembly assembly)
