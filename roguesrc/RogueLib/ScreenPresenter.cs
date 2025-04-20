@@ -8,15 +8,12 @@ public interface IScreenPresenter
 {
     void Initialize(IRayConnection rayConnection);
     void Update();
-    void Draw(GameState state);
+    void Draw(IRayConnection rayConnection, GameState state);
     bool WindowShouldClose();
-    void Cleanup();
 }
 
 public class ScreenPresenter : IScreenPresenter
 {
-    private Texture2D _charset;
-    private Font _menuFont;
     private const int Width = 40;
     private const int Height = 16;
 
@@ -100,16 +97,6 @@ public class ScreenPresenter : IScreenPresenter
 
     // Replace CRT effect fields with shader-related fields
     private bool _enableCrtEffect = true;
-    private Shader _crtShader;
-    private RenderTexture2D _gameTexture;
-    private int _resolutionLoc;
-    private int _curvatureLoc;
-    private int _scanlineLoc;
-    private int _vignetteLoc;
-    private int _brightnessLoc;
-    private int _distortionLoc;
-    private int _flickerLoc;
-    private int _timeLoc;
     private float _shaderTime = 0f;
     private int _scanlineCountLoc;
 
@@ -198,20 +185,8 @@ public class ScreenPresenter : IScreenPresenter
 
     public void Initialize(IRayConnection rayConnection)
     {
-        // Disable the default ESC key behavior that closes the window
-        Raylib.SetExitKey(KeyboardKey.Null);  // This disables the ESC key from closing the window
-
-        Raylib.InitWindow(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale, "Rogue-like");
-        Raylib.SetTargetFPS(60);
-
-        _charset = _rayLoader.LoadCharsetTexture(rayConnection);
-        _menuFont = _rayLoader.LoadRobotoFont(rayConnection);
-        // // var screenRes = new ScreenRes(rayLoader);
-        // _menuFont = screenRes.MenuFont;
-
-        // Initialize CRT shader
-        InitCrtShader(rayConnection);
-
+        // No need to initialize Raylib or load resources - that's done in RayConnectionFactory
+        
         SpawnEnemy();
         
         // Spawn initial gold items
@@ -224,39 +199,6 @@ public class ScreenPresenter : IScreenPresenter
         InitializeShop();
     }
 
-    private void InitCrtShader(IRayConnection rayConnection)
-    {
-        // Create a render texture the size of the window
-        _gameTexture = Raylib.LoadRenderTexture(Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale);
-        
-        // Load the CRT shader
-        _crtShader = _rayLoader.LoadCrtShader(rayConnection);
-        
-        // Get shader uniform locations
-        _resolutionLoc = Raylib.GetShaderLocation(_crtShader, "resolution");
-        _curvatureLoc = Raylib.GetShaderLocation(_crtShader, "curvature");
-        _scanlineLoc = Raylib.GetShaderLocation(_crtShader, "scanlineIntensity");
-        _scanlineCountLoc = Raylib.GetShaderLocation(_crtShader, "scanlineCount");
-        _vignetteLoc = Raylib.GetShaderLocation(_crtShader, "vignetteIntensity");
-        _brightnessLoc = Raylib.GetShaderLocation(_crtShader, "brightness");
-        _distortionLoc = Raylib.GetShaderLocation(_crtShader, "distortion");
-        _flickerLoc = Raylib.GetShaderLocation(_crtShader, "flickerIntensity");
-        _timeLoc = Raylib.GetShaderLocation(_crtShader, "time");
-        
-        // Set initial uniform values
-        float[] resolution = { Width * CharWidth * DisplayScale, Height * CharHeight * DisplayScale };
-        Raylib.SetShaderValue(_crtShader, _resolutionLoc, resolution, ShaderUniformDataType.Vec2);
-        
-        // Fix the extreme warping by drastically reducing curvature
-        Raylib.SetShaderValue(_crtShader, _curvatureLoc, 0.05f, ShaderUniformDataType.Float);  // Decreased from 0.5 to 0.3
-        Raylib.SetShaderValue(_crtShader, _scanlineLoc, 0.1f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _scanlineCountLoc, 240.0f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _vignetteLoc, 0.1f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _brightnessLoc, 1.05f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _distortionLoc, 0.002f, ShaderUniformDataType.Float);
-        Raylib.SetShaderValue(_crtShader, _flickerLoc, 0.01f, ShaderUniformDataType.Float);
-    }
-
     public void Update()
     {
         // Collect all key events that occurred
@@ -267,35 +209,40 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    public void Draw(GameState state)
+    public void Draw(IRayConnection rayConnection, GameState state)
     {
         // Update shader time
         _shaderTime += Raylib.GetFrameTime();
-        Raylib.SetShaderValue(_crtShader, _timeLoc, _shaderTime, ShaderUniformDataType.Float);
+        
+        Raylib.SetShaderValue(
+            rayConnection.CrtShader,
+            rayConnection.TimeLoc,
+            _shaderTime,
+            ShaderUniformDataType.Float);
         
         // Draw game to render texture
-        Raylib.BeginTextureMode(_gameTexture);
+        Raylib.BeginTextureMode(rayConnection.GameTexture);
         Raylib.ClearBackground(_backgroundColor);
 
         switch (_currentScreenEnum)
         {
             case GameScreenEnum.Menu:
-                DrawMenu();
+                DrawMenu(rayConnection);
                 HandleMenuInput();
                 break;
 
             case GameScreenEnum.CharacterSet:
-                DrawCharacterSet();
+                DrawCharacterSet(rayConnection);
                 HandleCharacterSetInput();
                 break;
 
             case GameScreenEnum.Animation:
-                DrawAnimation();
+                DrawAnimation(rayConnection);
                 HandleAnimationInput();
                 break;
 
             case GameScreenEnum.Shop:
-                DrawShop();
+                DrawShop(rayConnection);
                 HandleShopInput();
                 break;
         }
@@ -306,17 +253,13 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
         
-        if (_gameTexture.Id == 0)
-        {
-            Console.WriteLine("Render texture not created properly!");
-        }
         
         if (_enableCrtEffect)
         {
-            Raylib.BeginShaderMode(_crtShader);
+            Raylib.BeginShaderMode(rayConnection.CrtShader);
             Raylib.DrawTextureRec(
-                _gameTexture.Texture,
-                new Rectangle(0, 0, _gameTexture.Texture.Width, -_gameTexture.Texture.Height),
+                rayConnection.GameTexture.Texture,
+                new Rectangle(0, 0, rayConnection.GameTexture.Texture.Width, -rayConnection.GameTexture.Texture.Height),
                 new Vector2(0, 0),
                 Color.White
             );
@@ -326,8 +269,8 @@ public class ScreenPresenter : IScreenPresenter
         {
             // Draw without shader if effect is disabled
             Raylib.DrawTextureRec(
-                _gameTexture.Texture,
-                new Rectangle(0, 0, _gameTexture.Texture.Width, -_gameTexture.Texture.Height),
+                rayConnection.GameTexture.Texture,
+                new Rectangle(0, 0, rayConnection.GameTexture.Texture.Width, -rayConnection.GameTexture.Texture.Height),
                 new Vector2(0, 0),
                 Color.White
             );
@@ -339,7 +282,7 @@ public class ScreenPresenter : IScreenPresenter
         _keyEvents.Clear();
     }
 
-    private void DrawMenu()
+    private void DrawMenu(IRayConnection rayConnection)
     {
         // Draw debug grid to help with alignment
         DrawDebugGrid();
@@ -349,14 +292,14 @@ public class ScreenPresenter : IScreenPresenter
         int titleSize = 48;
         
         // Use MeasureTextEx instead of MeasureText to account for spacing
-        Vector2 titleSize2D = Raylib.MeasureTextEx(_menuFont, title, titleSize, 1);
+        Vector2 titleSize2D = Raylib.MeasureTextEx(rayConnection.MenuFont, title, titleSize, 1);
         int titleWidth = (int)titleSize2D.X;
         
         int centerX = (Width * CharWidth * DisplayScale) / 2;
         
         // Draw title with shadow effect
-        Raylib.DrawTextEx(_menuFont, title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
-        Raylib.DrawTextEx(_menuFont, title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
+        Raylib.DrawTextEx(rayConnection.MenuFont, title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
+        Raylib.DrawTextEx(rayConnection.MenuFont, title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
         
         // Draw a decorative line under the title - with correct width
         int lineY = 40 + titleSize + 10; // Position it directly under the title with a small gap
@@ -370,17 +313,17 @@ public class ScreenPresenter : IScreenPresenter
         int menuStartY = lineY + 30; // Start menu options below the line
         int menuSpacing = 60;
         
-        DrawColoredHotkeyText("Start (A)dventure", centerX - 120, menuStartY);
-        DrawColoredHotkeyText("View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
-        DrawColoredHotkeyText("(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
-        DrawColoredHotkeyText("e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
+        DrawColoredHotkeyText(rayConnection, "Start (A)dventure", centerX - 120, menuStartY);
+        DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
+        DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
+        DrawColoredHotkeyText(rayConnection, "e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
         
         // Draw a version number and copyright
         string version = "v0.1 Alpha";
-        DrawText(version, 20, Height * CharHeight * DisplayScale - 40, new Color(150, 150, 150, 200));
+        DrawText(rayConnection, version, 20, Height * CharHeight * DisplayScale - 40, new Color(150, 150, 150, 200));
         
         // Draw a small decorative element
-        DrawCharacter(2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
+        DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
     }
 
     private void DrawDebugGrid()
@@ -421,7 +364,7 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.DrawLine(0, centerY, screenWidth, centerY, new Color(255, 0, 0, 100));
     }
 
-    private void DrawColoredHotkeyText(string text, int x, int y, ColoredHotkeyOptions? options = null)
+    private void DrawColoredHotkeyText(IRayConnection rayConnection, string text, int x, int y, ColoredHotkeyOptions? options = null)
     {
         options ??= new ColoredHotkeyOptions();
 
@@ -431,7 +374,7 @@ public class ScreenPresenter : IScreenPresenter
         // Guard clause: if no valid parentheses found, draw plain text
         if (startParenIndex == -1 || endParenIndex == -1 || endParenIndex <= startParenIndex + 1)
         {
-            DrawText(text, x, y, options.BaseColor);
+            DrawText(rayConnection, text, x, y, options.BaseColor);
             return;
         }
 
@@ -440,31 +383,31 @@ public class ScreenPresenter : IScreenPresenter
 
         // Draw text before parenthesis
         var beforeText = text[..startParenIndex];
-        DrawText(beforeText, currentX, y, options.BaseColor);
+        DrawText(rayConnection, beforeText, currentX, y, options.BaseColor);
         
         // Use MeasureTextEx for more accurate width measurement
-        Vector2 beforeSize = Raylib.MeasureTextEx(_menuFont, beforeText, ScreenConstants.MenuFontSize, 1);
+        Vector2 beforeSize = Raylib.MeasureTextEx(rayConnection.MenuFont, beforeText, ScreenConstants.MenuFontSize, 1);
         currentX += (int)beforeSize.X - 4;  // Reduce spacing before parenthesis
 
         // Draw opening parenthesis
-        DrawText("(", currentX, y, options.BaseColor);
-        Vector2 parenSize = Raylib.MeasureTextEx(_menuFont, "(", ScreenConstants.MenuFontSize, 1);
+        DrawText(rayConnection, "(", currentX, y, options.BaseColor);
+        Vector2 parenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, "(", ScreenConstants.MenuFontSize, 1);
         currentX += (int)parenSize.X - 2;  // Tighter spacing after opening parenthesis
 
         // Draw hotkey in different color
         var hotkey = text[(startParenIndex + 1)..endParenIndex];
-        DrawText(hotkey, currentX, y, options.HotkeyColor);
-        Vector2 hotkeySize = Raylib.MeasureTextEx(_menuFont, hotkey, ScreenConstants.MenuFontSize, 1);
+        DrawText(rayConnection, hotkey, currentX, y, options.HotkeyColor);
+        Vector2 hotkeySize = Raylib.MeasureTextEx(rayConnection.MenuFont, hotkey, ScreenConstants.MenuFontSize, 1);
         currentX += (int)hotkeySize.X - 2;  // Tighter spacing after hotkey
 
         // Draw closing parenthesis
-        DrawText(")", currentX, y, options.BaseColor);
-        Vector2 closeParenSize = Raylib.MeasureTextEx(_menuFont, ")", ScreenConstants.MenuFontSize, 1);
+        DrawText(rayConnection, ")", currentX, y, options.BaseColor);
+        Vector2 closeParenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, ")", ScreenConstants.MenuFontSize, 1);
         currentX += (int)closeParenSize.X - 2;  // Tighter spacing after closing parenthesis
 
         // Draw remaining text
         var afterText = text[(endParenIndex + 1)..];
-        DrawText(afterText, currentX, y, options.BaseColor);
+        DrawText(rayConnection, afterText, currentX, y, options.BaseColor);
     }
 
     private void HandleMenuInput()
@@ -496,7 +439,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawCharacterSet()
+    private void DrawCharacterSet(IRayConnection rayConnection)
     {
         // Draw all characters in a grid
         for (var charNum = 0; charNum < 256; charNum++)
@@ -504,7 +447,7 @@ public class ScreenPresenter : IScreenPresenter
             var row = charNum / 32;
             var col = charNum % 32;
 
-            DrawCharacter(
+            DrawCharacter(rayConnection, 
                 charNum,
                 20 + (col * 40),
                 20 + (row * 60),
@@ -512,7 +455,7 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
 
-        DrawText("Press any key to return", 20, Height * CharHeight * DisplayScale - 40, Color.White);
+        DrawText(rayConnection, "Press any key to return", 20, Height * CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput()
@@ -523,19 +466,19 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawAnimation()
+    private void DrawAnimation(IRayConnection rayConnection)
     {
         UpdatePlayerIdleAnimation();
-        DrawHealthBar();
-        DrawGoldCounter();
-        DrawWorld();
-        DrawExplosions();
-        DrawSwordAnimation();
-        DrawFlyingGold();
-        DrawCooldownIndicators();
-        DrawCrossbowBolts();
-        DrawChargerHealth();
-        DrawInstructions();
+        DrawHealthBar(rayConnection);
+        DrawGoldCounter(rayConnection);
+        DrawWorld(rayConnection);
+        DrawExplosions(rayConnection);
+        DrawSwordAnimation(rayConnection);
+        DrawFlyingGold(rayConnection);
+        DrawCooldownIndicators(rayConnection);
+        DrawCrossbowBolts(rayConnection);
+        DrawChargerHealth(rayConnection);
+        DrawInstructions(rayConnection);
     }
 
     private void UpdatePlayerIdleAnimation()
@@ -548,7 +491,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawExplosions()
+    private void DrawExplosions(IRayConnection rayConnection)
     {
         // Draw explosions (after ground and enemies, but before sword)
         foreach (var explosion in _explosions)
@@ -560,11 +503,11 @@ public class ScreenPresenter : IScreenPresenter
                 _ => (char)42  // Large explosion (asterisk)
             };
             
-            DrawCharacter(explosionChar, 100 + explosion.X * 40, 100 + explosion.Y * 40, _explosionColor);
+            DrawCharacter(rayConnection, explosionChar, 100 + explosion.X * 40, 100 + explosion.Y * 40, _explosionColor);
         }
     }
 
-    private void DrawSwordAnimation()
+    private void DrawSwordAnimation(IRayConnection rayConnection)
     {
         // Draw sword if swinging (drawn after ground to appear on top)
         if (_isSwordSwinging)
@@ -638,11 +581,11 @@ public class ScreenPresenter : IScreenPresenter
             float swordY = 100 + (_animPlayerY + yOffset) * 40;
 
             // Draw the sword character with silvery-blue color
-            DrawCharacter(swordChar, (int)swordX, (int)swordY, _swordColor);
+            DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, _swordColor);
         }
     }
 
-    private void DrawFlyingGold()
+    private void DrawFlyingGold(IRayConnection rayConnection)
     {
         // Draw flying gold (after everything else so it appears on top)
         foreach (var gold in _flyingGold)
@@ -671,11 +614,11 @@ public class ScreenPresenter : IScreenPresenter
             Color fadingGoldColor = new Color(_goldColor.R, _goldColor.G, _goldColor.B, alpha);
             
             // Draw the flying gold character with fading effect
-            DrawCharacter(GoldChar, currentX, currentY, fadingGoldColor);
+            DrawCharacter(rayConnection, GoldChar, currentX, currentY, fadingGoldColor);
         }
     }
 
-    private void DrawCooldownIndicators()
+    private void DrawCooldownIndicators(IRayConnection rayConnection)
     {
         // Draw sword cooldown indicator
         if (_swordOnCooldown)
@@ -716,7 +659,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawCrossbowBolts()
+    private void DrawCrossbowBolts(IRayConnection rayConnection)
     {
         foreach (var bolt in _crossbowBolts)
         {
@@ -729,21 +672,21 @@ public class ScreenPresenter : IScreenPresenter
             };
             
             // Draw the bolt at its current position
-            DrawCharacter(boltChar, 100 + (int)(bolt.X * 40), 100 + (int)(bolt.Y * 40), _boltColor);
+            DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 40), 100 + (int)(bolt.Y * 40), _boltColor);
         }
     }
 
-    private void DrawChargerHealth()
+    private void DrawChargerHealth(IRayConnection rayConnection)
     {
         // Draw charger health if active
         if (_chargerActive && _charger != null && _charger.Alive)
         {
             string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth} (Hit {_charger.HitCount} times)";
-            DrawText(healthText, 20, 60, Color.Red);
+            DrawText(rayConnection, healthText, 20, 60, Color.Red);
         }
     }
 
-    private void DrawInstructions()
+    private void DrawInstructions(IRayConnection rayConnection)
     {
         // Move the instructions text up by 20 pixels
         string instructionsText = "Use WASD to move, SPACE to swing sword";
@@ -754,10 +697,10 @@ public class ScreenPresenter : IScreenPresenter
         instructionsText += ", ESC to return to menu, (G) for debug gold";
         
         // Changed from Height * CharHeight * DisplayScale - 40 to Height * CharHeight * DisplayScale - 60
-        DrawText(instructionsText, 20, Height * CharHeight * DisplayScale - 60, Color.White);
+        DrawText(rayConnection, instructionsText, 20, Height * CharHeight * DisplayScale - 60, Color.White);
     }
 
-    private void DrawWorld()
+    private void DrawWorld(IRayConnection rayConnection)
     {
         for (int y = 0; y < 10; y++)
         {
@@ -768,7 +711,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Simple animation: toggle between character 2 and 1 every 0.5 seconds
                     int playerChar = (Raylib.GetTime() % 1 < 0.5) ? 2 : 1;
-                    DrawCharacter(playerChar, 100 + x * 40, 100 + y * 40, Color.White);
+                    DrawCharacter(rayConnection, playerChar, 100 + x * 40, 100 + y * 40, Color.White);
                     continue;
                 }
                 
@@ -781,28 +724,29 @@ public class ScreenPresenter : IScreenPresenter
                     {
                         chargerColor = new Color((byte)_chargerColor.R, (byte)_chargerColor.G, (byte)_chargerColor.B, (byte)128);
                     }
-                    DrawCharacter(ChargerChar, 100 + x * 40, 100 + y * 40, chargerColor);
+                    
+                    DrawCharacter(rayConnection, ChargerChar, 100 + x * 40, 100 + y * 40, chargerColor);
                 }
                 // Draw health pickups
                 else if (_healthPickups.Any(h => h.X == x && h.Y == y))
                 {
-                    DrawCharacter(HealthChar, 100 + x * 40, 100 + y * 40, _healthColor);
+                    DrawCharacter(rayConnection, HealthChar, 100 + x * 40, 100 + y * 40, _healthColor);
                 }
                 // Draw gold items
                 else if (_goldItems.Any(g => g.X == x && g.Y == y))
                 {
-                    DrawCharacter(GoldChar, 100 + x * 40, 100 + y * 40, _goldColor);
+                    DrawCharacter(rayConnection, GoldChar, 100 + x * 40, 100 + y * 40, _goldColor);
                 }
                 // Draw enemies
                 else if (_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
                 {
-                    DrawCharacter(128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
+                    DrawCharacter(rayConnection, 128, 100 + x * 40, 100 + y * 40, Color.RayWhite);
                 }
                 else
                 {
                     // Draw ground dots
                     const char groundChar = (char)250;
-                    DrawCharacter(groundChar, 100 + x * 40, 100 + y * 40, Color.Green);
+                    DrawCharacter(rayConnection, groundChar, 100 + x * 40, 100 + y * 40, Color.Green);
                 }
             }
         }
@@ -1394,12 +1338,12 @@ public class ScreenPresenter : IScreenPresenter
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
     }
 
-    private void DrawText(string text, int x, int y, Color color)
+    private void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color)
     {
-        Raylib.DrawTextEx(_menuFont, text, new Vector2(x, y), ScreenConstants.MenuFontSize, 1, color);
+        Raylib.DrawTextEx(rayConnection.MenuFont, text, new Vector2(x, y), ScreenConstants.MenuFontSize, 1, color);
     }
 
-    private void DrawCharacter(int charNum, int x, int y, Color color, bool showBorder = false)
+    private void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false)
     {
         var sourceX = charNum % 32;
         var sourceY = charNum / 32;
@@ -1419,7 +1363,9 @@ public class ScreenPresenter : IScreenPresenter
         );
 
         // Draw the character
-        Raylib.DrawTexturePro(_charset, sourceRect, destRect, Vector2.Zero, 0, color);
+        Raylib.DrawTexturePro(
+            rayConnection.CharsetTexture,
+            sourceRect, destRect, Vector2.Zero, 0, color);
 
         if (showBorder)
         {
@@ -1442,8 +1388,8 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
     }
-
-    private void DrawHealthBar()
+    
+    private void DrawHealthBar(IRayConnection rayConnection)
     {
         const int heartChar = 3;  // ASCII/CP437 code for heart symbol (♥)
         const int heartSpacing = 30;  // Pixels between hearts
@@ -1456,23 +1402,18 @@ public class ScreenPresenter : IScreenPresenter
             Color heartColor = (i < _currentHealth) ? _healthColor : _emptyHealthColor;
 
             // Draw the heart
-            DrawCharacter(heartChar, startX + (i * heartSpacing), startY, heartColor);
+            DrawCharacter(rayConnection, heartChar, startX + (i * heartSpacing), startY, heartColor);
         }
     }
 
-    private void DrawGoldCounter()
+    private void DrawGoldCounter(IRayConnection rayConnection)
     {
-        // Calculate position for top right placement
+        // Draw gold counter at the top-right of the screen
         int screenWidth = Width * CharWidth * DisplayScale;
         string goldText = $"Gold: {_playerGold}";
         int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
         
-        // Position the gold counter at the top right with some padding
-        int startX = screenWidth - goldTextWidth - 20;  // 20px padding from right edge
-        const int startY = 20;  // Same vertical position as health
-        
-        // Draw gold text
-        DrawText(goldText, startX, startY, _goldColor);
+        DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, _goldColor);
     }
 
     public bool WindowShouldClose()
@@ -1488,24 +1429,6 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         return closeRequested;
-    }
-
-    public void Cleanup()
-    {
-        // Call the existing Dispose method to handle cleanup
-        Dispose();
-    }
-
-    public void Dispose()
-    {
-        // Unload shader resources
-        Raylib.UnloadShader(_crtShader);
-        Raylib.UnloadRenderTexture(_gameTexture);
-        
-        // Existing cleanup code
-        Raylib.UnloadTexture(_charset);
-        Raylib.UnloadFont(_menuFont);
-        Raylib.CloseWindow();
     }
 
     private class Explosion
@@ -1606,55 +1529,49 @@ public class ScreenPresenter : IScreenPresenter
         });
     }
 
-    private void DrawShop()
+    private void DrawShop(IRayConnection rayConnection)
     {
         // Draw shop background
-        Raylib.DrawRectangle(50, 50, Width * CharWidth * DisplayScale - 100, Height * CharHeight * DisplayScale - 100, new Color(0, 0, 0, 200));
+        Raylib.DrawRectangle(50, 50, Width * CharWidth * DisplayScale - 100, Height * CharHeight * DisplayScale - 100, new Color(30, 30, 30, 230));
+        Raylib.DrawRectangleLines(50, 50, Width * CharWidth * DisplayScale - 100, Height * CharHeight * DisplayScale - 100, Color.Gold);
         
         // Draw shop title
-        DrawText("SHOP", Width * CharWidth * DisplayScale / 2 - 50, 70, Color.Gold);
+        string shopTitle = "ADVENTURER'S SHOP";
+        Vector2 titleSize = Raylib.MeasureTextEx(rayConnection.MenuFont, shopTitle, 32, 1);
+        Raylib.DrawTextEx(rayConnection.MenuFont, shopTitle, new Vector2((Width * CharWidth * DisplayScale) / 2 - titleSize.X / 2, 70), 32, 1, Color.Gold);
         
-        // Draw gold amount
-        DrawText($"Your Gold: {_playerGold}", Width * CharWidth * DisplayScale / 2 - 80, 110, _goldColor);
+        // Draw player's gold
+        string goldText = $"Your Gold: {_playerGold}";
+        DrawText(rayConnection, goldText, 70, 120, _goldColor);
         
         // Draw shop items
-        int startY = 150;
-        int itemHeight = 80;
+        int itemY = 170;
+        int itemSpacing = 50;
         
         for (int i = 0; i < _shopInventory.Count; i++)
         {
             var item = _shopInventory[i];
+            Color itemColor = i == _selectedShopItem ? Color.White : new Color(200, 200, 200, 200);
             
-            // Special handling for header items
-            if (item.Category == ShopCategory.Header)
+            // Draw selection indicator
+            if (i == _selectedShopItem)
             {
-                // Draw section header with special styling
-                DrawText(item.Name, 80, startY + i * itemHeight + 10, Color.Gold);
-                DrawText(item.Description, 80, startY + i * itemHeight + 35, new Color(150, 150, 150, 255));
-                continue;  // Skip the rest of the drawing for headers
+                Raylib.DrawRectangle(60, itemY - 5, Width * CharWidth * DisplayScale - 120, 40, new Color(60, 60, 60, 150));
             }
             
-            Color itemColor = (_selectedShopItem == i) ? Color.Yellow : Color.White;
-            Color priceColor = (_playerGold >= item.Price) ? Color.Green : Color.Red;
-            
-            // Draw selection background if this is the selected item
-            if (_selectedShopItem == i)
-            {
-                Raylib.DrawRectangle(60, startY + i * itemHeight, Width * CharWidth * DisplayScale - 120, itemHeight - 5, new Color(50, 50, 50, 100));
-            }
-            
-            // Draw item name
-            DrawText(item.Name, 80, startY + i * itemHeight + 10, itemColor);
+            // Draw item name and price
+            DrawText(rayConnection, item.Name, 70, itemY, itemColor);
+            string priceText = $"{item.Price} gold";
+            DrawText(rayConnection, priceText, Width * CharWidth * DisplayScale - 200, itemY, itemColor);
             
             // Draw item description
-            DrawText(item.Description, 80, startY + i * itemHeight + 35, new Color(200, 200, 200, 255));
+            DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
             
-            // Draw item price
-            DrawText($"{item.Price} gold", Width * CharWidth * DisplayScale - 200, startY + i * itemHeight + 20, priceColor);
+            itemY += itemSpacing;
         }
         
         // Draw instructions
-        DrawText("↑/↓: Select Item   Enter: Buy   Esc: Close Shop", 80, Height * CharHeight * DisplayScale - 80, Color.White);
+        DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, Height * CharHeight * DisplayScale - 100, Color.White);
     }
 
     private void HandleShopInput()
