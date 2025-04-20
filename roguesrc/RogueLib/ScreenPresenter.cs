@@ -1434,42 +1434,42 @@ public class ScreenPresenter : IScreenPresenter
 
     private void SpawnEnemy()
     {
-        // Find a position that's not occupied by the player or a wall
+        // Find a position that's not occupied by the player or another enemy
+        // and is a walkable tile
         int newX = 0;
         int newY = 0;
         bool isPositionValid = false;
 
-        const int maxAttempts = 20;
+        const int maxAttempts = 20; // Increased from 10 to 20 for better chances
 
         for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
             newX = _random.Next(20);  // 0-19
             newY = _random.Next(10);  // 0-9
 
-            // Check if position is valid (not on player, not on a wall, not on another enemy)
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                            IsWalkableTile(newX, newY);  // Add this check
+                              !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
+                              IsWalkableTile(newX, newY);  // Check if the tile is walkable
 
             if (isPositionValid)
                 break;
         }
 
         if (!isPositionValid)
-            return;
+            return;  // Don't spawn if we couldn't find a valid position
 
-        _enemies.Add(new Enemy { X = newX, Y = newY });
-        _enemySpawnTimer = 0;
+        _enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
     }
 
     private void SpawnGoldItem()
     {
         // Find a position that's not occupied by the player, enemies, or other gold
+        // and is a walkable tile
         int newX = 0;
         int newY = 0;
         bool isPositionValid = false;
 
-        const int maxAttempts = 10;
+        const int maxAttempts = 20; // Increased from 10 to 20
 
         for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
@@ -1477,9 +1477,9 @@ public class ScreenPresenter : IScreenPresenter
             newY = _random.Next(10);  // 0-9
 
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                            !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
-                            IsWalkableTile(newX, newY);  // Add this check
+                              !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
+                              !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
+                              IsWalkableTile(newX, newY);  // Check if the tile is walkable
 
             if (isPositionValid)
                 break;
@@ -1494,11 +1494,12 @@ public class ScreenPresenter : IScreenPresenter
     private void SpawnHealthPickup()
     {
         // Find a position that's not occupied by the player, enemies, gold, or other health pickups
+        // and is a walkable tile
         int newX = 0;
         int newY = 0;
         bool isPositionValid = false;
 
-        const int maxAttempts = 10;
+        const int maxAttempts = 20; // Increased from 10 to 20
 
         for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
@@ -1506,10 +1507,10 @@ public class ScreenPresenter : IScreenPresenter
             newY = _random.Next(10);  // 0-9
 
             isPositionValid = (newX != _animPlayerX || newY != _animPlayerY) &&
-                            !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
-                            !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
-                            !_healthPickups.Any(h => h.X == newX && h.Y == newY) &&
-                            IsWalkableTile(newX, newY);  // Add this check
+                              !_enemies.Any(e => e.Alive && e.X == newX && e.Y == newY) &&
+                              !_goldItems.Any(g => g.X == newX && g.Y == newY) &&
+                              !_healthPickups.Any(h => h.X == newX && h.Y == newY) &&
+                              IsWalkableTile(newX, newY);  // Check if the tile is walkable
 
             if (isPositionValid)
                 break;
@@ -2056,7 +2057,7 @@ public class ScreenPresenter : IScreenPresenter
         // Check if the tile is a wall or other non-walkable object
         char mapChar = _map[y][x];
 
-        var wallTiles = new List<char> { '|', '-', '╔', '╗', '╝', '╚', '═', '║'};
+        var wallTiles = new List<char> { '|', '-', '╔', '╗', '╝', '╚', '═', '║', '=' };
 
         return !wallTiles.Contains(mapChar);
     }
