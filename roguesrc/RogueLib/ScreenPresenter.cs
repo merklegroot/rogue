@@ -893,7 +893,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(_animPlayerX, _animPlayerY - 1))
                 {
-                    _animPlayerY = Math.Max(0, _animPlayerY - 1);
+                    _animPlayerY -= 1;  // No Math.Max constraint
                 }
                 _lastDirection = Direction.Up;
                 moved = true;
@@ -902,7 +902,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(_animPlayerX, _animPlayerY + 1))
                 {
-                    _animPlayerY = Math.Min(9, _animPlayerY + 1);
+                    _animPlayerY += 1;  // No Math.Min constraint
                 }
                 _lastDirection = Direction.Down;
                 moved = true;
@@ -912,7 +912,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(_animPlayerX - 1, _animPlayerY))
                 {
-                    _animPlayerX = Math.Max(0, _animPlayerX - 1);
+                    _animPlayerX -= 1;  // No Math.Max constraint
                 }
                 _lastDirection = Direction.Left;
                 moved = true;
@@ -921,7 +921,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(_animPlayerX + 1, _animPlayerY))
                 {
-                    _animPlayerX = Math.Min(19, _animPlayerX + 1);
+                    _animPlayerX += 1;  // No Math.Min constraint
                 }
                 _lastDirection = Direction.Right;
                 moved = true;
