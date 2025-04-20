@@ -63,8 +63,8 @@ public class ScreenPresenter : IScreenPresenter
     // Multiple enemies support
     private readonly List<Enemy> _enemies = [];
     private float _enemySpawnTimer;
-    private const float EnemySpawnDelay = 1.0f;  // Spawn a new enemy every 1 second
-    private const int MaxEnemies = 3;  // Maximum number of enemies
+    private const float EnemySpawnDelay = 0.3f;  // Reduced from 1.0f to 0.3f - spawn every 0.3 seconds
+    private const int MaxEnemies = 15;  // Increased from 3 to 15 - allow up to 15 enemies
 
     // Add health fields
     private readonly int _maxHealth = 10;
@@ -1002,7 +1002,7 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Update enemy movement
-        UpdateEnemy();
+        UpdateEnemies();
 
         // Update invincibility timer
         if (_isInvincible)
@@ -1229,205 +1229,166 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void UpdateEnemy()
+    private void UpdateEnemies()
     {
-        // Update enemy spawn timer
-        _enemySpawnTimer += Raylib.GetFrameTime();
-
-        // Count living enemies
-        int livingEnemies = _enemies.Count(e => e.Alive);
-
-        // Spawn new enemy if timer expired and we're under the max living enemies
-        if (_enemySpawnTimer >= EnemySpawnDelay && livingEnemies < MaxEnemies)
-        {
-            SpawnEnemy();
-        }
-
-        // Update each enemy with its own timer
         float frameTime = Raylib.GetFrameTime();
-        foreach (var enemy in _enemies)
+        
+        // Update enemy spawn timer
+        _enemySpawnTimer += frameTime;
+        if (_enemySpawnTimer >= EnemySpawnDelay)
         {
-            if (!enemy.Alive) continue;  // Skip dead enemies
-
-            // Update this enemy's individual timer
-            enemy.MoveTimer += frameTime;
-
-            if (enemy.MoveTimer >= EnemyMoveDelay)
+            _enemySpawnTimer = 0f;
+            
+            // Only spawn if we haven't reached the maximum
+            if (_enemies.Count(e => e.Alive) < MaxEnemies)
             {
-                // Choose a random direction (0-3)
-                int direction = _random.Next(4);
-
-                int newX = enemy.X;
-                int newY = enemy.Y;
-
-                switch (direction)
-                {
-                    case 0: // Up
-                        newY = Math.Max(0, enemy.Y - 1);
-                        break;
-                    case 1: // Right
-                        newX = Math.Min(19, enemy.X + 1);
-                        break;
-                    case 2: // Down
-                        newY = Math.Min(9, enemy.Y + 1);
-                        break;
-                    case 3: // Left
-                        newX = Math.Max(0, enemy.X - 1);
-                        break;
-                }
-
-                // Only move if the new position is not occupied by another enemy or the player
-                bool positionOccupied = (newX == _animPlayerX && newY == _animPlayerY) ||
-                                        _enemies.Any(e => e != enemy && e.Alive && e.X == newX && e.Y == newY) ||
-                                        (_chargerActive && _charger != null && _charger.Alive && 
-                                         Math.Abs(newX - _charger.X) < 0.5f && Math.Abs(newY - _charger.Y) < 0.5f);
-
-                if (!positionOccupied)
-                {
-                    enemy.X = newX;
-                    enemy.Y = newY;
-                }
-
-                // Reset this enemy's timer
-                enemy.MoveTimer = 0;
+                SpawnEnemy();
             }
         }
-
-        // Update charger if active
-        if (_chargerActive && _charger != null && _charger.Alive)
+        
+        // Update existing enemies
+        foreach (var enemy in _enemies)
         {
-            _charger.MoveTimer += frameTime;
+            if (!enemy.Alive) continue;
             
-            if (_charger.MoveTimer >= ChargerSpeed) // Charger moves faster than regular enemies
+            enemy.MoveTimer += frameTime;
+            if (enemy.MoveTimer >= EnemyMoveDelay)
             {
-                // Charger always moves toward the player (unlike random movement of regular enemies)
-                float dx = _animPlayerX - _charger.X;
-                float dy = _animPlayerY - _charger.Y;
+                enemy.MoveTimer = 0f;
                 
-                // Determine primary direction to move (horizontal or vertical)
-                if (Math.Abs(dx) > Math.Abs(dy))
+                // Calculate direction to player
+                int dx = 0;
+                int dy = 0;
+                
+                // Simple AI: move toward player
+                if (enemy.X < _animPlayerX) dx = 1;
+                else if (enemy.X > _animPlayerX) dx = -1;
+                
+                if (enemy.Y < _animPlayerY) dy = 1;
+                else if (enemy.Y > _animPlayerY) dy = -1;
+                
+                // Try to move horizontally first
+                if (dx != 0)
                 {
-                    // Move horizontally
-                    if (dx > 0)
-                        _charger.X = Math.Min(19, _charger.X + 1);
-                    else
-                        _charger.X = Math.Max(0, _charger.X - 1);
+                    // Check if the new position is walkable
+                    if (IsWalkableTile(enemy.X + dx, enemy.Y))
+                    {
+                        enemy.X += dx;
+                    }
+                    // If horizontal movement is blocked, try vertical
+                    else if (dy != 0 && IsWalkableTile(enemy.X, enemy.Y + dy))
+                    {
+                        enemy.Y += dy;
+                    }
                 }
-                else
+                // If no horizontal movement, try vertical
+                else if (dy != 0)
                 {
-                    // Move vertically
-                    if (dy > 0)
-                        _charger.Y = Math.Min(9, _charger.Y + 1);
-                    else
-                        _charger.Y = Math.Max(0, _charger.Y - 1);
+                    // Check if the new position is walkable
+                    if (IsWalkableTile(enemy.X, enemy.Y + dy))
+                    {
+                        enemy.Y += dy;
+                    }
                 }
                 
-                // Reset charger's timer
-                _charger.MoveTimer = 0;
+                // Check for collision with player
+                if (Math.Abs(enemy.X - _animPlayerX) < 0.5f && Math.Abs(enemy.Y - _animPlayerY) < 0.5f)
+                {
+                    // Only damage player if not invincible
+                    if (!_isInvincible)
+                    {
+                        _currentHealth--;
+                        
+                        // Apply knockback
+                        ApplyKnockback(new Vector2(enemy.X, enemy.Y));
+                        
+                        // Make player briefly invincible
+                        _isInvincible = true;
+                        _invincibilityTimer = 0f;
+                    }
+                }
+            }
+        }
+        
+        // Remove dead enemies
+        _enemies.RemoveAll(e => !e.Alive);
+    }
+
+    // Also update the charger movement logic
+    private void UpdateCharger()
+    {
+        if (!_chargerActive || _charger == null || !_charger.Alive)
+            return;
+        
+        float frameTime = Raylib.GetFrameTime();
+        
+        // Update charger invincibility
+        if (_charger.IsInvincible)
+        {
+            _charger.InvincibilityTimer += frameTime;
+            if (_charger.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
+            {
+                _charger.IsInvincible = false;
+            }
+        }
+        
+        // Update charger movement
+        _charger.MoveTimer += frameTime;
+        if (_charger.MoveTimer >= ChargerSpeed) // Charger moves faster than regular enemies
+        {
+            _charger.MoveTimer = 0f;
+            
+            // Calculate direction to player
+            float dx = 0;
+            float dy = 0;
+            
+            // Charger AI: move directly toward player
+            if (_charger.X < _animPlayerX) dx = 1;
+            else if (_charger.X > _animPlayerX) dx = -1;
+            
+            if (_charger.Y < _animPlayerY) dy = 1;
+            else if (_charger.Y > _animPlayerY) dy = -1;
+            
+            // Try to move horizontally first
+            if (dx != 0)
+            {
+                // Check if the new position is walkable
+                if (IsWalkableTile((int)(_charger.X + dx), (int)_charger.Y))
+                {
+                    _charger.X += dx;
+                }
+                // If horizontal movement is blocked, try vertical
+                else if (dy != 0 && IsWalkableTile((int)_charger.X, (int)(_charger.Y + dy)))
+                {
+                    _charger.Y += dy;
+                }
+            }
+            // If no horizontal movement, try vertical
+            else if (dy != 0)
+            {
+                // Check if the new position is walkable
+                if (IsWalkableTile((int)_charger.X, (int)(_charger.Y + dy)))
+                {
+                    _charger.Y += dy;
+                }
             }
             
             // Check for collision with player
             if (Math.Abs(_charger.X - _animPlayerX) < 0.5f && Math.Abs(_charger.Y - _animPlayerY) < 0.5f)
             {
-                HandleChargerDamage(true); // true for sword
-            }
-        }
-
-        // Check for sword collision with any enemy
-        if (_isSwordSwinging)
-        {
-            // Define the collision area based on the direction
-            List<(int x, int y)> collisionPoints = new List<(int x, int y)>();
-
-            switch (_lastDirection)
-            {
-                case Direction.Left:
-                    // Check left, top-left, and bottom-left
-                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY));     // Left
-                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY - 1)); // Top-left
-                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY + 1)); // Bottom-left
-                    break;
-
-                case Direction.Right:
-                    // Check right, top-right, and bottom-right
-                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY));     // Right
-                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY - 1)); // Top-right
-                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY + 1)); // Bottom-right
-                    break;
-
-                case Direction.Up:
-                    // Check up, top-left, and top-right
-                    collisionPoints.Add((_animPlayerX, _animPlayerY - 1));     // Up
-                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY - 1)); // Top-left
-                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY - 1)); // Top-right
-                    break;
-
-                case Direction.Down:
-                    // Check down, bottom-left, and bottom-right
-                    collisionPoints.Add((_animPlayerX, _animPlayerY + 1));     // Down
-                    collisionPoints.Add((_animPlayerX - 1, _animPlayerY + 1)); // Bottom-left
-                    collisionPoints.Add((_animPlayerX + 1, _animPlayerY + 1)); // Bottom-right
-                    break;
-            }
-
-            // Check if any collision point matches any enemy position
-            foreach (var enemy in _enemies)
-            {
-                if (enemy.Alive && collisionPoints.Any(p => p.x == enemy.X && p.y == enemy.Y))
+                // Only damage player if not invincible
+                if (!_isInvincible)
                 {
-                    enemy.Alive = false;
+                    // Charger does 2 damage
+                    _currentHealth -= 2;
                     
-                    // Increment kill counter
-                    _enemiesKilled++;
+                    // Apply stronger knockback
+                    ApplyKnockback(new Vector2(_charger.X, _charger.Y), 1.5f);
                     
-                    // Check if we should spawn a charger
-                    if (_enemiesKilled >= KillsForCharger && !_chargerActive)
-                    {
-                        SpawnCharger();
-                        _enemiesKilled = 0; // Reset kill counter
-                    }
-                    
-                    // Create explosion at enemy position
-                    _explosions.Add(new Explosion { 
-                        X = enemy.X, 
-                        Y = enemy.Y, 
-                        Timer = 0f 
-                    });
-                    
-                    // Gold will be spawned when the explosion finishes
+                    // Make player briefly invincible
+                    _isInvincible = true;
+                    _invincibilityTimer = 0f;
                 }
-            }
-            
-            // Check for sword collision with charger
-            if (_chargerActive && _charger != null && _charger.Alive)
-            {
-                if (collisionPoints.Any(p => Math.Abs(p.x - _charger.X) < 0.5f && Math.Abs(p.y - _charger.Y) < 0.5f))
-                {
-                    HandleChargerDamage(true); // true for sword
-                }
-            }
-        }
-        
-        // Also check for crossbow bolt collision with charger
-        foreach (var bolt in _crossbowBolts)
-        {
-            if (_chargerActive && _charger != null && _charger.Alive)
-            {
-                if (Math.Abs(bolt.X - _charger.X) < 0.5f && Math.Abs(bolt.Y - _charger.Y) < 0.5f)
-                {
-                    HandleChargerDamage(false); // false for bolt
-                }
-            }
-        }
-
-        // Update charger invincibility
-        if (_chargerActive && _charger != null && _charger.Alive && _charger.IsInvincible)
-        {
-            _charger.InvincibilityTimer += Raylib.GetFrameTime();
-            if (_charger.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
-            {
-                _charger.IsInvincible = false;
-                Console.WriteLine("COLLISION FIX: Charger invincibility ended");
             }
         }
     }
