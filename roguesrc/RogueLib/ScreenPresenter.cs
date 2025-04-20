@@ -192,6 +192,11 @@ public class ScreenPresenter : IScreenPresenter
     // Add a field to store the loaded map
     private List<string> _map;
 
+    // Add these camera variables to the class fields
+    private float _cameraX = 0;
+    private float _cameraY = 0;
+    private const float CameraDeadZone = 3.0f; // How far player can move from center before camera follows
+
     public ScreenPresenter(IRayLoader rayLoader)
     {
         _rayLoader = rayLoader;
@@ -718,6 +723,9 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawWorld(IRayConnection rayConnection)
     {
+        // Update camera position to follow player with a dead zone
+        UpdateCamera();
+        
         // Calculate map dimensions
         int mapHeight = _map.Count;
         int mapWidth = _map.Max(line => line.Length);
@@ -727,12 +735,20 @@ public class ScreenPresenter : IScreenPresenter
         {
             for (int x = 0; x < mapWidth; x++)
             {
+                // Skip tiles that are too far from the camera (optimization)
+                if (Math.Abs(x - _cameraX) > 15 || Math.Abs(y - _cameraY) > 10)
+                    continue;
+                
                 // Get the character at this position in the map
                 char mapChar = '.'; // Default to floor
                 if (y < _map.Count && x < _map[y].Length)
                 {
                     mapChar = _map[y][x];
                 }
+                
+                // Calculate screen position with camera offset
+                int screenX = 100 + (int)((x - _cameraX) * 40) + 400;
+                int screenY = 100 + (int)((y - _cameraY) * 40) + 200;
                 
                 // Draw the appropriate tile based on the map character
                 Color tileColor = Color.DarkGray;
@@ -787,57 +803,62 @@ public class ScreenPresenter : IScreenPresenter
                 }
                 
                 // Draw the tile
-                DrawCharacter(rayConnection, tileChar, 100 + x * 40, 100 + y * 40, tileColor);
+                DrawCharacter(rayConnection, tileChar, screenX, screenY, tileColor);
+            }
+        }
+        
+        // Draw player with idle animation - now using camera offset
+        int playerScreenX = 100 + (int)((_animPlayerX - _cameraX) * 40) + 400;
+        int playerScreenY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200;
+        
+        // If player is invincible, make them flash
+        Color playerColor = _playerColor;
+        if (_isInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
+        {
+            playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
+        }
+        
+        DrawCharacter(rayConnection, (Raylib.GetTime() % 1 < 0.5) ? 2 : 1, playerScreenX, playerScreenY, playerColor);
+        
+        // Draw enemies - now using camera offset
+        foreach (var enemy in _enemies)
+        {
+            if (enemy.Alive)
+            {
+                int enemyScreenX = 100 + (int)((enemy.X - _cameraX) * 40) + 400;
+                int enemyScreenY = 100 + (int)((enemy.Y - _cameraY) * 40) + 200;
                 
-                // Draw player with idle animation
-                if (Math.Abs(x - _animPlayerX) < 0.5f && Math.Abs(y - _animPlayerY) < 0.5f)
+                // Only draw if on screen
+                if (enemyScreenX >= 0 && enemyScreenX < Width * CharWidth * DisplayScale &&
+                    enemyScreenY >= 0 && enemyScreenY < Height * CharHeight * DisplayScale)
                 {
-                    // Simple animation: toggle between character 2 and 1 every 0.5 seconds
-                    int playerChar = (Raylib.GetTime() % 1 < 0.5) ? 2 : 1;
-                    
-                    // If player is invincible, make them flash
-                    Color playerColor = _playerColor;
-                    if (_isInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
-                    {
-                        playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
-                    }
-                    
-                    DrawCharacter(rayConnection, playerChar, 100 + (int)(_animPlayerX * 40), 100 + (int)(_animPlayerY * 40), playerColor);
+                    DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, _enemyColor);
                 }
-                
-                // Draw enemies
-                foreach (var enemy in _enemies)
-                {
-                    if (enemy.Alive && Math.Abs(x - enemy.X) < 0.5f && Math.Abs(y - enemy.Y) < 0.5f)
-                    {
-                        DrawCharacter(rayConnection, ScreenConstants.EnemyChar, 100 + (int)(enemy.X * 40), 100 + (int)(enemy.Y * 40), _enemyColor);
-                    }
-                }
-                
-                // Draw charger if active
-                if (_chargerActive && _charger != null && _charger.Alive && 
-                    Math.Abs(x - _charger.X) < 0.5f && Math.Abs(y - _charger.Y) < 0.5f)
-                {
-                    DrawCharacter(rayConnection, 6, 100 + (int)(_charger.X * 40), 100 + (int)(_charger.Y * 40), _chargerColor);
-                }
-                
-                // Draw gold items
-                foreach (var gold in _goldItems)
-                {
-                    if (Math.Abs(x - gold.X) < 0.5f && Math.Abs(y - gold.Y) < 0.5f)
-                    {
-                        DrawCharacter(rayConnection, 36, 100 + (int)(gold.X * 40), 100 + (int)(gold.Y * 40), _goldColor); // $ symbol
-                    }
-                }
-                
-                // Draw health pickups
-                foreach (var health in _healthPickups)
-                {
-                    if (Math.Abs(x - health.X) < 0.5f && Math.Abs(y - health.Y) < 0.5f)
-                    {
-                        DrawCharacter(rayConnection, 3, 100 + (int)(health.X * 40), 100 + (int)(health.Y * 40), _healthColor); // Heart symbol
-                    }
-                }
+            }
+        }
+        
+        // Draw charger if active
+        if (_chargerActive && _charger != null && _charger.Alive && 
+            Math.Abs(_charger.X - _cameraX) < 15 && Math.Abs(_charger.Y - _cameraY) < 10)
+        {
+            DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - _cameraX) * 40) + 400, 100 + (int)((_charger.Y - _cameraY) * 40) + 200, _chargerColor);
+        }
+        
+        // Draw gold items
+        foreach (var gold in _goldItems)
+        {
+            if (Math.Abs(gold.X - _cameraX) < 15 && Math.Abs(gold.Y - _cameraY) < 10)
+            {
+                DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - _cameraX) * 40) + 400, 100 + (int)((gold.Y - _cameraY) * 40) + 200, _goldColor); // $ symbol
+            }
+        }
+        
+        // Draw health pickups
+        foreach (var health in _healthPickups)
+        {
+            if (Math.Abs(health.X - _cameraX) < 15 && Math.Abs(health.Y - _cameraY) < 10)
+            {
+                DrawCharacter(rayConnection, 3, 100 + (int)((health.X - _cameraX) * 40) + 400, 100 + (int)((health.Y - _cameraY) * 40) + 200, _healthColor); // Heart symbol
             }
         }
     }
@@ -2025,5 +2046,30 @@ public class ScreenPresenter : IScreenPresenter
         var wallTiles = new List<char> { '|', '-', '╔', '╗', '╝', '╚', '═', '║'};
 
         return !wallTiles.Contains(mapChar);
+    }
+
+    // Add a new method to update the camera position
+    private void UpdateCamera()
+    {
+        // Calculate how far the player is from the camera center
+        float deltaX = _animPlayerX - _cameraX;
+        float deltaY = _animPlayerY - _cameraY;
+        
+        // If player is outside the dead zone, move the camera
+        if (Math.Abs(deltaX) > CameraDeadZone)
+        {
+            // Move camera in the direction of the player
+            _cameraX += deltaX > 0 ? 
+                Math.Min(deltaX - CameraDeadZone, 0.5f) : 
+                Math.Max(deltaX + CameraDeadZone, -0.5f);
+        }
+        
+        if (Math.Abs(deltaY) > CameraDeadZone)
+        {
+            // Move camera in the direction of the player
+            _cameraY += deltaY > 0 ? 
+                Math.Min(deltaY - CameraDeadZone, 0.5f) : 
+                Math.Max(deltaY + CameraDeadZone, -0.5f);
+        }
     }
 }
