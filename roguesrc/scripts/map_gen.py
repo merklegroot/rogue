@@ -260,6 +260,9 @@ class InfiniteRogueMap:
             (section_x, section_y - 1)   # Up
         ]
         
+        # Track which doors are connected
+        connected_doors = set()
+        
         for adj_x, adj_y in adjacent_sections:
             adj_key = (adj_x, adj_y)
             
@@ -272,7 +275,12 @@ class InfiniteRogueMap:
                 adj_room = self.room_cache[adj_key]
                 if adj_room:
                     # Connect the rooms with hallways
-                    self._connect_rooms_with_hallway(room, adj_room)
+                    hallway_doors = self._connect_rooms_with_hallway(room, adj_room)
+                    if hallway_doors:
+                        connected_doors.update(hallway_doors)
+        
+        # Remove doors that don't connect to anything
+        room['doors'] = [door for door in room['doors'] if door in connected_doors]
     
     def _connect_rooms_with_hallway(self, room1, room2):
         """
@@ -280,11 +288,23 @@ class InfiniteRogueMap:
         
         Args:
             room1, room2: Room data
+            
+        Returns:
+            set: Set of door positions that were connected
         """
         # Skip if already connected
         room_pair = tuple(sorted([(room1['x'], room1['y']), (room2['x'], room2['y'])]))
         if room_pair in self.hallway_cache:
-            return
+            # Return the doors that are part of this hallway
+            hallway = self.hallway_cache[room_pair]
+            connected_doors = set()
+            for door in room1['doors']:
+                if door in hallway:
+                    connected_doors.add(door)
+            for door in room2['doors']:
+                if door in hallway:
+                    connected_doors.add(door)
+            return connected_doors
         
         # Find the best door pair to connect
         best_door_pair = None
@@ -313,6 +333,9 @@ class InfiniteRogueMap:
             if hallway_path:
                 # Cache the hallway
                 self.hallway_cache[room_pair] = hallway_path
+                return {door1, door2}
+        
+        return set()
     
     def _find_path_avoiding_rooms(self, start, end, rooms):
         """
@@ -655,12 +678,28 @@ class InfiniteRogueMap:
                 section_x, section_y = section_key
                 self._generate_hallways_for_room(room, section_x, section_y)
         
+        # Clean up any doors that don't connect to hallways
+        self._remove_unconnected_doors()
+        
         # Generate the map grid
         map_grid = [[self.get_tile(start_x + x, start_y + y) for x in range(width)] 
                     for y in range(height)]
         
         # Convert to string
         return '\n'.join([''.join(row) for row in map_grid])
+    
+    def _remove_unconnected_doors(self):
+        """Remove doors that don't connect to any hallways"""
+        # Collect all doors that are part of hallways
+        connected_doors = set()
+        for hallway in self.hallway_cache.values():
+            for pos in hallway:
+                connected_doors.add(pos)
+        
+        # Remove unconnected doors from each room
+        for room in self.room_cache.values():
+            if room:  # Skip empty sections
+                room['doors'] = [door for door in room['doors'] if door in connected_doors]
 
 
 map_file_name = "../RogueLib/resources/map.txt"
@@ -671,12 +710,10 @@ def save_map_to_file(map_str, filename=map_file_name):
         f.write(map_str)
 
 if __name__ == "__main__":
-    # Create an infinite map with a random seed
     random_seed = random.randint(0, 1000000)
     infinite_map = InfiniteRogueMap(seed=random_seed)
     
-    # Generate a much larger section of the map (approximately 10x larger)
-    map_section = infinite_map.generate_map_section(0, 0, width=400, height=200)
+    map_section = infinite_map.generate_map_section(0, 0, width=200, height=200)
     
     print(f"Using random seed: {random_seed}")
     print(map_section)
