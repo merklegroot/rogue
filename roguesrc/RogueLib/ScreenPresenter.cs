@@ -790,7 +790,8 @@ public class ScreenPresenter : IScreenPresenter
                 }
                 
                 // Calculate screen position with camera offset
-                int screenX = 100 + (int)((x - _cameraX) * 40) + 400;
+                // Reduce horizontal spacing by 2 pixels (32 instead of 40)
+                int screenX = 100 + (int)((x - _cameraX) * 32) + 400;
                 int screenY = 100 + (int)((y - _cameraY) * 40) + 200;
                 
                 // Draw the appropriate tile based on the map character
@@ -850,8 +851,8 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
         
-        // Draw player with idle animation - now using camera offset
-        int playerScreenX = 100 + (int)((_animPlayerX - _cameraX) * 40) + 400;
+        // Also update player position calculation with the new spacing
+        int playerScreenX = 100 + (int)((_animPlayerX - _cameraX) * 38) + 400;
         int playerScreenY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200;
         
         // If player is invincible, make them flash
