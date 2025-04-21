@@ -2274,5 +2274,9 @@ public class ScreenPresenter : IScreenPresenter
         // Set player position
         _animPlayerX = newX;
         _animPlayerY = newY;
+        
+        // Immediately center camera on player for initial spawn
+        _cameraX = _animPlayerX;
+        _cameraY = _animPlayerY;
     }
 }

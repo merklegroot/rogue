@@ -675,8 +675,8 @@ if __name__ == "__main__":
     random_seed = random.randint(0, 1000000)
     infinite_map = InfiniteRogueMap(seed=random_seed)
     
-    # Generate a section of the map with doubled dimensions
-    map_section = infinite_map.generate_map_section(0, 0, width=120, height=60)
+    # Generate a much larger section of the map (approximately 10x larger)
+    map_section = infinite_map.generate_map_section(0, 0, width=400, height=200)
     
     print(f"Using random seed: {random_seed}")
     print(map_section)
