@@ -532,8 +532,8 @@ public class ScreenPresenter : IScreenPresenter
                 _ => (char)42  // Large explosion (asterisk)
             };
             
-            // Calculate position with camera offset
-            int explosionX = 100 + (int)((explosion.X - _cameraX) * 40) + 400;
+            // Calculate position with camera offset - updated horizontal spacing
+            int explosionX = 100 + (int)((explosion.X - _cameraX) * 32) + 400;
             int explosionY = 100 + (int)((explosion.Y - _cameraY) * 40) + 200;
             
             // Only draw if on screen
@@ -636,8 +636,8 @@ public class ScreenPresenter : IScreenPresenter
                 _ => '+'
             };
 
-            // Calculate exact pixel position with camera offset
-            float swordX = 100 + ((_animPlayerX + xOffset) - _cameraX) * 40 + 400;
+            // Calculate exact pixel position with camera offset - updated horizontal spacing
+            float swordX = 100 + ((_animPlayerX + xOffset) - _cameraX) * 32 + 400;
             float swordY = 100 + ((_animPlayerY + yOffset) - _cameraY) * 40 + 200;
 
             // Draw the sword character with silvery-blue color
@@ -690,8 +690,8 @@ public class ScreenPresenter : IScreenPresenter
             int barWidth = 30;
             int barHeight = 5;
             
-            // Calculate position with camera offset
-            int barX = 100 + (int)((_animPlayerX - _cameraX) * 40) + 400 - barWidth / 2 + 20;  // Center above player
+            // Calculate position with camera offset - updated horizontal spacing
+            int barX = 100 + (int)((_animPlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center above player
             int barY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200 - 15;  // Above player
             
             // Background (empty) bar
@@ -711,8 +711,8 @@ public class ScreenPresenter : IScreenPresenter
             int barWidth = 30;
             int barHeight = 5;
             
-            // Calculate position with camera offset
-            int barX = 100 + (int)((_animPlayerX - _cameraX) * 40) + 400 - barWidth / 2 + 20;  // Center below player
+            // Calculate position with camera offset - updated horizontal spacing
+            int barX = 100 + (int)((_animPlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center below player
             int barY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200 + 45;  // Below player
             
             // Background (empty) bar
@@ -735,8 +735,8 @@ public class ScreenPresenter : IScreenPresenter
                 _ => '+'
             };
             
-            // Draw the bolt at its current position
-            DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 40), 100 + (int)(bolt.Y * 40), _boltColor);
+            // Draw the bolt at its current position - updated horizontal spacing
+            DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 32), 100 + (int)(bolt.Y * 40), _boltColor);
         }
     }
 
@@ -790,7 +790,7 @@ public class ScreenPresenter : IScreenPresenter
                 }
                 
                 // Calculate screen position with camera offset
-                // Reduce horizontal spacing by 2 pixels (32 instead of 40)
+                // Using 32 pixels for horizontal spacing
                 int screenX = 100 + (int)((x - _cameraX) * 32) + 400;
                 int screenY = 100 + (int)((y - _cameraY) * 40) + 200;
                 
@@ -851,8 +851,8 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
         
-        // Also update player position calculation with the new spacing
-        int playerScreenX = 100 + (int)((_animPlayerX - _cameraX) * 38) + 400;
+        // Update player position calculation with the new spacing
+        int playerScreenX = 100 + (int)((_animPlayerX - _cameraX) * 32) + 400;
         int playerScreenY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200;
         
         // If player is invincible, make them flash
@@ -864,12 +864,12 @@ public class ScreenPresenter : IScreenPresenter
         
         DrawCharacter(rayConnection, (Raylib.GetTime() % 1 < 0.5) ? 2 : 1, playerScreenX, playerScreenY, playerColor);
         
-        // Draw enemies - now using camera offset
+        // Draw enemies - now using camera offset and updated horizontal spacing
         foreach (var enemy in _enemies)
         {
             if (enemy.Alive)
             {
-                int enemyScreenX = 100 + (int)((enemy.X - _cameraX) * 40) + 400;
+                int enemyScreenX = 100 + (int)((enemy.X - _cameraX) * 32) + 400;
                 int enemyScreenY = 100 + (int)((enemy.Y - _cameraY) * 40) + 200;
                 
                 // Only draw if on screen
@@ -881,28 +881,28 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
         
-        // Draw charger if active
+        // Draw charger if active - with updated horizontal spacing
         if (_chargerActive && _charger != null && _charger.Alive && 
             Math.Abs(_charger.X - _cameraX) < 15 && Math.Abs(_charger.Y - _cameraY) < 10)
         {
-            DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - _cameraX) * 40) + 400, 100 + (int)((_charger.Y - _cameraY) * 40) + 200, _chargerColor);
+            DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - _cameraX) * 32) + 400, 100 + (int)((_charger.Y - _cameraY) * 40) + 200, _chargerColor);
         }
         
-        // Draw gold items
+        // Draw gold items - with updated horizontal spacing
         foreach (var gold in _goldItems)
         {
             if (Math.Abs(gold.X - _cameraX) < 15 && Math.Abs(gold.Y - _cameraY) < 10)
             {
-                DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - _cameraX) * 40) + 400, 100 + (int)((gold.Y - _cameraY) * 40) + 200, _goldColor); // $ symbol
+                DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - _cameraX) * 32) + 400, 100 + (int)((gold.Y - _cameraY) * 40) + 200, _goldColor); // $ symbol
             }
         }
         
-        // Draw health pickups
+        // Draw health pickups - with updated horizontal spacing
         foreach (var health in _healthPickups)
         {
             if (Math.Abs(health.X - _cameraX) < 15 && Math.Abs(health.Y - _cameraY) < 10)
             {
-                DrawCharacter(rayConnection, 3, 100 + (int)((health.X - _cameraX) * 40) + 400, 100 + (int)((health.Y - _cameraY) * 40) + 200, _healthColor); // Heart symbol
+                DrawCharacter(rayConnection, 3, 100 + (int)((health.X - _cameraX) * 32) + 400, 100 + (int)((health.Y - _cameraY) * 40) + 200, _healthColor); // Heart symbol
             }
         }
     }
