@@ -1,3 +1,5 @@
+using Raylib_cs;
+
 namespace RogueLib.Constants;
 
 public static class ScreenConstants
@@ -13,4 +15,6 @@ public static class ScreenConstants
 
 
     public const int EnemyChar = 128; // (Captial C with a cedilla under it)
+
+    public static readonly Color SwordColor = new(180, 210, 230, 255);  // Silvery-blue color
 }

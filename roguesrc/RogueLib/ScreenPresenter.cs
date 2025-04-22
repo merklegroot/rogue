@@ -50,23 +50,19 @@ public class ScreenPresenter : IScreenPresenter
     private Direction _lastDirection = Direction.Right;
     private bool _isSwordSwinging;
     private float _swordSwingTime;
-    private const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
 
-    // Add a silvery-blue color for the sword
-    private readonly Color _swordColor = new(180, 210, 230, 255);  // Silvery-blue color
-
-    private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     private readonly Random _random = new();
 
     // Multiple enemies support
     private readonly List<Enemy> _enemies = [];
     private float _enemySpawnTimer;
+    private const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
+    
+    private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     private const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
     private const int MaxEnemies = 3;  // Back to original: maximum of 3 enemies
 
-    // Add health fields
-    private readonly int _maxHealth = 10;
-    private int _currentHealth = 7;  // Start with 7 out of 10 health
+    private readonly int _maxHealth = 10;    
     private readonly Color _healthColor = Color.Red;
     private readonly Color _emptyHealthColor = new(100, 100, 100, 255);  // Gray color for empty hearts
 
@@ -224,7 +220,7 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Initialize shop inventory
-        InitializeShop();
+        InitializeShop(state);
     }
 
     public void Update()
@@ -496,7 +492,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawAnimation(IRayConnection rayConnection, GameState state)
     {
         UpdatePlayerIdleAnimation();
-        DrawHealthBar(rayConnection);
+        DrawHealthBar(rayConnection, state);
         DrawGoldCounter(rayConnection);
         DrawWorld(rayConnection, state);
         DrawExplosions(rayConnection);
@@ -639,7 +635,7 @@ public class ScreenPresenter : IScreenPresenter
             float swordY = 100 + ((state.PlayerY + yOffset) - _cameraY) * 40 + 200;
 
             // Draw the sword character with silvery-blue color
-            DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, _swordColor);
+            DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, ScreenConstants.SwordColor);
         }
     }
 
@@ -1130,8 +1126,8 @@ public class ScreenPresenter : IScreenPresenter
                 if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
                 {
                     // Player takes damage
-                    _currentHealth--;
-                    Console.WriteLine($"Player hit by enemy! Health: {_currentHealth}");
+                    state.CurrentHealth--;
+                    Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
                     
                     // Make player invincible briefly
                     _isInvincible = true;
@@ -1152,8 +1148,8 @@ public class ScreenPresenter : IScreenPresenter
             if (Math.Abs(state.PlayerX - _charger.X) < 0.5f && Math.Abs(state.PlayerY - _charger.Y) < 0.5f)
             {
                 // Player takes more damage from charger (2 instead of 1)
-                _currentHealth -= 2;
-                Console.WriteLine($"Player hit by charger! Health: {_currentHealth}");
+                state.CurrentHealth -= 2;
+                Console.WriteLine($"Player hit by charger! Health: {state.CurrentHealth}");
                 
                 // Make player invincible briefly
                 _isInvincible = true;
@@ -1238,7 +1234,7 @@ public class ScreenPresenter : IScreenPresenter
                 Math.Abs(_healthPickups[i].Y - state.PlayerY) <= 1)
             {
                 // Add health to the player
-                _currentHealth = Math.Min(_maxHealth, _currentHealth + _healthPickups[i].HealAmount);
+                state.CurrentHealth = Math.Min(_maxHealth, state.CurrentHealth + _healthPickups[i].HealAmount);
                 
                 // Remove the collected health pickup
                 _healthPickups.RemoveAt(i);
@@ -1317,7 +1313,7 @@ public class ScreenPresenter : IScreenPresenter
                     // Only damage player if not invincible
                     if (!_isInvincible)
                     {
-                        _currentHealth--;
+                        state.CurrentHealth--;
                         
                         // Apply knockback
                         ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
@@ -1400,7 +1396,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (!_isInvincible)
                 {
                     // Charger does 2 damage
-                    _currentHealth -= 2;
+                    state.CurrentHealth -= 2;
                     
                     // Apply stronger knockback
                     ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.5f);
@@ -1572,7 +1568,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
     
-    private void DrawHealthBar(IRayConnection rayConnection)
+    private void DrawHealthBar(IRayConnection rayConnection, GameState state)
     {
         const int heartChar = 3;  // ASCII/CP437 code for heart symbol (♥)
         const int heartSpacing = 30;  // Pixels between hearts
@@ -1582,7 +1578,7 @@ public class ScreenPresenter : IScreenPresenter
         for (int i = 0; i < _maxHealth; i++)
         {
             // Determine if this heart should be filled or empty
-            Color heartColor = (i < _currentHealth) ? _healthColor : _emptyHealthColor;
+            Color heartColor = (i < state.CurrentHealth) ? _healthColor : _emptyHealthColor;
 
             // Draw the heart
             DrawCharacter(rayConnection, heartChar, startX + (i * heartSpacing), startY, heartColor);
@@ -1644,7 +1640,7 @@ public class ScreenPresenter : IScreenPresenter
         public int HealAmount { get; set; }  // How much health this pickup restores
     }
 
-    private void InitializeShop()
+    private void InitializeShop(GameState state)
     {
         // Regular items section
         _shopInventory.Add(new ShopItem
@@ -1652,7 +1648,7 @@ public class ScreenPresenter : IScreenPresenter
             Name = "Health Potion",
             Description = "Restores 25 health",
             Price = 10,
-            OnPurchase = () => { _currentHealth = Math.Min(10, _currentHealth + 25); },
+            OnPurchase = () => { state.CurrentHealth = Math.Min(10, state.CurrentHealth + 25); },
             Category = ShopCategory.Consumable
         });
         
