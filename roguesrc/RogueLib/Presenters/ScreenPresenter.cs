@@ -97,17 +97,20 @@ public class ScreenPresenter : IScreenPresenter
 
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
+    private readonly IChunkPresenter _chunkPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
         IScreenDrawer screenDrawer, 
         IHealthBarPresenter healthBarPresenter,
-        IShopPresenter shopPresenter)
+        IShopPresenter shopPresenter,
+        IChunkPresenter chunkPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawer = screenDrawer;
         _healthBarPresenter = healthBarPresenter;
         _shopPresenter = shopPresenter;
+        _chunkPresenter = chunkPresenter;
         
         // Load the map from the embedded resource
         _map = rayLoader.LoadMap();
@@ -368,6 +371,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection);
         DrawInstructions(rayConnection);
+        _chunkPresenter.Draw(rayConnection, state, _cameraX, _cameraY);
     }
 
     private void UpdatePlayerIdleAnimation()

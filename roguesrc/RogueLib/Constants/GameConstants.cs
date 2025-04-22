@@ -15,7 +15,10 @@ public static class GameConstants
 
     public const float InvincibilityDuration = 1.0f;  
 
+    // Chunk constants
+    public const int ChunkSize = 20;  // 20 spaces in each direction
+
     // Wobble animation constants
     public const float WobbleFrequency = 1000.0f; // Time in milliseconds for one complete wobble cycle
-    public const float WobbleAmount = 0.025f; // How much to scale (10% variation)
+    public const float WobbleAmount = 0.025f; // How much to scale
 }
