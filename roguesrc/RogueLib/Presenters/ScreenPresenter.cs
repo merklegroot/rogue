@@ -18,33 +18,23 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Random _random = new();
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
-    // Add gold items field
     private readonly List<GoldItem> _goldItems = [];
     
-    private const char GoldChar = '$';   // Character to represent gold
+    private const char GoldChar = '$';
 
-    // Add flying gold animation fields
     private readonly List<FlyingGold> _flyingGold = [];
-    private const float GoldFlyDuration = 0.3f;  // Reduced from 0.5f to 0.3f for faster animation
+    private const float GoldFlyDuration = 0.3f;
 
-    // Replace CRT effect fields with shader-related fields
     private bool _enableCrtEffect = true;
     private float _shaderTime = 0f;
 
-    // Add health pickup fields
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
-    private const float HealthSpawnInterval = 30f;  // Spawn a health pickup every 30 seconds
-
-    // Add sword cooldown fields
+    private const float HealthSpawnInterval = 30f;
     private float _swordCooldownTimer = 0f;
-    private float _swordCooldown = 1.0f;  // Changed from const to field
+    private float _swordCooldown = 1.0f;
     private bool _swordOnCooldown = false;
-
-    // Add the _swordReach field
-    private int _swordReach = 1;  // Default sword reach
-
-    // Add these fields for crossbow functionality
+    private int _swordReach = 1;
     private bool _hasCrossbow = false;
     private bool _isCrossbowFiring = false;
     private float _crossbowCooldown = 2.0f;
@@ -53,7 +43,6 @@ public class ScreenPresenter : IScreenPresenter
     
     private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
 
-    // Add these fields for tracking enemy kills and the charger
     private int _enemiesKilled = 0;
     private const int KillsForCharger = 10;
     private bool _chargerActive = false;
@@ -61,40 +50,19 @@ public class ScreenPresenter : IScreenPresenter
     private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
     private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
     private readonly Color _chargerColor = new(255, 50, 50, 255); // Bright red color
-    private const int ChargerHealth = 5; // Define charger health as a constant
-
-    // Add fields for player idle animation
-    private float _playerIdleAnimTimer = 0f;
-    private int _playerIdleAnimFrame = 0;
-    private const int PlayerIdleFrameCount = 4;
-    private const float PlayerIdleFrameDuration = 0.25f; // 4 frames per second
-
-    // Add a single field for player animation
-    private int _playerChar = 2; // Default player character
-
+    private const int ChargerHealth = 5;
     private const float KnockbackDuration = 0.08f;
-    private const float KnockbackDistance = 0.5f; // How far to knock the player back
-
-    // Add these color fields near the other color definitions
-    
-    
-
-    // Add this field with the other private fields
+    private const float KnockbackDistance = 0.5f;
     private bool _gameJustStarted = true;
-
-    // Add shop-related fields
-    private bool _shopOpen = false;
-
     private readonly IRayLoader _rayLoader;
     private readonly IScreenDrawer _screenDrawer;
-    // Add a field to store the loaded map
     private List<string> _map;
 
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
 
-    private const float CameraDeadZone = 5.0f; // Increased from 3.0f to 5.0f
+    private const float CameraDeadZone = 5.0f;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -357,7 +325,6 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawAnimation(IRayConnection rayConnection, GameState state)
     {
-        UpdatePlayerIdleAnimation();
         _healthBarPresenter.Draw(rayConnection, state);
         DrawGoldCounter(rayConnection, state);
         DrawWorld(rayConnection, state);
@@ -369,16 +336,6 @@ public class ScreenPresenter : IScreenPresenter
         DrawChargerHealth(rayConnection);
         DrawInstructions(rayConnection);
         _chunkPresenter.Draw(rayConnection, state);
-    }
-
-    private void UpdatePlayerIdleAnimation()
-    {
-        _playerIdleAnimTimer += Raylib.GetFrameTime();
-        if (_playerIdleAnimTimer >= PlayerIdleFrameDuration)
-        {
-            _playerIdleAnimTimer -= PlayerIdleFrameDuration;
-            _playerIdleAnimFrame = (_playerIdleAnimFrame + 1) % PlayerIdleFrameCount;
-        }
     }
 
     private void DrawExplosions(GameState state, IRayConnection rayConnection)
@@ -959,7 +916,6 @@ public class ScreenPresenter : IScreenPresenter
         // Open shop with 'B' key
         if (Raylib.IsKeyPressed(KeyboardKey.B))
         {
-            _shopOpen = true;
             state.CurrentScreen = GameScreenEnum.Shop;
             state.ShopState.SelectedShopItem = 0;
         }
@@ -1523,7 +1479,6 @@ public class ScreenPresenter : IScreenPresenter
             
             if (key == KeyboardKey.Escape)
             {
-                _shopOpen = false;
                 state.CurrentScreen = GameScreenEnum.Animation;
             }
             else if (key == KeyboardKey.Up)
