@@ -19,7 +19,7 @@ public interface IScreenPresenter
 
 public class ScreenPresenter : IScreenPresenter
 {
-    private GameScreenEnum _currentScreenEnum = GameScreenEnum.Menu;
+    
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
     // React default background color
@@ -212,16 +212,16 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.BeginTextureMode(rayConnection.GameTexture);
         Raylib.ClearBackground(_backgroundColor);
 
-        switch (_currentScreenEnum)
+        switch (state.CurrentScreen)
         {
             case GameScreenEnum.Menu:
                 DrawMenu(rayConnection);
-                HandleMenuInput();
+                HandleMenuInput(state);
                 break;
 
             case GameScreenEnum.CharacterSet:
                 DrawCharacterSet(rayConnection);
-                HandleCharacterSetInput();
+                HandleCharacterSetInput(state);
                 break;
 
             case GameScreenEnum.Animation:
@@ -231,7 +231,7 @@ public class ScreenPresenter : IScreenPresenter
 
             case GameScreenEnum.Shop:
                 DrawShop(rayConnection);
-                HandleShopInput();
+                HandleShopInput(state);
                 break;
         }
         
@@ -276,7 +276,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawDebugGrid();
         
         // Draw a fancy title
-        int titleSize = 48;
+        const int titleSize = 48;
         
         // Use MeasureTextEx instead of MeasureText to account for spacing
         Vector2 titleSize2D = Raylib.MeasureTextEx(rayConnection.MenuFont, ScreenConstants.Title, titleSize, 1);
@@ -397,19 +397,19 @@ public class ScreenPresenter : IScreenPresenter
         _screenDrawer.DrawText(rayConnection, afterText, currentX, y, options.BaseColor);
     }
 
-    private void HandleMenuInput()
+    private void HandleMenuInput(GameState state)
     {
         while (_keyEvents.Count > 0)
         {
             var key = _keyEvents.Dequeue();
             if (key == KeyboardKey.C)
             {
-                _currentScreenEnum = GameScreenEnum.CharacterSet;
+                state.CurrentScreen = GameScreenEnum.CharacterSet;
                 break;
             }
             if (key == KeyboardKey.A)
             {
-                _currentScreenEnum = GameScreenEnum.Animation;
+                state.CurrentScreen = GameScreenEnum.Animation;
                 break;
             }
             if (key == KeyboardKey.X)
@@ -445,11 +445,11 @@ public class ScreenPresenter : IScreenPresenter
         _screenDrawer.DrawText(rayConnection, "Press any key to return", 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, Color.White);
     }
 
-    private void HandleCharacterSetInput()
+    private void HandleCharacterSetInput(GameState state)
     {
         if (_keyEvents.Count > 0)
         {
-            _currentScreenEnum = GameScreenEnum.Menu;
+            state.CurrentScreen = GameScreenEnum.Menu;
         }
     }
 
@@ -873,7 +873,7 @@ public class ScreenPresenter : IScreenPresenter
             var key = _keyEvents.Dequeue();
             if (key == KeyboardKey.Escape)
             {
-                _currentScreenEnum = GameScreenEnum.Menu;
+                state.CurrentScreen = GameScreenEnum.Menu;
                 return;
             }
             if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !_swordOnCooldown)
@@ -1042,7 +1042,7 @@ public class ScreenPresenter : IScreenPresenter
         if (Raylib.IsKeyPressed(KeyboardKey.B))
         {
             _shopOpen = true;
-            _currentScreenEnum = GameScreenEnum.Shop;
+            state.CurrentScreen = GameScreenEnum.Shop;
             _selectedShopItem = 0;
         }
 
@@ -1641,7 +1641,7 @@ public class ScreenPresenter : IScreenPresenter
         _screenDrawer.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.White);
     }
 
-    private void HandleShopInput()
+    private void HandleShopInput(GameState state)
     {
         while (_keyEvents.Count > 0)
         {
@@ -1650,7 +1650,7 @@ public class ScreenPresenter : IScreenPresenter
             if (key == KeyboardKey.Escape)
             {
                 _shopOpen = false;
-                _currentScreenEnum = GameScreenEnum.Animation;
+                state.CurrentScreen = GameScreenEnum.Animation;
             }
             else if (key == KeyboardKey.Up)
             {

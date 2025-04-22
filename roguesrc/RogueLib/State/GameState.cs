@@ -2,6 +2,8 @@ namespace RogueLib.State;
 
 public class GameState
 {
+    public GameScreenEnum CurrentScreen { get; set; } = GameScreenEnum.Menu;
+
     public int PlayerX { get; set; } = 10;
     public int PlayerY { get; set; } = 5;
     public int CurrentHealth { get; set; } = 7;    
