@@ -76,8 +76,8 @@ public class ScreenPresenter : IScreenPresenter
     private const float KnockbackDistance = 0.5f; // How far to knock the player back
 
     // Add these color fields near the other color definitions
-    private readonly Color _playerColor = new(0, 200, 255, 255);  // Cyan-blue for player
-    private readonly Color _enemyColor = new(255, 100, 100, 255); // Red for enemies
+    
+    
 
     // Add this field with the other private fields
     private bool _gameJustStarted = true;
@@ -733,13 +733,13 @@ public class ScreenPresenter : IScreenPresenter
         int playerScreenY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200;
         
         // If player is invincible, make them flash
-        Color playerColor = _playerColor;
+        Color playerColor = ScreenConstants.PlayerColor;
         if (state.IsInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
         {
             playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
         }
         
-        _screenDrawer.DrawCharacter(rayConnection, (Raylib.GetTime() % 1 < 0.5) ? 2 : 1, playerScreenX, playerScreenY, playerColor);
+        _screenDrawer.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, playerColor);
         
         // Draw enemies - now using camera offset and updated horizontal spacing
         foreach (var enemy in state.Enemies)
@@ -753,7 +753,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (enemyScreenX >= 0 && enemyScreenX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
                     enemyScreenY >= 0 && enemyScreenY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
                 {
-                    _screenDrawer.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, _enemyColor);
+                    _screenDrawer.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, ScreenConstants.EnemyColor);
                 }
             }
         }

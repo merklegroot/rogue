@@ -18,6 +18,9 @@ public static class ScreenConstants
 
     public static readonly Color SwordColor = new(180, 210, 230, 255);  // Silvery-blue color
 
+    public static readonly Color PlayerColor = Color.Yellow;  // Yellow for player
+    public static readonly Color EnemyColor = new(255, 100, 100, 255); // Red for enemies
+
     public const int SidePadding = 8;
     public const int TopPadding = 10;
 
