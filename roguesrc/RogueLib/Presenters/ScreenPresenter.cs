@@ -282,6 +282,7 @@ public class ScreenPresenter : IScreenPresenter
         _healthBarPresenter.Draw(rayConnection, state);
         DrawGoldCounter(rayConnection, state);
         DrawWorld(rayConnection, state);
+        _debugPanelPresenter.Draw(rayConnection, state);
         DrawExplosions(state, rayConnection);
         DrawSwordAnimation(rayConnection, state);
         DrawFlyingGold(rayConnection, state);
@@ -540,9 +541,6 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Update camera position to follow player with a dead zone
         UpdateCamera(state);
-        
-        // Draw debug panel
-        _debugPanelPresenter.Draw(rayConnection, state);
         
         // Calculate map dimensions
         int mapHeight = _map.Count;
