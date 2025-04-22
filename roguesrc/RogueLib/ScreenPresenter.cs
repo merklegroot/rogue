@@ -6,7 +6,7 @@ namespace RogueLib;
 
 public interface IScreenPresenter
 {
-    void Initialize(IRayConnection rayConnection);
+    void Initialize(IRayConnection rayConnection, GameState state);
     void Update();
     void Draw(IRayConnection rayConnection, GameState state);
     bool WindowShouldClose();
@@ -44,8 +44,6 @@ public class ScreenPresenter : IScreenPresenter
         Color.Pink
     };
 
-    private int _animPlayerX = 10;
-    private int _animPlayerY = 5;
     private float _timeSinceLastMove;
 
     // Add these fields to track direction and sword state
@@ -208,21 +206,21 @@ public class ScreenPresenter : IScreenPresenter
         _map = rayLoader.LoadMap();
     }
 
-    public void Initialize(IRayConnection rayConnection)
+    public void Initialize(IRayConnection rayConnection, GameState state)
     {
         // Load the map from the embedded resource
         _map = _rayLoader.LoadMap();
         
         // Initialize player position on a floor tile
-        InitializePlayerPosition();
+        InitializePlayerPosition(state);
         
         // Rest of initialization code...
-        SpawnEnemy();
+        SpawnEnemy(state);
         
         // Spawn initial gold items
         for (int i = 0; i < MaxGoldItems; i++)
         {
-            SpawnGoldItem();
+            SpawnGoldItem(state);
         }
 
         // Initialize shop inventory
@@ -267,8 +265,8 @@ public class ScreenPresenter : IScreenPresenter
                 break;
 
             case GameScreenEnum.Animation:
-                DrawAnimation(rayConnection);
-                HandleAnimationInput();
+                DrawAnimation(rayConnection, state);
+                HandleAnimationInput(state);
                 break;
 
             case GameScreenEnum.Shop:
@@ -495,16 +493,16 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawAnimation(IRayConnection rayConnection)
+    private void DrawAnimation(IRayConnection rayConnection, GameState state)
     {
         UpdatePlayerIdleAnimation();
         DrawHealthBar(rayConnection);
         DrawGoldCounter(rayConnection);
-        DrawWorld(rayConnection);
+        DrawWorld(rayConnection, state);
         DrawExplosions(rayConnection);
-        DrawSwordAnimation(rayConnection);
+        DrawSwordAnimation(rayConnection, state);
         DrawFlyingGold(rayConnection);
-        DrawCooldownIndicators(rayConnection);
+        DrawCooldownIndicators(rayConnection, state);
         DrawCrossbowBolts(rayConnection);
         DrawChargerHealth(rayConnection);
         DrawInstructions(rayConnection);
@@ -545,7 +543,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawSwordAnimation(IRayConnection rayConnection)
+    private void DrawSwordAnimation(IRayConnection rayConnection, GameState state)
     {
         // Handle sword swinging
         if (Raylib.IsKeyPressed(KeyboardKey.Space) && !_isSwordSwinging && !_swordOnCooldown)
@@ -554,7 +552,7 @@ public class ScreenPresenter : IScreenPresenter
             _swordSwingTime = 0;
             
             // Check for sword collisions immediately when swing starts
-            CheckSwordCollisions();
+            CheckSwordCollisions(state);
         }
 
         // Update sword swing animation
@@ -637,8 +635,8 @@ public class ScreenPresenter : IScreenPresenter
             };
 
             // Calculate exact pixel position with camera offset - updated horizontal spacing
-            float swordX = 100 + ((_animPlayerX + xOffset) - _cameraX) * 32 + 400;
-            float swordY = 100 + ((_animPlayerY + yOffset) - _cameraY) * 40 + 200;
+            float swordX = 100 + ((state.PlayerX + xOffset) - _cameraX) * 32 + 400;
+            float swordY = 100 + ((state.PlayerY + yOffset) - _cameraY) * 40 + 200;
 
             // Draw the sword character with silvery-blue color
             DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, _swordColor);
@@ -678,7 +676,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawCooldownIndicators(IRayConnection rayConnection)
+    private void DrawCooldownIndicators(IRayConnection rayConnection, GameState state)
     {
         // Draw sword cooldown indicator
         if (_swordOnCooldown)
@@ -691,8 +689,8 @@ public class ScreenPresenter : IScreenPresenter
             int barHeight = 5;
             
             // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((_animPlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center above player
-            int barY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200 - 15;  // Above player
+            int barX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center above player
+            int barY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200 - 15;  // Above player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
@@ -712,8 +710,8 @@ public class ScreenPresenter : IScreenPresenter
             int barHeight = 5;
             
             // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((_animPlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center below player
-            int barY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200 + 45;  // Below player
+            int barX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center below player
+            int barY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200 + 45;  // Below player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
@@ -764,10 +762,10 @@ public class ScreenPresenter : IScreenPresenter
         DrawText(rayConnection, instructionsText, 20, Height * CharHeight * DisplayScale - 60, Color.White);
     }
 
-    private void DrawWorld(IRayConnection rayConnection)
+    private void DrawWorld(IRayConnection rayConnection, GameState state)
     {
         // Update camera position to follow player with a dead zone
-        UpdateCamera();
+        UpdateCamera(state);
         
         // Calculate map dimensions
         int mapHeight = _map.Count;
@@ -852,8 +850,8 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Update player position calculation with the new spacing
-        int playerScreenX = 100 + (int)((_animPlayerX - _cameraX) * 32) + 400;
-        int playerScreenY = 100 + (int)((_animPlayerY - _cameraY) * 40) + 200;
+        int playerScreenX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400;
+        int playerScreenY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200;
         
         // If player is invincible, make them flash
         Color playerColor = _playerColor;
@@ -907,7 +905,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
     
-    private void HandleAnimationInput()
+    private void HandleAnimationInput(GameState state)
     {
         // Handle ESC key via event queue for menu navigation
         while (_keyEvents.Count > 0)
@@ -924,7 +922,7 @@ public class ScreenPresenter : IScreenPresenter
                 _swordSwingTime = 0;
                 
                 // Check for sword collisions immediately when swing starts
-                CheckSwordCollisions();
+                CheckSwordCollisions(state);
             }
             // Add debug option to get free gold with G key
             if (key == KeyboardKey.G)
@@ -959,18 +957,18 @@ public class ScreenPresenter : IScreenPresenter
             // Check WASD keys
             if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up))
             {
-                if (IsWalkableTile(_animPlayerX, _animPlayerY - 1))
+                if (IsWalkableTile(state.PlayerX, state.PlayerY - 1))
                 {
-                    _animPlayerY -= 1;  // No Math.Max constraint
+                    state.PlayerY -= 1;  // No Math.Max constraint
                 }
                 _lastDirection = Direction.Up;
                 moved = true;
             }
             else if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))
             {
-                if (IsWalkableTile(_animPlayerX, _animPlayerY + 1))
+                if (IsWalkableTile(state.PlayerX, state.PlayerY + 1))
                 {
-                    _animPlayerY += 1;  // No Math.Min constraint
+                    state.PlayerY += 1;  // No Math.Min constraint
                 }
                 _lastDirection = Direction.Down;
                 moved = true;
@@ -978,18 +976,18 @@ public class ScreenPresenter : IScreenPresenter
 
             if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left))
             {
-                if (IsWalkableTile(_animPlayerX - 1, _animPlayerY))
+                if (IsWalkableTile(state.PlayerX - 1, state.PlayerY))
                 {
-                    _animPlayerX -= 1;  // No Math.Max constraint
+                    state.PlayerX -= 1;  // No Math.Max constraint
                 }
                 _lastDirection = Direction.Left;
                 moved = true;
             }
             else if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right))
             {
-                if (IsWalkableTile(_animPlayerX + 1, _animPlayerY))
+                if (IsWalkableTile(state.PlayerX + 1, state.PlayerY))
                 {
-                    _animPlayerX += 1;  // No Math.Min constraint
+                    state.PlayerX += 1;  // No Math.Min constraint
                 }
                 _lastDirection = Direction.Right;
                 moved = true;
@@ -1001,7 +999,7 @@ public class ScreenPresenter : IScreenPresenter
                 _timeSinceLastMove = 0;
                 
                 // Check for gold collection after movement
-                CollectGold();
+                CollectGold(state);
             }
         }
 
@@ -1017,7 +1015,7 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Update enemy movement
-        UpdateEnemies();
+        UpdateEnemies(state);
 
         // Update invincibility timer
         if (_isInvincible)
@@ -1066,18 +1064,18 @@ public class ScreenPresenter : IScreenPresenter
         _timeSinceLastHealthSpawn += Raylib.GetFrameTime();
         if (_timeSinceLastHealthSpawn >= HealthSpawnInterval)
         {
-            SpawnHealthPickup();
+            SpawnHealthPickup(state);
             _timeSinceLastHealthSpawn = 0f;
         }
         
         // Check for health pickup collection
-        CollectHealth();
+        CollectHealth(state);
 
         // Ensure player is on a walkable tile when game starts
         if (_gameJustStarted)
         {
             _gameJustStarted = false;
-            EnsurePlayerOnWalkableTile();
+            EnsurePlayerOnWalkableTile(state);
         }
 
         // Open shop with 'B' key
@@ -1096,8 +1094,8 @@ public class ScreenPresenter : IScreenPresenter
             _crossbowCooldownTimer = 0f;
             
             // Create a new bolt based on player direction
-            float boltX = _animPlayerX;
-            float boltY = _animPlayerY;
+            float boltX = state.PlayerX;
+            float boltY = state.PlayerY;
             Direction boltDirection = _lastDirection;
             
             _crossbowBolts.Add(new CrossbowBolt
@@ -1129,7 +1127,7 @@ public class ScreenPresenter : IScreenPresenter
             if (enemy.Alive && !_isInvincible)
             {
                 // Check if player is colliding with this enemy
-                if (Math.Abs(_animPlayerX - enemy.X) < 0.5f && Math.Abs(_animPlayerY - enemy.Y) < 0.5f)
+                if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
                 {
                     // Player takes damage
                     _currentHealth--;
@@ -1140,7 +1138,7 @@ public class ScreenPresenter : IScreenPresenter
                     _invincibilityTimer = 0f;
                     
                     // Apply knockback in the opposite direction of the enemy
-                    ApplyKnockback(new Vector2(enemy.X, enemy.Y));
+                    ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
                     
                     break; // Only take damage from one enemy per frame
                 }
@@ -1151,7 +1149,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_chargerActive && _charger != null && _charger.Alive && !_isInvincible)
         {
             // Check if player is colliding with the charger
-            if (Math.Abs(_animPlayerX - _charger.X) < 0.5f && Math.Abs(_animPlayerY - _charger.Y) < 0.5f)
+            if (Math.Abs(state.PlayerX - _charger.X) < 0.5f && Math.Abs(state.PlayerY - _charger.Y) < 0.5f)
             {
                 // Player takes more damage from charger (2 instead of 1)
                 _currentHealth -= 2;
@@ -1162,7 +1160,7 @@ public class ScreenPresenter : IScreenPresenter
                 _invincibilityTimer = 0f;
                 
                 // Apply stronger knockback from the charger
-                ApplyKnockback(new Vector2(_charger.X, _charger.Y), 1.0f); // Double knockback distance
+                ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.0f); // Double knockback distance
             }
         }
 
@@ -1181,16 +1179,16 @@ public class ScreenPresenter : IScreenPresenter
                 switch (_knockbackDirection)
                 {
                     case Direction.Left:
-                        _animPlayerX = Math.Max(0, _animPlayerX - 1);  // Move a full tile left
+                        state.PlayerX = Math.Max(0, state.PlayerX - 1);  // Move a full tile left
                         break;
                     case Direction.Right:
-                        _animPlayerX = Math.Min(19, _animPlayerX + 1); // Move a full tile right
+                        state.PlayerX = Math.Min(19, state.PlayerX + 1); // Move a full tile right
                         break;
                     case Direction.Up:
-                        _animPlayerY = Math.Max(0, _animPlayerY - 1);  // Move a full tile up
+                        state.PlayerY = Math.Max(0, state.PlayerY - 1);  // Move a full tile up
                         break;
                     case Direction.Down:
-                        _animPlayerY = Math.Min(9, _animPlayerY + 1);  // Move a full tile down
+                        state.PlayerY = Math.Min(9, state.PlayerY + 1);  // Move a full tile down
                         break;
                 }
             }
@@ -1204,14 +1202,14 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void CollectGold()
+    private void CollectGold(GameState state)
     {
         // Find any gold within one square of the player's position
         for (int i = _goldItems.Count - 1; i >= 0; i--)
         {
             // Check if gold is at the player's position or one square away
-            if (Math.Abs(_goldItems[i].X - _animPlayerX) <= 1 && 
-                Math.Abs(_goldItems[i].Y - _animPlayerY) <= 1)
+            if (Math.Abs(_goldItems[i].X - state.PlayerX) <= 1 && 
+                Math.Abs(_goldItems[i].Y - state.PlayerY) <= 1)
             {
                 // Create flying gold animation
                 _flyingGold.Add(new FlyingGold { 
@@ -1230,14 +1228,14 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void CollectHealth()
+    private void CollectHealth(GameState state)
     {
         // Find any health pickup within one square of the player's position
         for (int i = _healthPickups.Count - 1; i >= 0; i--)
         {
             // Check if health pickup is at the player's position or one square away
-            if (Math.Abs(_healthPickups[i].X - _animPlayerX) <= 1 && 
-                Math.Abs(_healthPickups[i].Y - _animPlayerY) <= 1)
+            if (Math.Abs(_healthPickups[i].X - state.PlayerX) <= 1 && 
+                Math.Abs(_healthPickups[i].Y - state.PlayerY) <= 1)
             {
                 // Add health to the player
                 _currentHealth = Math.Min(_maxHealth, _currentHealth + _healthPickups[i].HealAmount);
@@ -1251,7 +1249,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void UpdateEnemies()
+    private void UpdateEnemies(GameState state)
     {
         float frameTime = Raylib.GetFrameTime();
         
@@ -1264,7 +1262,7 @@ public class ScreenPresenter : IScreenPresenter
             // Only spawn if we haven't reached the maximum
             if (_enemies.Count(e => e.Alive) < MaxEnemies)
             {
-                SpawnEnemy();
+                SpawnEnemy(state);
             }
         }
         
@@ -1283,11 +1281,11 @@ public class ScreenPresenter : IScreenPresenter
                 int dy = 0;
                 
                 // Simple AI: move toward player
-                if (enemy.X < _animPlayerX) dx = 1;
-                else if (enemy.X > _animPlayerX) dx = -1;
+                if (enemy.X < state.PlayerX) dx = 1;
+                else if (enemy.X > state.PlayerX) dx = -1;
                 
-                if (enemy.Y < _animPlayerY) dy = 1;
-                else if (enemy.Y > _animPlayerY) dy = -1;
+                if (enemy.Y < state.PlayerY) dy = 1;
+                else if (enemy.Y > state.PlayerY) dy = -1;
                 
                 // Try to move horizontally first
                 if (dx != 0)
@@ -1314,7 +1312,7 @@ public class ScreenPresenter : IScreenPresenter
                 }
                 
                 // Check for collision with player
-                if (Math.Abs(enemy.X - _animPlayerX) < 0.5f && Math.Abs(enemy.Y - _animPlayerY) < 0.5f)
+                if (Math.Abs(enemy.X - state.PlayerX) < 0.5f && Math.Abs(enemy.Y - state.PlayerY) < 0.5f)
                 {
                     // Only damage player if not invincible
                     if (!_isInvincible)
@@ -1322,7 +1320,7 @@ public class ScreenPresenter : IScreenPresenter
                         _currentHealth--;
                         
                         // Apply knockback
-                        ApplyKnockback(new Vector2(enemy.X, enemy.Y));
+                        ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
                         
                         // Make player briefly invincible
                         _isInvincible = true;
@@ -1337,7 +1335,7 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Also update the charger movement logic
-    private void UpdateCharger()
+    private void UpdateCharger(GameState state)
     {
         if (!_chargerActive || _charger == null || !_charger.Alive)
             return;
@@ -1365,11 +1363,11 @@ public class ScreenPresenter : IScreenPresenter
             float dy = 0;
             
             // Charger AI: move directly toward player
-            if (_charger.X < _animPlayerX) dx = 1;
-            else if (_charger.X > _animPlayerX) dx = -1;
+            if (_charger.X < state.PlayerX) dx = 1;
+            else if (_charger.X > state.PlayerX) dx = -1;
             
-            if (_charger.Y < _animPlayerY) dy = 1;
-            else if (_charger.Y > _animPlayerY) dy = -1;
+            if (_charger.Y < state.PlayerY) dy = 1;
+            else if (_charger.Y > state.PlayerY) dy = -1;
             
             // Try to move horizontally first
             if (dx != 0)
@@ -1396,7 +1394,7 @@ public class ScreenPresenter : IScreenPresenter
             }
             
             // Check for collision with player
-            if (Math.Abs(_charger.X - _animPlayerX) < 0.5f && Math.Abs(_charger.Y - _animPlayerY) < 0.5f)
+            if (Math.Abs(_charger.X - state.PlayerX) < 0.5f && Math.Abs(_charger.Y - state.PlayerY) < 0.5f)
             {
                 // Only damage player if not invincible
                 if (!_isInvincible)
@@ -1405,7 +1403,7 @@ public class ScreenPresenter : IScreenPresenter
                     _currentHealth -= 2;
                     
                     // Apply stronger knockback
-                    ApplyKnockback(new Vector2(_charger.X, _charger.Y), 1.5f);
+                    ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.5f);
                     
                     // Make player briefly invincible
                     _isInvincible = true;
@@ -1415,7 +1413,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void SpawnEnemy()
+    private void SpawnEnemy(GameState state)
     {
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
@@ -1429,7 +1427,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (line[x] == '.')  // Only consider floor tiles
                 {
                     // Check if position is not occupied by player or other enemies
-                    if ((x != _animPlayerX || y != _animPlayerY) &&
+                    if ((x != state.PlayerX || y != state.PlayerY) &&
                         !_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
                     {
                         validPositions.Add((x, y));
@@ -1450,7 +1448,7 @@ public class ScreenPresenter : IScreenPresenter
         _enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
     }
 
-    private void SpawnGoldItem()
+    private void SpawnGoldItem(GameState state)
     {
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
@@ -1464,7 +1462,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (line[x] == '.')  // Only consider floor tiles
                 {
                     // Check if position is not occupied by player, enemies, or other gold
-                    if ((x != _animPlayerX || y != _animPlayerY) &&
+                    if ((x != state.PlayerX || y != state.PlayerY) &&
                         !_enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
                         !_goldItems.Any(g => g.X == x && g.Y == y))
                     {
@@ -1486,7 +1484,7 @@ public class ScreenPresenter : IScreenPresenter
         _goldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
     }
 
-    private void SpawnHealthPickup()
+    private void SpawnHealthPickup(GameState state)
     {
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
@@ -1500,7 +1498,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (line[x] == '.')  // Only consider floor tiles
                 {
                     // Check if position is not occupied by player, enemies, gold, or other health pickups
-                    if ((x != _animPlayerX || y != _animPlayerY) &&
+                    if ((x != state.PlayerX || y != state.PlayerY) &&
                         !_enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
                         !_goldItems.Any(g => g.X == x && g.Y == y) &&
                         !_healthPickups.Any(h => h.X == x && h.Y == y))
@@ -1953,7 +1951,7 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Update the SpawnCharger method
-    private void SpawnCharger()
+    private void SpawnCharger(GameState state)
     {
         // Find a position that's not occupied by the player or another enemy
         float newX = 0;
@@ -1987,7 +1985,7 @@ public class ScreenPresenter : IScreenPresenter
                     break;
             }
 
-            isPositionValid = (Math.Abs(newX - _animPlayerX) > 3 || Math.Abs(newY - _animPlayerY) > 3) &&
+            isPositionValid = (Math.Abs(newX - state.PlayerX) > 3 || Math.Abs(newY - state.PlayerY) > 3) &&
                               !_enemies.Any(e => e.Alive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
 
             if (isPositionValid)
@@ -2010,11 +2008,11 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Add this new method for applying knockback
-    private void ApplyKnockback(Vector2 sourcePosition, float multiplier = 1.0f)
+    private void ApplyKnockback(GameState state, Vector2 sourcePosition, float multiplier = 1.0f)
     {
         // Determine knockback direction (away from the source)
-        float dx = _animPlayerX - sourcePosition.X;
-        float dy = _animPlayerY - sourcePosition.Y;
+        float dx = state.PlayerX - sourcePosition.X;
+        float dy = state.PlayerY - sourcePosition.Y;
         
         // If player is exactly on the enemy, use the player's facing direction
         if (Math.Abs(dx) < 0.1f && Math.Abs(dy) < 0.1f)
@@ -2064,11 +2062,11 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Add a new method to update the camera position
-    private void UpdateCamera()
+    private void UpdateCamera(GameState state)
     {
         // Calculate how far the player is from the camera center
-        float deltaX = _animPlayerX - _cameraX;
-        float deltaY = _animPlayerY - _cameraY;
+        float deltaX = state.PlayerX - _cameraX;
+        float deltaY = state.PlayerY - _cameraY;
         
         // If player is outside the dead zone, move the camera
         if (Math.Abs(deltaX) > CameraDeadZone)
@@ -2088,11 +2086,11 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void CheckSwordCollisions()
+    private void CheckSwordCollisions(GameState state)
     {
         // Calculate sword position based on player position and direction
-        float swordX = _animPlayerX;
-        float swordY = _animPlayerY;
+        float swordX = state.PlayerX;
+        float swordY = state.PlayerY;
         
         // Adjust position based on direction and sword reach
         switch (_lastDirection)
@@ -2135,7 +2133,7 @@ public class ScreenPresenter : IScreenPresenter
                     // Check if we should spawn a charger
                     if (_enemiesKilled >= KillsForCharger && !_chargerActive)
                     {
-                        SpawnCharger();
+                        SpawnCharger(state);
                     }
                     
                     break; // Only hit one enemy per swing
@@ -2156,10 +2154,10 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Add this new method to ensure player spawns on a walkable tile
-    private void EnsurePlayerOnWalkableTile()
+    private void EnsurePlayerOnWalkableTile(GameState state)
     {
         // If player is already on a walkable tile, do nothing
-        if (IsWalkableTile((int)_animPlayerX, (int)_animPlayerY))
+        if (IsWalkableTile((int)state.PlayerX, (int)state.PlayerY))
         {
             return;
         }
@@ -2178,14 +2176,14 @@ public class ScreenPresenter : IScreenPresenter
                     if (Math.Abs(offsetX) != radius && Math.Abs(offsetY) != radius)
                         continue;
                     
-                    int testX = (int)_animPlayerX + offsetX;
-                    int testY = (int)_animPlayerY + offsetY;
+                    int testX = (int)state.PlayerX + offsetX;
+                    int testY = (int)state.PlayerY + offsetY;
                     
                     if (IsWalkableTile(testX, testY))
                     {
                         // Found a walkable tile, move player there
-                        _animPlayerX = testX;
-                        _animPlayerY = testY;
+                        state.PlayerX = testX;
+                        state.PlayerY = testY;
                         return;
                     }
                 }
@@ -2196,8 +2194,8 @@ public class ScreenPresenter : IScreenPresenter
         // This is a fallback that should rarely be needed
         int roomWidth = 7;
         int roomHeight = 5;
-        int roomX = (int)_animPlayerX - roomWidth / 2;
-        int roomY = (int)_animPlayerY - roomHeight / 2;
+        int roomX = (int)state.PlayerX - roomWidth / 2;
+        int roomY = (int)state.PlayerY - roomHeight / 2;
         
         // Create a simple room
         for (int y = 0; y < roomHeight; y++)
@@ -2241,12 +2239,12 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Place player in the center of the new room
-        _animPlayerX = roomX + roomWidth / 2;
-        _animPlayerY = roomY + roomHeight / 2;
+        state.PlayerX = roomX + roomWidth / 2;
+        state.PlayerY = roomY + roomHeight / 2;
     }
 
     // Add this method to initialize the player position on a floor tile
-    private void InitializePlayerPosition()
+    private void InitializePlayerPosition(GameState state)
     {
         // Create a list of all valid spawn positions (floor tiles only)
         var floorTiles = new List<(int x, int y)>();
@@ -2273,11 +2271,11 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = floorTiles[randomIndex];
         
         // Set player position
-        _animPlayerX = newX;
-        _animPlayerY = newY;
+        state.PlayerX = newX;
+        state.PlayerY = newY;
         
         // Immediately center camera on player for initial spawn
-        _cameraX = _animPlayerX;
-        _cameraY = _animPlayerY;
+        _cameraX = state.PlayerX;
+        _cameraY = state.PlayerY;
     }
 }

@@ -39,7 +39,7 @@ class InfiniteRogueMap:
         self.MAX_ROOM_HEIGHT = 8
         
         # Section size (each section can contain one room)
-        self.SECTION_SIZE = 20
+        self.CHUNK_SIZE = 20
     
     def get_tile(self, x, y):
         """
@@ -53,8 +53,8 @@ class InfiniteRogueMap:
             str: Character representing the map tile
         """
         # Determine which section this coordinate belongs to
-        section_x = x // self.SECTION_SIZE
-        section_y = y // self.SECTION_SIZE
+        section_x = x // self.CHUNK_SIZE
+        section_y = y // self.CHUNK_SIZE
         
         # Get or generate the room for this section
         room = self._get_or_generate_room(section_x, section_y)
@@ -105,11 +105,11 @@ class InfiniteRogueMap:
             room_height = room_rng.randint(self.MIN_ROOM_HEIGHT, self.MAX_ROOM_HEIGHT)
             
             # Position the room within the section (with some randomness)
-            margin_x = self.SECTION_SIZE - room_width
-            margin_y = self.SECTION_SIZE - room_height
+            margin_x = self.CHUNK_SIZE - room_width
+            margin_y = self.CHUNK_SIZE - room_height
             
-            room_x = section_x * self.SECTION_SIZE + room_rng.randint(1, max(1, margin_x - 1))
-            room_y = section_y * self.SECTION_SIZE + room_rng.randint(1, max(1, margin_y - 1))
+            room_x = section_x * self.CHUNK_SIZE + room_rng.randint(1, max(1, margin_x - 1))
+            room_y = section_y * self.CHUNK_SIZE + room_rng.randint(1, max(1, margin_y - 1))
             
             # Generate doors
             doors = self._generate_doors(room_x, room_y, room_width, room_height, room_rng)
@@ -668,8 +668,8 @@ class InfiniteRogueMap:
         # First, generate all rooms in the visible area
         for y in range(start_y, start_y + height):
             for x in range(start_x, start_x + width):
-                section_x = x // self.SECTION_SIZE
-                section_y = y // self.SECTION_SIZE
+                section_x = x // self.CHUNK_SIZE
+                section_y = y // self.CHUNK_SIZE
                 self._get_or_generate_room(section_x, section_y)
         
         # Then generate hallways between all rooms

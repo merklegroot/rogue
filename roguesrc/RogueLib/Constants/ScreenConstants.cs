@@ -12,5 +12,5 @@ public static class ScreenConstants
     public const string Title = "ROGUE ADVENTURE";
 
 
-    public const int EnemyChar = 128;
+    public const int EnemyChar = 128; // (Captial C with a cedilla under it)
 }

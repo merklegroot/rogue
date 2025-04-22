@@ -21,7 +21,7 @@ public class Game : IGame
     public void Run()
     {
         var rayConnection = _rayConnectionFactory.Connect();
-        _presenter.Initialize(rayConnection);
+        _presenter.Initialize(rayConnection, _state);
 
         try
         {
