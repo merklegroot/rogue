@@ -21,13 +21,13 @@ public class DebugPanelPresenter
         
         // Position the panel lower on the screen
         int panelX = 10;
-        int panelY = 50;
+        int panelY = 100;
         
         // Draw off-white border
         Raylib.DrawRectangle(panelX - 2, panelY - 2, panelWidth + 4, panelHeight + 4, new Color(220, 220, 220, 255));
         
-        // Draw black background panel
-        Raylib.DrawRectangle(panelX, panelY, panelWidth, panelHeight, new Color(0, 0, 0, 255));
+        // Draw translucent gray background panel
+        Raylib.DrawRectangle(panelX, panelY, panelWidth, panelHeight, new Color(100, 100, 100, 180));
         
         int debugY = panelY + 10;
         
