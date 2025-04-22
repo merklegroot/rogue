@@ -4,6 +4,8 @@ public class GameState
 {
     public GameScreenEnum CurrentScreen { get; set; } = GameScreenEnum.Menu;
 
+    public int PlayerGold { get; set; } = 0;
+    
     public int PlayerX { get; set; } = 10;
     public int PlayerY { get; set; } = 5;
     public int CurrentHealth { get; set; } = 7;    
@@ -26,4 +28,6 @@ public class GameState
     public List<ExplosionState> Explosions { get; } = [];
 
     public readonly List<CrossbowBoltState> CrossbowBolts = [];
+    
+    public ShopState ShopState { get; set; } = new ShopState();
 }

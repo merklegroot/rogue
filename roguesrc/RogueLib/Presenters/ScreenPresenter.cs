@@ -43,10 +43,6 @@ public class ScreenPresenter : IScreenPresenter
     
     private readonly Color _explosionColor = new(255, 165, 0, 255);  // Orange color for explosions
 
-    // Add gold field
-    private int _playerGold = 0;
-    private readonly Color _goldColor = new(255, 215, 0, 255);  // Gold color
-
     // Add gold items field
     private readonly List<GoldItem> _goldItems = [];
     
@@ -129,20 +125,8 @@ public class ScreenPresenter : IScreenPresenter
         return _playerChar;
     }
 
-    // Define ShopItem class before it's used
-    private class ShopItem
-    {
-        public required string Name { get; set; }
-        public required string Description { get; set; }
-        public int Price { get; set; }
-        public required Action OnPurchase { get; set; }
-        public ShopCategory Category { get; set; } = ShopCategory.Consumable;  // Default category
-    }
-
     // Add shop-related fields
     private bool _shopOpen = false;
-    private int _selectedShopItem = 0;
-    private readonly List<ShopItem> _shopInventory = [];
 
     private readonly IRayLoader _rayLoader;
     private readonly IScreenDrawer _screenDrawer;
@@ -155,12 +139,18 @@ public class ScreenPresenter : IScreenPresenter
     private const float CameraDeadZone = 5.0f; // Increased from 3.0f to 5.0f
 
     private readonly IHealthBarPresenter _healthBarPresenter;
+    private readonly IShopPresenter _shopPresenter;
 
-    public ScreenPresenter(IRayLoader rayLoader, IScreenDrawer screenDrawer, IHealthBarPresenter healthBarPresenter)
+    public ScreenPresenter(
+        IRayLoader rayLoader, 
+        IScreenDrawer screenDrawer, 
+        IHealthBarPresenter healthBarPresenter,
+        IShopPresenter shopPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawer = screenDrawer;
         _healthBarPresenter = healthBarPresenter;
+        _shopPresenter = shopPresenter;
         
         // Load the map from the embedded resource
         _map = rayLoader.LoadMap();
@@ -230,7 +220,7 @@ public class ScreenPresenter : IScreenPresenter
                 break;
 
             case GameScreenEnum.Shop:
-                DrawShop(rayConnection);
+                _shopPresenter.Draw(rayConnection, state);
                 HandleShopInput(state);
                 break;
         }
@@ -457,11 +447,11 @@ public class ScreenPresenter : IScreenPresenter
     {
         UpdatePlayerIdleAnimation();
         _healthBarPresenter.Draw(rayConnection, state);
-        DrawGoldCounter(rayConnection);
+        DrawGoldCounter(rayConnection, state);
         DrawWorld(rayConnection, state);
         DrawExplosions(state, rayConnection);
         DrawSwordAnimation(rayConnection, state);
-        DrawFlyingGold(rayConnection);
+        DrawFlyingGold(rayConnection, state);
         DrawCooldownIndicators(rayConnection, state);
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection);
@@ -603,7 +593,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawFlyingGold(IRayConnection rayConnection)
+    private void DrawFlyingGold(IRayConnection rayConnection, GameState state)
     {
         // Draw flying gold (after everything else so it appears on top)
         foreach (var gold in _flyingGold)
@@ -618,7 +608,7 @@ public class ScreenPresenter : IScreenPresenter
             
             // Calculate end position (gold counter location)
             int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-            string goldText = $"Gold: {_playerGold}";
+            string goldText = $"Gold: {state.PlayerGold}";
             int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
             int endX = screenWidth - goldTextWidth - 40;  // Position before the text
             int endY = 20;  // Same Y as gold counter
@@ -629,7 +619,7 @@ public class ScreenPresenter : IScreenPresenter
             
             // Calculate alpha (opacity) based on progress - fade out as it approaches the counter
             byte alpha = (byte)(255 * (1.0f - progress * 0.8f));  // Fade to 20% opacity
-            Color fadingGoldColor = new Color(_goldColor.R, _goldColor.G, _goldColor.B, alpha);
+            Color fadingGoldColor = new Color(ScreenConstants.GoldColor.R, ScreenConstants.GoldColor.G, ScreenConstants.GoldColor.B, alpha);
             
             // Draw the flying gold character with fading effect
             _screenDrawer.DrawCharacter(rayConnection, GoldChar, currentX, currentY, fadingGoldColor);
@@ -851,7 +841,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (Math.Abs(gold.X - _cameraX) < 15 && Math.Abs(gold.Y - _cameraY) < 10)
             {
-                _screenDrawer.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - _cameraX) * 32) + 400, 100 + (int)((gold.Y - _cameraY) * 40) + 200, _goldColor); // $ symbol
+                _screenDrawer.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - _cameraX) * 32) + 400, 100 + (int)((gold.Y - _cameraY) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
             }
         }
         
@@ -887,7 +877,7 @@ public class ScreenPresenter : IScreenPresenter
             // Add debug option to get free gold with G key
             if (key == KeyboardKey.G)
             {
-                _playerGold += 100;
+                state.PlayerGold += 100;
                 
                 // Optional: Add a visual indicator that gold was added
                 int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
@@ -1013,7 +1003,7 @@ public class ScreenPresenter : IScreenPresenter
             if (_flyingGold[i].Timer >= GoldFlyDuration)
             {
                 // Add the gold value to player's total when animation completes
-                _playerGold += _flyingGold[i].Value;
+                state.PlayerGold += _flyingGold[i].Value;
                 
                 // Remove the flying gold
                 _flyingGold.RemoveAt(i);
@@ -1043,7 +1033,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             _shopOpen = true;
             state.CurrentScreen = GameScreenEnum.Shop;
-            _selectedShopItem = 0;
+            state.ShopState.SelectedShopItem = 0;
         }
 
         // Handle crossbow firing with F key
@@ -1481,14 +1471,14 @@ public class ScreenPresenter : IScreenPresenter
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
     }
 
-    private void DrawGoldCounter(IRayConnection rayConnection)
+    private void DrawGoldCounter(IRayConnection rayConnection, GameState state)
     {
         // Draw gold counter at the top-right of the screen
         int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-        string goldText = $"Gold: {_playerGold}";
+        string goldText = $"Gold: {state.PlayerGold}";
         int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
         
-        _screenDrawer.DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, _goldColor);
+        _screenDrawer.DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, ScreenConstants.GoldColor);
     }
 
     public bool WindowShouldClose()
@@ -1531,7 +1521,7 @@ public class ScreenPresenter : IScreenPresenter
     private void InitializeShop(GameState state)
     {
         // Regular items section
-        _shopInventory.Add(new ShopItem
+        state.ShopState.ShopInventory.Add(new ShopItem
         {
             Name = "Health Potion",
             Description = "Restores 25 health",
@@ -1540,7 +1530,7 @@ public class ScreenPresenter : IScreenPresenter
             Category = ShopCategory.Consumable
         });
         
-        _shopInventory.Add(new ShopItem
+        state.ShopState.ShopInventory.Add(new ShopItem
         {
             Name = "Faster Sword",
             Description = "Reduces sword cooldown by 0.2s",
@@ -1552,7 +1542,7 @@ public class ScreenPresenter : IScreenPresenter
             Category = ShopCategory.Upgrade
         });
         
-        _shopInventory.Add(new ShopItem
+        state.ShopState.ShopInventory.Add(new ShopItem
         {
             Name = "Longer Sword",
             Description = "Increases sword reach",
@@ -1561,7 +1551,7 @@ public class ScreenPresenter : IScreenPresenter
             Category = ShopCategory.Upgrade
         });
         
-        _shopInventory.Add(new ShopItem
+        state.ShopState.ShopInventory.Add(new ShopItem
         {
             Name = "Invincibility",
             Description = "5 seconds of invincibility",
@@ -1576,7 +1566,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Weapons section (empty for now)
         // You can add weapon items here later
-        _shopInventory.Add(new ShopItem
+        state.ShopState.ShopInventory.Add(new ShopItem
         {
             Name = "--- Weapons ---",
             Description = "Coming soon...",
@@ -1586,7 +1576,7 @@ public class ScreenPresenter : IScreenPresenter
         });
         
         // Add crossbow to weapons section
-        _shopInventory.Add(new ShopItem
+        state.ShopState.ShopInventory.Add(new ShopItem
         {
             Name = "Crossbow",
             Description = "Fires bolts at enemies from a distance",
@@ -1596,50 +1586,6 @@ public class ScreenPresenter : IScreenPresenter
         });
     }
 
-    private void DrawShop(IRayConnection rayConnection)
-    {
-        // Draw shop background
-        Raylib.DrawRectangle(50, 50, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 100, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, new Color(30, 30, 30, 230));
-        Raylib.DrawRectangleLines(50, 50, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 100, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.Gold);
-        
-        // Draw shop title
-        string shopTitle = "ADVENTURER'S SHOP";
-        Vector2 titleSize = Raylib.MeasureTextEx(rayConnection.MenuFont, shopTitle, 32, 1);
-        Raylib.DrawTextEx(rayConnection.MenuFont, shopTitle, new Vector2((ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale) / 2 - titleSize.X / 2, 70), 32, 1, Color.Gold);
-        
-        // Draw player's gold
-        string goldText = $"Your Gold: {_playerGold}";
-        _screenDrawer.DrawText(rayConnection, goldText, 70, 120, _goldColor);
-        
-        // Draw shop items
-        int itemY = 170;
-        int itemSpacing = 50;
-        
-        for (int i = 0; i < _shopInventory.Count; i++)
-        {
-            var item = _shopInventory[i];
-            Color itemColor = i == _selectedShopItem ? Color.White : new Color(200, 200, 200, 200);
-            
-            // Draw selection indicator
-            if (i == _selectedShopItem)
-            {
-                Raylib.DrawRectangle(60, itemY - 5, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 120, 40, new Color(60, 60, 60, 150));
-            }
-            
-            // Draw item name and price
-            _screenDrawer.DrawText(rayConnection, item.Name, 70, itemY, itemColor);
-            string priceText = $"{item.Price} gold";
-            _screenDrawer.DrawText(rayConnection, priceText, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 200, itemY, itemColor);
-            
-            // Draw item description
-            _screenDrawer.DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
-            
-            itemY += itemSpacing;
-        }
-        
-        // Draw instructions
-        _screenDrawer.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.White);
-    }
 
     private void HandleShopInput(GameState state)
     {
@@ -1655,34 +1601,34 @@ public class ScreenPresenter : IScreenPresenter
             else if (key == KeyboardKey.Up)
             {
                 // Move selection up, skipping headers
-                int newSelection = _selectedShopItem - 1;
-                while (newSelection >= 0 && _shopInventory[newSelection].Category == ShopCategory.Header)
+                int newSelection = state.ShopState.SelectedShopItem - 1;
+                while (newSelection >= 0 && state.ShopState.ShopInventory[newSelection].Category == ShopCategory.Header)
                 {
                     newSelection--;
                 }
-                _selectedShopItem = Math.Max(0, newSelection);
+                state.ShopState.SelectedShopItem = Math.Max(0, newSelection);
             }
             else if (key == KeyboardKey.Down)
             {
                 // Move selection down, skipping headers
-                int newSelection = _selectedShopItem + 1;
-                while (newSelection < _shopInventory.Count && _shopInventory[newSelection].Category == ShopCategory.Header)
+                int newSelection = state.ShopState.SelectedShopItem + 1;
+                while (newSelection < state.ShopState.ShopInventory.Count && state.ShopState.ShopInventory[newSelection].Category == ShopCategory.Header)
                 {
                     newSelection++;
                 }
-                _selectedShopItem = Math.Min(_shopInventory.Count - 1, newSelection);
+                state.ShopState.SelectedShopItem = Math.Min(state.ShopState.ShopInventory.Count - 1, newSelection);
             }
             else if (key == KeyboardKey.Enter)
             {
                 // Try to purchase the selected item
-                if (_selectedShopItem >= 0 && _selectedShopItem < _shopInventory.Count)
+                if (state.ShopState.SelectedShopItem >= 0 && state.ShopState.SelectedShopItem < state.ShopState.ShopInventory.Count)
                 {
-                    var item = _shopInventory[_selectedShopItem];
+                    var item = state.ShopState.ShopInventory[state.ShopState.SelectedShopItem];
                     // Don't allow purchasing headers
-                    if (item.Category != ShopCategory.Header && _playerGold >= item.Price)
+                    if (item.Category != ShopCategory.Header && state.PlayerGold >= item.Price)
                     {
                         // Deduct gold
-                        _playerGold -= item.Price;
+                        state.PlayerGold -= item.Price;
                         
                         // Apply the purchase effect
                         item.OnPurchase();
@@ -1690,15 +1636,6 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
         }
-    }
-
-    // Add a category enum for shop items
-    private enum ShopCategory
-    {
-        Consumable,
-        Upgrade,
-        Weapon,
-        Header  // Used for section headers
     }
 
     private void UpdateCrossbowBolts(GameState state)

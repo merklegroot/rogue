@@ -27,4 +27,6 @@ public static class ScreenConstants
     public const int MaxHealth = 10;
 
     public static readonly Color HealthColor = Color.Red;
+    
+    public static readonly Color GoldColor = new(255, 215, 0, 255);
 }
