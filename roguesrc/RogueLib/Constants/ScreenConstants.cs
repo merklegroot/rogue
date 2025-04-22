@@ -17,4 +17,10 @@ public static class ScreenConstants
     public const int EnemyChar = 128; // (Captial C with a cedilla under it)
 
     public static readonly Color SwordColor = new(180, 210, 230, 255);  // Silvery-blue color
+
+    public const int SidePadding = 8;
+    public const int TopPadding = 10;
+
+    public const int CharHGap = 1;
+    public const int CharVGap = 2;
 }
