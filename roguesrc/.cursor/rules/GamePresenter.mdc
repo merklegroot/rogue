@@ -1,0 +1,14 @@
+
+```language=markdown
+---
+description: Rules for working with the ScreenPresenter
+globs: "**/*ScreenPresenter*.cs"
+alwaysApply: false
+---
+
+# ScreenPresenter Rules
+
+When working with the ScreenPresenter class:
+
+- Try to maintain state in the GameState class rather than in fields or properties on the ScreenPresenter.
+

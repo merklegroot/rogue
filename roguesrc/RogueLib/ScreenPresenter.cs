@@ -14,9 +14,6 @@ public interface IScreenPresenter
 
 public class ScreenPresenter : IScreenPresenter
 {
-    private const int Width = 40;
-    private const int Height = 16;
-
     private GameScreenEnum _currentScreenEnum = GameScreenEnum.Menu;
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
@@ -82,13 +79,11 @@ public class ScreenPresenter : IScreenPresenter
     // Replace CRT effect fields with shader-related fields
     private bool _enableCrtEffect = true;
     private float _shaderTime = 0f;
-    private int _scanlineCountLoc;
 
     // Add health pickup fields
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
     private const float HealthSpawnInterval = 30f;  // Spawn a health pickup every 30 seconds
-    private const char HealthChar = (char)3;  // ASCII/CP437 heart symbol (♥)
 
     // Add sword cooldown fields
     private float _swordCooldownTimer = 0f;
@@ -312,7 +307,7 @@ public class ScreenPresenter : IScreenPresenter
         Vector2 titleSize2D = Raylib.MeasureTextEx(rayConnection.MenuFont, ScreenConstants.Title, titleSize, 1);
         int titleWidth = (int)titleSize2D.X;
         
-        int centerX = (Width * ScreenConstants.CharWidth * DisplayScale) / 2;
+        int centerX = (ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale) / 2;
         
         // Draw title with shadow effect
         Raylib.DrawTextEx(rayConnection.MenuFont, ScreenConstants.Title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
@@ -324,7 +319,7 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.DrawRectangle(centerX - lineWidth/2, lineY, lineWidth, 2, Color.Gold);
         
         // Draw center marker
-        Raylib.DrawRectangle(centerX - 1, 0, 2, Height * ScreenConstants.CharHeight * DisplayScale, new Color(255, 0, 0, 100));
+        Raylib.DrawRectangle(centerX - 1, 0, 2, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale, new Color(255, 0, 0, 100));
         
         // Draw menu options centered with more spacing
         int menuStartY = lineY + 30; // Start menu options below the line
@@ -337,7 +332,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw a version number and copyright
         string version = "v0.1 Alpha";
-        _screenDrawer.DrawText(rayConnection, version, 20, Height * ScreenConstants.CharHeight * DisplayScale - 40, new Color(150, 150, 150, 200));
+        _screenDrawer.DrawText(rayConnection, version, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, new Color(150, 150, 150, 200));
         
         // Draw a small decorative element
         _screenDrawer.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
@@ -345,8 +340,8 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawDebugGrid()
     {
-        int screenWidth = Width * ScreenConstants.CharWidth * DisplayScale;
-        int screenHeight = Height * ScreenConstants.CharHeight * DisplayScale;
+        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+        int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
         
         // Draw vertical grid lines every 50 pixels
         for (int x = 0; x < screenWidth; x += 50)
@@ -472,7 +467,7 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
 
-        _screenDrawer.DrawText(rayConnection, "Press any key to return", 20, Height * ScreenConstants.CharHeight * DisplayScale - 40, Color.White);
+        _screenDrawer.DrawText(rayConnection, "Press any key to return", 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput()
@@ -525,8 +520,8 @@ public class ScreenPresenter : IScreenPresenter
             int explosionY = 100 + (int)((explosion.Y - _cameraY) * 40) + 200;
             
             // Only draw if on screen
-            if (explosionX >= 0 && explosionX < Width * ScreenConstants.CharWidth * DisplayScale &&
-                explosionY >= 0 && explosionY < Height * ScreenConstants.CharHeight * DisplayScale)
+            if (explosionX >= 0 && explosionX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
+                explosionY >= 0 && explosionY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
             {
                 _screenDrawer.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, _explosionColor);
             }
@@ -647,7 +642,7 @@ public class ScreenPresenter : IScreenPresenter
             progress = 1 - (1 - progress) * (1 - progress);
             
             // Calculate end position (gold counter location)
-            int screenWidth = Width * ScreenConstants.CharWidth * DisplayScale;
+            int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
             string goldText = $"Gold: {_playerGold}";
             int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
             int endX = screenWidth - goldTextWidth - 40;  // Position before the text
@@ -749,7 +744,7 @@ public class ScreenPresenter : IScreenPresenter
         instructionsText += ", ESC to return to menu, (G) for debug gold";
         
         // Changed from Height * ScreenConstants.CharHeight * DisplayScale - 40 to Height * ScreenConstants.CharHeight * DisplayScale - 60
-        _screenDrawer.DrawText(rayConnection, instructionsText, 20, Height * ScreenConstants.CharHeight * DisplayScale - 60, Color.White);
+        _screenDrawer.DrawText(rayConnection, instructionsText, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
     }
 
     private void DrawWorld(IRayConnection rayConnection, GameState state)
@@ -861,8 +856,8 @@ public class ScreenPresenter : IScreenPresenter
                 int enemyScreenY = 100 + (int)((enemy.Y - _cameraY) * 40) + 200;
                 
                 // Only draw if on screen
-                if (enemyScreenX >= 0 && enemyScreenX < Width * ScreenConstants.CharWidth * DisplayScale &&
-                    enemyScreenY >= 0 && enemyScreenY < Height * ScreenConstants.CharHeight * DisplayScale)
+                if (enemyScreenX >= 0 && enemyScreenX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
+                    enemyScreenY >= 0 && enemyScreenY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
                 {
                     _screenDrawer.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, _enemyColor);
                 }
@@ -920,10 +915,10 @@ public class ScreenPresenter : IScreenPresenter
                 _playerGold += 100;
                 
                 // Optional: Add a visual indicator that gold was added
-                int screenWidth = Width * ScreenConstants.CharWidth * DisplayScale;
+                int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
                 _flyingGold.Add(new FlyingGold { 
                     StartX = screenWidth / 2,
-                    StartY = Height * ScreenConstants.CharHeight * DisplayScale / 2,
+                    StartY = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale / 2,
                     Value = 100,
                     Timer = 0f
                 });
@@ -1514,7 +1509,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawGoldCounter(IRayConnection rayConnection)
     {
         // Draw gold counter at the top-right of the screen
-        int screenWidth = Width * ScreenConstants.CharWidth * DisplayScale;
+        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         string goldText = $"Gold: {_playerGold}";
         int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
         
@@ -1637,13 +1632,13 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawShop(IRayConnection rayConnection)
     {
         // Draw shop background
-        Raylib.DrawRectangle(50, 50, Width * ScreenConstants.CharWidth * DisplayScale - 100, Height * ScreenConstants.CharHeight * DisplayScale - 100, new Color(30, 30, 30, 230));
-        Raylib.DrawRectangleLines(50, 50, Width * ScreenConstants.CharWidth * DisplayScale - 100, Height * ScreenConstants.CharHeight * DisplayScale - 100, Color.Gold);
+        Raylib.DrawRectangle(50, 50, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 100, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, new Color(30, 30, 30, 230));
+        Raylib.DrawRectangleLines(50, 50, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 100, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.Gold);
         
         // Draw shop title
         string shopTitle = "ADVENTURER'S SHOP";
         Vector2 titleSize = Raylib.MeasureTextEx(rayConnection.MenuFont, shopTitle, 32, 1);
-        Raylib.DrawTextEx(rayConnection.MenuFont, shopTitle, new Vector2((Width * ScreenConstants.CharWidth * DisplayScale) / 2 - titleSize.X / 2, 70), 32, 1, Color.Gold);
+        Raylib.DrawTextEx(rayConnection.MenuFont, shopTitle, new Vector2((ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale) / 2 - titleSize.X / 2, 70), 32, 1, Color.Gold);
         
         // Draw player's gold
         string goldText = $"Your Gold: {_playerGold}";
@@ -1661,13 +1656,13 @@ public class ScreenPresenter : IScreenPresenter
             // Draw selection indicator
             if (i == _selectedShopItem)
             {
-                Raylib.DrawRectangle(60, itemY - 5, Width * ScreenConstants.CharWidth * DisplayScale - 120, 40, new Color(60, 60, 60, 150));
+                Raylib.DrawRectangle(60, itemY - 5, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 120, 40, new Color(60, 60, 60, 150));
             }
             
             // Draw item name and price
             _screenDrawer.DrawText(rayConnection, item.Name, 70, itemY, itemColor);
             string priceText = $"{item.Price} gold";
-            _screenDrawer.DrawText(rayConnection, priceText, Width * ScreenConstants.CharWidth * DisplayScale - 200, itemY, itemColor);
+            _screenDrawer.DrawText(rayConnection, priceText, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 200, itemY, itemColor);
             
             // Draw item description
             _screenDrawer.DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
@@ -1676,7 +1671,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Draw instructions
-        _screenDrawer.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, Height * ScreenConstants.CharHeight * DisplayScale - 100, Color.White);
+        _screenDrawer.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.White);
     }
 
     private void HandleShopInput()

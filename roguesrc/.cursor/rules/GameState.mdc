@@ -1,0 +1,16 @@
+
+3. Structure your rule like this:
+
+```language=markdown
+---
+description: Rules for working with GameState
+globs: "**/*GameState*.cs"
+alwaysApply: false
+---
+
+# GameState Rules
+
+When working with the GameState class:
+
+- Use properties with getters and setters for all state variables
+- Keep the GameState class focused on data, not game logic
