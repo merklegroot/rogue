@@ -6,7 +6,7 @@ public static class GameConstants
     
     public const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
     public const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
-    public const int MaxEnemies = 3;  // Back to original: maximum of 3 enemies
+    public const int MaxEnemies = 8;  // Increased to allow for more enemies while maintaining chunk distribution
     public const float ExplosionDuration = 0.5f;  // How long each explosion lasts
 
     public const float BoltSpeed = 8.0f; // Bolts move 8 tiles per second

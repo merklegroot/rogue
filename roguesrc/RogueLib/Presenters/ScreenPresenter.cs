@@ -1203,6 +1203,10 @@ public class ScreenPresenter : IScreenPresenter
 
     private void SpawnEnemy(GameState state)
     {
+        // Check total enemy limit first
+        if (state.Enemies.Count(e => e.Alive) >= GameConstants.MaxEnemies)
+            return;
+
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
         
@@ -1218,7 +1222,19 @@ public class ScreenPresenter : IScreenPresenter
                     if ((x != state.PlayerX || y != state.PlayerY) &&
                         !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y))
                     {
-                        validPositions.Add((x, y));
+                        // Check per-chunk limit
+                        int chunkX = x / GameConstants.ChunkSize;
+                        int chunkY = y / GameConstants.ChunkSize;
+                        int enemiesInChunk = state.Enemies.Count(e => 
+                            e.Alive && 
+                            e.X / GameConstants.ChunkSize == chunkX && 
+                            e.Y / GameConstants.ChunkSize == chunkY);
+
+                        // Allow up to 2 enemies per chunk
+                        if (enemiesInChunk < 2)
+                        {
+                            validPositions.Add((x, y));
+                        }
                     }
                 }
             }
