@@ -551,7 +551,7 @@ public class ScreenPresenter : IScreenPresenter
             for (int x = 0; x < mapWidth; x++)
             {
                 // Skip tiles that are too far from the camera (optimization)
-                if (Math.Abs(x - state.CameraState.X) > 15 || Math.Abs(y - state.CameraState.Y) > 10)
+                if (Math.Abs(x - state.CameraState.X) > 25 || Math.Abs(y - state.CameraState.Y) > 20)
                     continue;
                 
                 // Get the character at this position in the map
