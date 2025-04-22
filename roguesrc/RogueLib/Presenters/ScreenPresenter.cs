@@ -82,23 +82,6 @@ public class ScreenPresenter : IScreenPresenter
     // Add this field with the other private fields
     private bool _gameJustStarted = true;
 
-    // Add this method to update the player animation
-    private void UpdatePlayerAnimation()
-    {
-        // Simple animation: change character every 30 frames (about 0.5 seconds)
-        if ((int)(Raylib.GetTime() * 60) % 30 == 0)
-        {
-            // Toggle between character 2 and 1
-            _playerChar = (_playerChar == 2) ? 1 : 2;
-        }
-    }
-
-    // Add this method to get the current player character
-    private int GetPlayerChar()
-    {
-        return _playerChar;
-    }
-
     // Add shop-related fields
     private bool _shopOpen = false;
 
@@ -732,6 +715,10 @@ public class ScreenPresenter : IScreenPresenter
         int playerScreenX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400;
         int playerScreenY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200;
         
+        // Update wobble animation using state
+        state.WobbleTimer += Raylib.GetFrameTime();
+        float wobbleScale = 1.0f + (float)Math.Sin(state.WobbleTimer * GameConstants.WobbleSpeed) * GameConstants.WobbleAmount;
+        
         // If player is invincible, make them flash
         Color playerColor = ScreenConstants.PlayerColor;
         if (state.IsInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
@@ -739,7 +726,8 @@ public class ScreenPresenter : IScreenPresenter
             playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
         }
         
-        _screenDrawer.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, playerColor);
+        // Draw player with wobble effect
+        _screenDrawer.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, playerColor, false, wobbleScale);
         
         // Draw enemies - now using camera offset and updated horizontal spacing
         foreach (var enemy in state.Enemies)

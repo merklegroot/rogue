@@ -6,7 +6,7 @@ namespace RogueLib;
 public interface IScreenDrawer
 {
     void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color);
-    void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false);
+    void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false, float scale = 1.0f);
 }
 
 
@@ -17,7 +17,7 @@ public class ScreenDrawer : IScreenDrawer
         Raylib.DrawTextEx(rayConnection.MenuFont, text, new Vector2(x, y), ScreenConstants.MenuFontSize, 1, color);
     }
 
-    public void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false)
+    public void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false, float scale = 1.0f)
     {
         var sourceX = charNum % 32;
         var sourceY = charNum / 32;
@@ -32,8 +32,8 @@ public class ScreenDrawer : IScreenDrawer
         Rectangle destRect = new(
             x,
             y,
-            ScreenConstants.CharWidth * ScreenConstants.DisplayScale,
-            ScreenConstants.CharHeight * ScreenConstants.DisplayScale
+            ScreenConstants.CharWidth * ScreenConstants.DisplayScale * scale,
+            ScreenConstants.CharHeight * ScreenConstants.DisplayScale * scale
         );
 
         // Draw the character

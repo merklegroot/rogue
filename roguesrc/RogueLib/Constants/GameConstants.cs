@@ -14,4 +14,8 @@ public static class GameConstants
     public const int MaxGoldItems = 3;  // Reduced from 5 to 3
 
     public const float InvincibilityDuration = 1.0f;  
+
+    // Wobble animation constants
+    public const float WobbleSpeed = 2.0f; // Speed of the wobble animation
+    public const float WobbleAmount = 0.1f; // How much to scale (10% variation)
 }

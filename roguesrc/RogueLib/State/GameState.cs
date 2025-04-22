@@ -20,6 +20,10 @@ public class GameState
 
     public float TimeSinceLastMove { get; set; }
 
+    // Add wobble animation state
+    public float WobbleTimer { get; set; } = 0f;
+    // Constants moved to GameConstants
+
     public List<Enemy> Enemies { get; } = [];
     public float EnemySpawnTimer { get; set; }
     
