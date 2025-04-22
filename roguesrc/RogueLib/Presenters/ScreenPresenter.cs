@@ -36,7 +36,6 @@ public class ScreenPresenter : IScreenPresenter
     private bool _swordOnCooldown = false;
     private int _swordReach = 1;
     private bool _hasCrossbow = false;
-    private bool _isCrossbowFiring = false;
     private float _crossbowCooldown = 2.0f;
     private float _crossbowCooldownTimer = 0f;
     private bool _crossbowOnCooldown = false;
@@ -49,8 +48,6 @@ public class ScreenPresenter : IScreenPresenter
     private ChargerEnemyState? _charger = null;
     private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
     private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
-    private readonly Color _chargerColor = new(255, 50, 50, 255); // Bright red color
-    private const int ChargerHealth = 5;
     private const float KnockbackDuration = 0.08f;
     private const float KnockbackDistance = 0.5f;
     private bool _gameJustStarted = true;
@@ -508,7 +505,7 @@ public class ScreenPresenter : IScreenPresenter
             };
             
             // Draw the bolt at its current position - updated horizontal spacing
-            _screenDrawer.DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 32), 100 + (int)(bolt.Y * 40), _boltColor);
+            _screenDrawer.DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 32), 100 + (int)(bolt.Y * 40), ScreenConstants.BoltColor);
         }
     }
 
@@ -517,8 +514,8 @@ public class ScreenPresenter : IScreenPresenter
         // Draw charger health if active
         if (_chargerActive && _charger != null && _charger.Alive)
         {
-            string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth} (Hit {_charger.HitCount} times)";
-            _screenDrawer.DrawText(rayConnection, healthText, 20, 60, Color.Red);
+            string healthText = $"Charger HP: {_charger.Health}/{GameConstants.ChargerHealth} (Hit {_charger.HitCount} times)";
+            _screenDrawer.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
         }
     }
 
@@ -672,7 +669,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_chargerActive && _charger != null && _charger.Alive && 
             Math.Abs(_charger.X - state.CameraState.X) < 15 && Math.Abs(_charger.Y - state.CameraState.Y) < 10)
         {
-            _screenDrawer.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - state.CameraState.X) * 32) + 400, 100 + (int)((_charger.Y - state.CameraState.Y) * 40) + 200, _chargerColor);
+            _screenDrawer.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - state.CameraState.X) * 32) + 400, 100 + (int)((_charger.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
         }
         
         // Draw gold items - with updated horizontal spacing
@@ -877,7 +874,6 @@ public class ScreenPresenter : IScreenPresenter
         // Handle crossbow firing with F key
         if (Raylib.IsKeyPressed(KeyboardKey.F) && _hasCrossbow && !_crossbowOnCooldown)
         {
-            _isCrossbowFiring = true;
             _crossbowOnCooldown = true;
             _crossbowCooldownTimer = 0f;
             
@@ -1530,7 +1526,7 @@ public class ScreenPresenter : IScreenPresenter
             _charger.HitCount++;
             
             // Update displayed health
-            _charger.Health = ChargerHealth - _charger.HitCount;
+            _charger.Health = GameConstants.ChargerHealth - _charger.HitCount;
             
             Console.WriteLine($"COLLISION FIX: Charger hit {_charger.HitCount} times. Health display: {_charger.Health}");
             
@@ -1615,7 +1611,7 @@ public class ScreenPresenter : IScreenPresenter
         _charger = new ChargerEnemyState { 
             X = newX, 
             Y = newY, 
-            Health = 5, // Hardcoded to 5
+            Health = GameConstants.ChargerHealth, // Use constant from ScreenConstants
             Alive = true 
         };
         _chargerActive = true;

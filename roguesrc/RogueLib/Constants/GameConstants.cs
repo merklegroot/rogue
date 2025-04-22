@@ -21,4 +21,6 @@ public static class GameConstants
     // Wobble animation constants
     public const float WobbleFrequency = 1000.0f; // Time in milliseconds for one complete wobble cycle
     public const float WobbleAmount = 0.025f; // How much to scale
+
+    public const int ChargerHealth = 5;
 }
