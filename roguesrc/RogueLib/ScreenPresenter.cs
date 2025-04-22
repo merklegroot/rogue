@@ -17,9 +17,6 @@ public class ScreenPresenter : IScreenPresenter
     private GameScreenEnum _currentScreenEnum = GameScreenEnum.Menu;
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
-
-    private const int DisplayScale = 4;
-
     // React default background color
     private readonly Color _backgroundColor = new(40, 44, 52, 255);  // #282c34
 
@@ -36,11 +33,6 @@ public class ScreenPresenter : IScreenPresenter
     };
 
     private float _timeSinceLastMove;
-
-    // Add these fields to track direction and sword state
-    private Direction _lastDirection = Direction.Right;
-    private bool _isSwordSwinging;
-    private float _swordSwingTime;
 
     private readonly Random _random = new();
 
@@ -531,32 +523,32 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawSwordAnimation(IRayConnection rayConnection, GameState state)
     {
         // Handle sword swinging
-        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !_isSwordSwinging && !_swordOnCooldown)
+        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !state.IsSwordSwinging && !_swordOnCooldown)
         {
-            _isSwordSwinging = true;
-            _swordSwingTime = 0;
+            state.IsSwordSwinging = true;
+            state.SwordSwingTime = 0;
             
             // Check for sword collisions immediately when swing starts
             CheckSwordCollisions(state);
         }
 
         // Update sword swing animation
-        if (_isSwordSwinging)
+        if (state.IsSwordSwinging)
         {
-            _swordSwingTime += Raylib.GetFrameTime();
-            if (_swordSwingTime >= SwordSwingDuration)
+            state.SwordSwingTime += Raylib.GetFrameTime();
+            if (state.SwordSwingTime >= SwordSwingDuration)
             {
-                _isSwordSwinging = false;
+                state.IsSwordSwinging = false;
                 _swordOnCooldown = true;  // Start cooldown when swing finishes
                 _swordCooldownTimer = 0f;
             }
         }
 
         // Draw sword if swinging (drawn after ground to appear on top)
-        if (_isSwordSwinging)
+        if (state.IsSwordSwinging)
         {
             // Calculate animation progress (0.0 to 1.0)
-            var progress = _swordSwingTime / SwordSwingDuration;
+            var progress = state.SwordSwingTime / SwordSwingDuration;
             if (progress > 1.0f) progress = 1.0f;
 
             // Calculate frame (0, 1, or 2)
@@ -568,7 +560,7 @@ public class ScreenPresenter : IScreenPresenter
             var yOffset = 0f;
 
             // Determine position based on direction and animation progress
-            switch (_lastDirection)
+            switch (state.LastDirection)
             {
                 case Direction.Left:
                     // Fixed position to the left, sweeping from top to bottom
@@ -593,7 +585,7 @@ public class ScreenPresenter : IScreenPresenter
             }
 
             // Get sword character based on direction and animation frame
-            char swordChar = (_lastDirection, frame) switch
+            char swordChar = (state.LastDirection, frame) switch
             {
                 // Left side: \ → - → /
                 (Direction.Left, 0) => '\\',
@@ -901,10 +893,10 @@ public class ScreenPresenter : IScreenPresenter
                 _currentScreenEnum = GameScreenEnum.Menu;
                 return;
             }
-            if (key == KeyboardKey.Space && !_isSwordSwinging && !_swordOnCooldown)
+            if (key == KeyboardKey.Space && !state.IsSwordSwinging && !_swordOnCooldown)
             {
-                _isSwordSwinging = true;
-                _swordSwingTime = 0;
+                state.IsSwordSwinging = true;
+                state.SwordSwingTime = 0;
                 
                 // Check for sword collisions immediately when swing starts
                 CheckSwordCollisions(state);
@@ -946,7 +938,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     state.PlayerY -= 1;  // No Math.Max constraint
                 }
-                _lastDirection = Direction.Up;
+                state.LastDirection = Direction.Up;
                 moved = true;
             }
             else if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))
@@ -955,7 +947,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     state.PlayerY += 1;  // No Math.Min constraint
                 }
-                _lastDirection = Direction.Down;
+                state.LastDirection = Direction.Down;
                 moved = true;
             }
 
@@ -965,7 +957,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     state.PlayerX -= 1;  // No Math.Max constraint
                 }
-                _lastDirection = Direction.Left;
+                state.LastDirection = Direction.Left;
                 moved = true;
             }
             else if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right))
@@ -974,7 +966,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     state.PlayerX += 1;  // No Math.Min constraint
                 }
-                _lastDirection = Direction.Right;
+                state.LastDirection = Direction.Right;
                 moved = true;
             }
 
@@ -1081,7 +1073,7 @@ public class ScreenPresenter : IScreenPresenter
             // Create a new bolt based on player direction
             float boltX = state.PlayerX;
             float boltY = state.PlayerY;
-            Direction boltDirection = _lastDirection;
+            Direction boltDirection = state.LastDirection;
             
             _crossbowBolts.Add(new CrossbowBolt
             {
@@ -1161,7 +1153,7 @@ public class ScreenPresenter : IScreenPresenter
                 float frameKnockback = KnockbackDistance * Raylib.GetFrameTime() * (1.0f / KnockbackDuration);
                 
                 // Move player in knockback direction
-                switch (_knockbackDirection)
+                switch (state.KnockbackDirection)
                 {
                     case Direction.Left:
                         state.PlayerX = Math.Max(0, state.PlayerX - 1);  // Move a full tile left
@@ -1934,7 +1926,7 @@ public class ScreenPresenter : IScreenPresenter
         // If player is exactly on the enemy, use the player's facing direction
         if (Math.Abs(dx) < 0.1f && Math.Abs(dy) < 0.1f)
         {
-            _knockbackDirection = _lastDirection switch
+            state.KnockbackDirection = state.LastDirection switch
             {
                 Direction.Left => Direction.Right,
                 Direction.Right => Direction.Left,
@@ -1946,17 +1938,17 @@ public class ScreenPresenter : IScreenPresenter
         else if (Math.Abs(dx) > Math.Abs(dy))
         {
             // Knockback horizontally
-            _knockbackDirection = dx > 0 ? Direction.Right : Direction.Left;
+            state.KnockbackDirection = dx > 0 ? Direction.Right : Direction.Left;
         }
         else
         {
             // Knockback vertically
-            _knockbackDirection = dy > 0 ? Direction.Down : Direction.Up;
+            state.KnockbackDirection = dy > 0 ? Direction.Down : Direction.Up;
         }
         
         // Start knockback effect
-        _isKnockedBack = true;
-        _knockbackTimer = 0f;
+        state.IsKnockedBack = true;
+        state.KnockbackTimer = 0f;
     }
 
     // Add a helper method to check if a tile is walkable
@@ -2010,7 +2002,7 @@ public class ScreenPresenter : IScreenPresenter
         float swordY = state.PlayerY;
         
         // Adjust position based on direction and sword reach
-        switch (_lastDirection)
+        switch (state.LastDirection)
         {
             case Direction.Left:
                 swordX -= _swordReach;
