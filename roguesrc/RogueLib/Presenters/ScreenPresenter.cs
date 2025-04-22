@@ -5,10 +5,6 @@ using RogueLib.State;
 
 namespace RogueLib.Presenters;
 
-// Add CrossbowBolt class inside the ScreenPresenter class
-
-// Add ChargerEnemy class inside ScreenPresenter with a hit counter
-
 public interface IScreenPresenter
 {
     void Initialize(IRayConnection rayConnection, GameState state);
@@ -18,30 +14,9 @@ public interface IScreenPresenter
 }
 
 public class ScreenPresenter : IScreenPresenter
-{
-    
-    private readonly Queue<KeyboardKey> _keyEvents = new();
-
-    // React default background color
-    private readonly Color _backgroundColor = new(40, 44, 52, 255);  // #282c34
-
-    private readonly Color[] _colors = new[]
-    {
-        Color.White,
-        Color.Red,
-        Color.Green,
-        Color.Blue,
-        Color.Yellow,
-        Color.Purple,
-        Color.Orange,
-        Color.Pink
-    };
-    
+{    
     private readonly Random _random = new();
-    
-    private const float InvincibilityDuration = 1.0f;  
-    
-    private readonly Color _explosionColor = new(255, 165, 0, 255);  // Orange color for explosions
+    private readonly Queue<KeyboardKey> _keyEvents = new();
 
     // Add gold items field
     private readonly List<GoldItem> _goldItems = [];
@@ -75,7 +50,6 @@ public class ScreenPresenter : IScreenPresenter
     private float _crossbowCooldown = 2.0f;
     private float _crossbowCooldownTimer = 0f;
     private bool _crossbowOnCooldown = false;
-    
     
     private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
 
@@ -200,7 +174,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw game to render texture
         Raylib.BeginTextureMode(rayConnection.GameTexture);
-        Raylib.ClearBackground(_backgroundColor);
+        Raylib.ClearBackground(ScreenConstants.BackgroundColor);
 
         switch (state.CurrentScreen)
         {
@@ -262,10 +236,6 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawMenu(IRayConnection rayConnection)
     {
-        // Draw debug grid to help with alignment
-        DrawDebugGrid();
-        
-        // Draw a fancy title
         const int titleSize = 48;
         
         // Use MeasureTextEx instead of MeasureText to account for spacing
@@ -283,9 +253,6 @@ public class ScreenPresenter : IScreenPresenter
         int lineWidth = titleWidth - 20; // Make the line slightly shorter than the title text
         Raylib.DrawRectangle(centerX - lineWidth/2, lineY, lineWidth, 2, Color.Gold);
         
-        // Draw center marker
-        Raylib.DrawRectangle(centerX - 1, 0, 2, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale, new Color(255, 0, 0, 100));
-        
         // Draw menu options centered with more spacing
         int menuStartY = lineY + 30; // Start menu options below the line
         int menuSpacing = 60;
@@ -302,45 +269,7 @@ public class ScreenPresenter : IScreenPresenter
         // Draw a small decorative element
         _screenDrawer.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
     }
-
-    private void DrawDebugGrid()
-    {
-        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-        int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
-        
-        // Draw vertical grid lines every 50 pixels
-        for (int x = 0; x < screenWidth; x += 50)
-        {
-            Raylib.DrawLine(x, 0, x, screenHeight, new Color(100, 100, 100, 50));
-            
-            // Draw coordinate labels
-            if (x % 100 == 0)
-            {
-                Raylib.DrawText(x.ToString(), x + 2, 2, 16, new Color(100, 100, 100, 150));
-            }
-        }
-        
-        // Draw horizontal grid lines every 50 pixels
-        for (int y = 0; y < screenHeight; y += 50)
-        {
-            Raylib.DrawLine(0, y, screenWidth, y, new Color(100, 100, 100, 50));
-            
-            // Draw coordinate labels
-            if (y % 100 == 0)
-            {
-                Raylib.DrawText(y.ToString(), 2, y + 2, 16, new Color(100, 100, 100, 150));
-            }
-        }
-        
-        // Draw a vertical line at the center of the screen
-        int centerX = screenWidth / 2;
-        Raylib.DrawLine(centerX, 0, centerX, screenHeight, new Color(255, 0, 0, 100));
-        
-        // Draw a horizontal line at the center of the screen
-        int centerY = screenHeight / 2;
-        Raylib.DrawLine(0, centerY, screenWidth, centerY, new Color(255, 0, 0, 100));
-    }
-
+    
     private void DrawColoredHotkeyText(IRayConnection rayConnection, string text, int x, int y, ColoredHotkeyOptions? options = null)
     {
         options ??= new ColoredHotkeyOptions();
@@ -428,7 +357,7 @@ public class ScreenPresenter : IScreenPresenter
                 charNum,
                 20 + (col * 40),
                 20 + (row * 60),
-                _colors[charNum % _colors.Length]
+                ScreenConstants.SampleColors[charNum % ScreenConstants.SampleColors.Length]
             );
         }
 
@@ -488,7 +417,7 @@ public class ScreenPresenter : IScreenPresenter
             if (explosionX >= 0 && explosionX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
                 explosionY >= 0 && explosionY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
             {
-                _screenDrawer.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, _explosionColor);
+                _screenDrawer.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, ScreenConstants.ExplosionColor);
             }
         }
     }
@@ -971,7 +900,7 @@ public class ScreenPresenter : IScreenPresenter
         if (state.IsInvincible)
         {
             state.InvincibilityTimer += Raylib.GetFrameTime();
-            if (state.InvincibilityTimer >= InvincibilityDuration)
+            if (state.InvincibilityTimer >= GameConstants.InvincibilityDuration)
             {
                 state.IsInvincible = false;
                 state.InvincibilityTimer = 0f;

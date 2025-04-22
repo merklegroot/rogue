@@ -29,4 +29,21 @@ public static class ScreenConstants
     public static readonly Color HealthColor = Color.Red;
     
     public static readonly Color GoldColor = new(255, 215, 0, 255);
+
+    public static readonly Color BackgroundColor = new(40, 44, 52, 255);  // #282c34
+
+    public static readonly Color[] SampleColors = new[]
+    {
+        Color.White,
+        Color.Red,
+        Color.Green,
+        Color.Blue,
+        Color.Yellow,
+        Color.Purple,
+        Color.Orange,
+        Color.Pink
+    };
+    
+    
+    public static readonly Color ExplosionColor = new(255, 165, 0, 255);  // Orange color for explosions
 }

@@ -12,4 +12,6 @@ public static class GameConstants
     public const float BoltSpeed = 8.0f; // Bolts move 8 tiles per second
     
     public const int MaxGoldItems = 3;  // Reduced from 5 to 3
+
+    public const float InvincibilityDuration = 1.0f;  
 }
