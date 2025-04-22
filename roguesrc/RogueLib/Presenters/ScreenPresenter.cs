@@ -1,8 +1,13 @@
 using System.Numerics;
 using Raylib_cs;
 using RogueLib.Constants;
+using RogueLib.State;
 
 namespace RogueLib.Presenters;
+
+// Add CrossbowBolt class inside the ScreenPresenter class
+
+// Add ChargerEnemy class inside ScreenPresenter with a hit counter
 
 public interface IScreenPresenter
 {
@@ -74,7 +79,7 @@ public class ScreenPresenter : IScreenPresenter
     private float _crossbowCooldown = 2.0f;
     private float _crossbowCooldownTimer = 0f;
     private bool _crossbowOnCooldown = false;
-    private readonly List<CrossbowBolt> _crossbowBolts = [];
+    private readonly List<CrossbowBoltState> _crossbowBolts = [];
     private const float BoltSpeed = 8.0f; // Bolts move 8 tiles per second
     private const char BoltChar = '-';    // Character to represent horizontal bolt
     private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
@@ -83,7 +88,7 @@ public class ScreenPresenter : IScreenPresenter
     private int _enemiesKilled = 0;
     private const int KillsForCharger = 10;
     private bool _chargerActive = false;
-    private ChargerEnemy? _charger = null;
+    private ChargerEnemyState? _charger = null;
     private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
     private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
     private readonly Color _chargerColor = new(255, 50, 50, 255); // Bright red color
@@ -502,32 +507,32 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawSwordAnimation(IRayConnection rayConnection, GameState state)
     {
         // Handle sword swinging
-        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !state.IsSwordSwinging && !_swordOnCooldown)
+        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !state.SwordState.IsSwordSwinging && !_swordOnCooldown)
         {
-            state.IsSwordSwinging = true;
-            state.SwordSwingTime = 0;
+            state.SwordState.IsSwordSwinging = true;
+            state.SwordState.SwordSwingTime = 0;
             
             // Check for sword collisions immediately when swing starts
             CheckSwordCollisions(state);
         }
 
         // Update sword swing animation
-        if (state.IsSwordSwinging)
+        if (state.SwordState.IsSwordSwinging)
         {
-            state.SwordSwingTime += Raylib.GetFrameTime();
-            if (state.SwordSwingTime >= GameConstants.SwordSwingDuration)
+            state.SwordState.SwordSwingTime += Raylib.GetFrameTime();
+            if (state.SwordState.SwordSwingTime >= GameConstants.SwordSwingDuration)
             {
-                state.IsSwordSwinging = false;
+                state.SwordState.IsSwordSwinging = false;
                 _swordOnCooldown = true;  // Start cooldown when swing finishes
                 _swordCooldownTimer = 0f;
             }
         }
 
         // Draw sword if swinging (drawn after ground to appear on top)
-        if (state.IsSwordSwinging)
+        if (state.SwordState.IsSwordSwinging)
         {
             // Calculate animation progress (0.0 to 1.0)
-            var progress = state.SwordSwingTime / GameConstants.SwordSwingDuration;
+            var progress = state.SwordState.SwordSwingTime / GameConstants.SwordSwingDuration;
             if (progress > 1.0f) progress = 1.0f;
 
             // Calculate frame (0, 1, or 2)
@@ -872,10 +877,10 @@ public class ScreenPresenter : IScreenPresenter
                 _currentScreenEnum = GameScreenEnum.Menu;
                 return;
             }
-            if (key == KeyboardKey.Space && !state.IsSwordSwinging && !_swordOnCooldown)
+            if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !_swordOnCooldown)
             {
-                state.IsSwordSwinging = true;
-                state.SwordSwingTime = 0;
+                state.SwordState.IsSwordSwinging = true;
+                state.SwordState.SwordSwingTime = 0;
                 
                 // Check for sword collisions immediately when swing starts
                 CheckSwordCollisions(state);
@@ -1054,7 +1059,7 @@ public class ScreenPresenter : IScreenPresenter
             float boltY = state.PlayerY;
             Direction boltDirection = state.LastDirection;
             
-            _crossbowBolts.Add(new CrossbowBolt
+            _crossbowBolts.Add(new CrossbowBoltState
             {
                 X = boltX,
                 Y = boltY,
@@ -1763,27 +1768,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    // Add CrossbowBolt class inside the ScreenPresenter class
-    private class CrossbowBolt
-    {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public Direction Direction { get; set; }
-        public float DistanceTraveled { get; set; }
-    }
-
-    // Add ChargerEnemy class inside ScreenPresenter with a hit counter
-    private class ChargerEnemy
-    {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public bool Alive { get; set; } = true;
-        public float MoveTimer { get; set; } = 0f;
-        public int Health { get; set; } = 5; // Health display
-        public int HitCount { get; set; } = 0; // Count hits separately
-        public bool IsInvincible { get; set; } = false; // Add invincibility flag
-        public float InvincibilityTimer { get; set; } = 0f; // Add invincibility timer
-    }
+    
 
     // Create a completely new method for handling charger damage
     private void HandleChargerDamage(GameState state, bool fromSword)
@@ -1876,7 +1861,7 @@ public class ScreenPresenter : IScreenPresenter
             return;
 
         // Create a new charger with hardcoded health value
-        _charger = new ChargerEnemy { 
+        _charger = new ChargerEnemyState { 
             X = newX, 
             Y = newY, 
             Health = 5, // Hardcoded to 5
