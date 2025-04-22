@@ -34,4 +34,6 @@ public class GameState
     public readonly List<CrossbowBoltState> CrossbowBolts = [];
     
     public ShopState ShopState { get; set; } = new ShopState();
+
+    public CameraState CameraState { get; set; } = new CameraState();
 }

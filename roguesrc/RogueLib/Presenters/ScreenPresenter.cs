@@ -90,14 +90,11 @@ public class ScreenPresenter : IScreenPresenter
     // Add a field to store the loaded map
     private List<string> _map;
 
-    // Add these camera variables to the class fields
-    private float _cameraX = 0;
-    private float _cameraY = 0;
-    private const float CameraDeadZone = 5.0f; // Increased from 3.0f to 5.0f
-
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
+
+    private const float CameraDeadZone = 5.0f; // Increased from 3.0f to 5.0f
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -371,7 +368,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection);
         DrawInstructions(rayConnection);
-        _chunkPresenter.Draw(rayConnection, state, _cameraX, _cameraY);
+        _chunkPresenter.Draw(rayConnection, state);
     }
 
     private void UpdatePlayerIdleAnimation()
@@ -397,8 +394,8 @@ public class ScreenPresenter : IScreenPresenter
             };
             
             // Calculate position with camera offset - updated horizontal spacing
-            int explosionX = 100 + (int)((explosion.X - _cameraX) * 32) + 400;
-            int explosionY = 100 + (int)((explosion.Y - _cameraY) * 40) + 200;
+            int explosionX = 100 + (int)((explosion.X - state.CameraState.X) * 32) + 400;
+            int explosionY = 100 + (int)((explosion.Y - state.CameraState.Y) * 40) + 200;
             
             // Only draw if on screen
             if (explosionX >= 0 && explosionX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
@@ -501,8 +498,8 @@ public class ScreenPresenter : IScreenPresenter
             };
 
             // Calculate exact pixel position with camera offset - updated horizontal spacing
-            float swordX = 100 + ((state.PlayerX + xOffset) - _cameraX) * 32 + 400;
-            float swordY = 100 + ((state.PlayerY + yOffset) - _cameraY) * 40 + 200;
+            float swordX = 100 + ((state.PlayerX + xOffset) - state.CameraState.X) * 32 + 400;
+            float swordY = 100 + ((state.PlayerY + yOffset) - state.CameraState.Y) * 40 + 200;
 
             // Draw the sword character with silvery-blue color
             _screenDrawer.DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, ScreenConstants.SwordColor);
@@ -555,8 +552,8 @@ public class ScreenPresenter : IScreenPresenter
             int barHeight = 5;
             
             // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center above player
-            int barY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200 - 15;  // Above player
+            int barX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center above player
+            int barY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200 - 15;  // Above player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
@@ -576,8 +573,8 @@ public class ScreenPresenter : IScreenPresenter
             int barHeight = 5;
             
             // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400 - barWidth / 2 + 20;  // Center below player
-            int barY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200 + 45;  // Below player
+            int barX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center below player
+            int barY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200 + 45;  // Below player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
@@ -643,7 +640,7 @@ public class ScreenPresenter : IScreenPresenter
             for (int x = 0; x < mapWidth; x++)
             {
                 // Skip tiles that are too far from the camera (optimization)
-                if (Math.Abs(x - _cameraX) > 15 || Math.Abs(y - _cameraY) > 10)
+                if (Math.Abs(x - state.CameraState.X) > 15 || Math.Abs(y - state.CameraState.Y) > 10)
                     continue;
                 
                 // Get the character at this position in the map
@@ -655,8 +652,8 @@ public class ScreenPresenter : IScreenPresenter
                 
                 // Calculate screen position with camera offset
                 // Using 32 pixels for horizontal spacing
-                int screenX = 100 + (int)((x - _cameraX) * 32) + 400;
-                int screenY = 100 + (int)((y - _cameraY) * 40) + 200;
+                int screenX = 100 + (int)((x - state.CameraState.X) * 32) + 400;
+                int screenY = 100 + (int)((y - state.CameraState.Y) * 40) + 200;
                 
                 // Draw the appropriate tile based on the map character
                 Color tileColor = Color.DarkGray;
@@ -716,8 +713,8 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Update player position calculation with the new spacing
-        int playerScreenX = 100 + (int)((state.PlayerX - _cameraX) * 32) + 400;
-        int playerScreenY = 100 + (int)((state.PlayerY - _cameraY) * 40) + 200;
+        int playerScreenX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
+        int playerScreenY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
         
         // Update wobble animation using state
         state.WobbleTimer += Raylib.GetFrameTime();
@@ -748,8 +745,8 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (enemy.Alive)
             {
-                int enemyScreenX = 100 + (int)((enemy.X - _cameraX) * 32) + 400;
-                int enemyScreenY = 100 + (int)((enemy.Y - _cameraY) * 40) + 200;
+                int enemyScreenX = 100 + (int)((enemy.X - state.CameraState.X) * 32) + 400;
+                int enemyScreenY = 100 + (int)((enemy.Y - state.CameraState.Y) * 40) + 200;
                 
                 // Only draw if on screen
                 if (enemyScreenX >= 0 && enemyScreenX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
@@ -762,26 +759,26 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw charger if active - with updated horizontal spacing
         if (_chargerActive && _charger != null && _charger.Alive && 
-            Math.Abs(_charger.X - _cameraX) < 15 && Math.Abs(_charger.Y - _cameraY) < 10)
+            Math.Abs(_charger.X - state.CameraState.X) < 15 && Math.Abs(_charger.Y - state.CameraState.Y) < 10)
         {
-            _screenDrawer.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - _cameraX) * 32) + 400, 100 + (int)((_charger.Y - _cameraY) * 40) + 200, _chargerColor);
+            _screenDrawer.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - state.CameraState.X) * 32) + 400, 100 + (int)((_charger.Y - state.CameraState.Y) * 40) + 200, _chargerColor);
         }
         
         // Draw gold items - with updated horizontal spacing
         foreach (var gold in _goldItems)
         {
-            if (Math.Abs(gold.X - _cameraX) < 15 && Math.Abs(gold.Y - _cameraY) < 10)
+            if (Math.Abs(gold.X - state.CameraState.X) < 15 && Math.Abs(gold.Y - state.CameraState.Y) < 10)
             {
-                _screenDrawer.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - _cameraX) * 32) + 400, 100 + (int)((gold.Y - _cameraY) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
+                _screenDrawer.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
             }
         }
         
         // Draw health pickups - with updated horizontal spacing
         foreach (var health in _healthPickups)
         {
-            if (Math.Abs(health.X - _cameraX) < 15 && Math.Abs(health.Y - _cameraY) < 10)
+            if (Math.Abs(health.X - state.CameraState.X) < 15 && Math.Abs(health.Y - state.CameraState.Y) < 10)
             {
-                _screenDrawer.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - _cameraX) * 32) + 400, 100 + (int)((health.Y - _cameraY) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
+                _screenDrawer.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - state.CameraState.X) * 32) + 400, 100 + (int)((health.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
             }
         }
     }
@@ -1797,14 +1794,14 @@ public class ScreenPresenter : IScreenPresenter
     private void UpdateCamera(GameState state)
     {
         // Calculate how far the player is from the camera center
-        float deltaX = state.PlayerX - _cameraX;
-        float deltaY = state.PlayerY - _cameraY;
+        float deltaX = state.PlayerX - state.CameraState.X;
+        float deltaY = state.PlayerY - state.CameraState.Y;
         
         // If player is outside the dead zone, move the camera
         if (Math.Abs(deltaX) > CameraDeadZone)
         {
             // Move camera in the direction of the player
-            _cameraX += deltaX > 0 ? 
+            state.CameraState.X += deltaX > 0 ? 
                 Math.Min(deltaX - CameraDeadZone, 0.5f) : 
                 Math.Max(deltaX + CameraDeadZone, -0.5f);
         }
@@ -1812,7 +1809,7 @@ public class ScreenPresenter : IScreenPresenter
         if (Math.Abs(deltaY) > CameraDeadZone)
         {
             // Move camera in the direction of the player
-            _cameraY += deltaY > 0 ? 
+            state.CameraState.Y += deltaY > 0 ? 
                 Math.Min(deltaY - CameraDeadZone, 0.5f) : 
                 Math.Max(deltaY + CameraDeadZone, -0.5f);
         }
@@ -2007,7 +2004,7 @@ public class ScreenPresenter : IScreenPresenter
         state.PlayerY = newY;
         
         // Immediately center camera on player for initial spawn
-        _cameraX = state.PlayerX;
-        _cameraY = state.PlayerY;
+        state.CameraState.X = state.PlayerX;
+        state.CameraState.Y = state.PlayerY;
     }
 }

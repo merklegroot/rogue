@@ -6,7 +6,7 @@ namespace RogueLib.Presenters;
 
 public interface IChunkPresenter
 {
-    void Draw(IRayConnection rayConnection, GameState state, float cameraX, float cameraY);
+    void Draw(IRayConnection rayConnection, GameState state);
 }
 
 public class ChunkPresenter : IChunkPresenter
@@ -18,7 +18,7 @@ public class ChunkPresenter : IChunkPresenter
         _screenDrawer = screenDrawer;
     }
 
-    public void Draw(IRayConnection rayConnection, GameState state, float cameraX, float cameraY)
+    public void Draw(IRayConnection rayConnection, GameState state)
     {
         // Calculate the chunk that the player is in
         int playerChunkX = (int)(state.PlayerX / GameConstants.ChunkSize);
@@ -29,12 +29,12 @@ public class ChunkPresenter : IChunkPresenter
         {
             for (int x = playerChunkX - 1; x <= playerChunkX + 1; x++)
             {
-                DrawChunkBoundary(rayConnection, x, y, state, cameraX, cameraY);
+                DrawChunkBoundary(rayConnection, x, y, state.CameraState.X, state.CameraState.Y);
             }
         }
     }
 
-    private void DrawChunkBoundary(IRayConnection rayConnection, int chunkX, int chunkY, GameState state, float cameraX, float cameraY)
+    private void DrawChunkBoundary(IRayConnection rayConnection, int chunkX, int chunkY, float cameraX, float cameraY)
     {
         // Calculate chunk boundaries in world coordinates
         int left = chunkX * GameConstants.ChunkSize;
