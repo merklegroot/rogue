@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RogueLib.Presenters;
 
 namespace RogueLib.Registry;
 
@@ -10,7 +11,7 @@ public static class RogueLibRegistry
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IScreenPresenter, ScreenPresenter>()
             .AddScoped<IHealthBarPresenter, HealthBarPresenter>()
-            .AddScoped<IGame, Game>()
+            .AddScoped<IGameApp, GameAppApp>()
             .AddScoped<IScreenDrawer, ScreenDrawer>()
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>();

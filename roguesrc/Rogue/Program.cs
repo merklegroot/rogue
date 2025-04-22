@@ -11,7 +11,7 @@ class Program
         var host = CreateHostBuilder(args).Build();
         
         // Resolve and run the game
-        var game = host.Services.GetRequiredService<IGame>();
+        var game = host.Services.GetRequiredService<IGameApp>();
         game.Run();
     }
     

@@ -2,7 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using RogueLib.Constants;
 
-namespace RogueLib;
+namespace RogueLib.Presenters;
 
 public interface IScreenPresenter
 {

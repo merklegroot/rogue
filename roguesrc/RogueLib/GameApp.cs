@@ -1,17 +1,19 @@
+using RogueLib.Presenters;
+
 namespace RogueLib;
 
-public interface IGame
+public interface IGameApp
 {
     void Run();
 }
 
-public class Game : IGame
+public class GameAppApp : IGameApp
 {
     private readonly IScreenPresenter _presenter;
     private readonly GameState _state;
     private readonly IRayConnectionFactory _rayConnectionFactory;
 
-    public Game(IScreenPresenter presenter, IRayConnectionFactory rayConnectionFactory)
+    public GameAppApp(IScreenPresenter presenter, IRayConnectionFactory rayConnectionFactory)
     {
         _presenter = presenter;
         _rayConnectionFactory = rayConnectionFactory;
