@@ -338,7 +338,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw a version number and copyright
         string version = "v0.1 Alpha";
-        DrawText(rayConnection, version, 20, Height * ScreenConstants.CharHeight * DisplayScale - 40, new Color(150, 150, 150, 200));
+        _screenDrawer.DrawText(rayConnection, version, 20, Height * ScreenConstants.CharHeight * DisplayScale - 40, new Color(150, 150, 150, 200));
         
         // Draw a small decorative element
         _screenDrawer.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
@@ -392,7 +392,7 @@ public class ScreenPresenter : IScreenPresenter
         // Guard clause: if no valid parentheses found, draw plain text
         if (startParenIndex == -1 || endParenIndex == -1 || endParenIndex <= startParenIndex + 1)
         {
-            DrawText(rayConnection, text, x, y, options.BaseColor);
+            _screenDrawer.DrawText(rayConnection, text, x, y, options.BaseColor);
             return;
         }
 
@@ -401,31 +401,31 @@ public class ScreenPresenter : IScreenPresenter
 
         // Draw text before parenthesis
         var beforeText = text[..startParenIndex];
-        DrawText(rayConnection, beforeText, currentX, y, options.BaseColor);
+        _screenDrawer.DrawText(rayConnection, beforeText, currentX, y, options.BaseColor);
         
         // Use MeasureTextEx for more accurate width measurement
         Vector2 beforeSize = Raylib.MeasureTextEx(rayConnection.MenuFont, beforeText, ScreenConstants.MenuFontSize, 1);
         currentX += (int)beforeSize.X - 4;  // Reduce spacing before parenthesis
 
         // Draw opening parenthesis
-        DrawText(rayConnection, "(", currentX, y, options.BaseColor);
+        _screenDrawer.DrawText(rayConnection, "(", currentX, y, options.BaseColor);
         Vector2 parenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, "(", ScreenConstants.MenuFontSize, 1);
         currentX += (int)parenSize.X - 2;  // Tighter spacing after opening parenthesis
 
         // Draw hotkey in different color
         var hotkey = text[(startParenIndex + 1)..endParenIndex];
-        DrawText(rayConnection, hotkey, currentX, y, options.HotkeyColor);
+        _screenDrawer.DrawText(rayConnection, hotkey, currentX, y, options.HotkeyColor);
         Vector2 hotkeySize = Raylib.MeasureTextEx(rayConnection.MenuFont, hotkey, ScreenConstants.MenuFontSize, 1);
         currentX += (int)hotkeySize.X - 2;  // Tighter spacing after hotkey
 
         // Draw closing parenthesis
-        DrawText(rayConnection, ")", currentX, y, options.BaseColor);
+        _screenDrawer.DrawText(rayConnection, ")", currentX, y, options.BaseColor);
         Vector2 closeParenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, ")", ScreenConstants.MenuFontSize, 1);
         currentX += (int)closeParenSize.X - 2;  // Tighter spacing after closing parenthesis
 
         // Draw remaining text
         var afterText = text[(endParenIndex + 1)..];
-        DrawText(rayConnection, afterText, currentX, y, options.BaseColor);
+        _screenDrawer.DrawText(rayConnection, afterText, currentX, y, options.BaseColor);
     }
 
     private void HandleMenuInput()
@@ -473,7 +473,7 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
 
-        DrawText(rayConnection, "Press any key to return", 20, Height * ScreenConstants.CharHeight * DisplayScale - 40, Color.White);
+        _screenDrawer.DrawText(rayConnection, "Press any key to return", 20, Height * ScreenConstants.CharHeight * DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput()
@@ -735,7 +735,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_chargerActive && _charger != null && _charger.Alive)
         {
             string healthText = $"Charger HP: {_charger.Health}/{ChargerHealth} (Hit {_charger.HitCount} times)";
-            DrawText(rayConnection, healthText, 20, 60, Color.Red);
+            _screenDrawer.DrawText(rayConnection, healthText, 20, 60, Color.Red);
         }
     }
 
@@ -750,7 +750,7 @@ public class ScreenPresenter : IScreenPresenter
         instructionsText += ", ESC to return to menu, (G) for debug gold";
         
         // Changed from Height * ScreenConstants.CharHeight * DisplayScale - 40 to Height * ScreenConstants.CharHeight * DisplayScale - 60
-        DrawText(rayConnection, instructionsText, 20, Height * ScreenConstants.CharHeight * DisplayScale - 60, Color.White);
+        _screenDrawer.DrawText(rayConnection, instructionsText, 20, Height * ScreenConstants.CharHeight * DisplayScale - 60, Color.White);
     }
 
     private void DrawWorld(IRayConnection rayConnection, GameState state)
@@ -1512,11 +1512,6 @@ public class ScreenPresenter : IScreenPresenter
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
     }
 
-    private void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color)
-    {
-        Raylib.DrawTextEx(rayConnection.MenuFont, text, new Vector2(x, y), ScreenConstants.MenuFontSize, 1, color);
-    }
-
     private void DrawHealthBar(IRayConnection rayConnection, GameState state)
     {
         const int heartChar = 3;  // ASCII/CP437 code for heart symbol (♥)
@@ -1541,7 +1536,7 @@ public class ScreenPresenter : IScreenPresenter
         string goldText = $"Gold: {_playerGold}";
         int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
         
-        DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, _goldColor);
+        _screenDrawer.DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, _goldColor);
     }
 
     public bool WindowShouldClose()
@@ -1670,7 +1665,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw player's gold
         string goldText = $"Your Gold: {_playerGold}";
-        DrawText(rayConnection, goldText, 70, 120, _goldColor);
+        _screenDrawer.DrawText(rayConnection, goldText, 70, 120, _goldColor);
         
         // Draw shop items
         int itemY = 170;
@@ -1688,18 +1683,18 @@ public class ScreenPresenter : IScreenPresenter
             }
             
             // Draw item name and price
-            DrawText(rayConnection, item.Name, 70, itemY, itemColor);
+            _screenDrawer.DrawText(rayConnection, item.Name, 70, itemY, itemColor);
             string priceText = $"{item.Price} gold";
-            DrawText(rayConnection, priceText, Width * ScreenConstants.CharWidth * DisplayScale - 200, itemY, itemColor);
+            _screenDrawer.DrawText(rayConnection, priceText, Width * ScreenConstants.CharWidth * DisplayScale - 200, itemY, itemColor);
             
             // Draw item description
-            DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
+            _screenDrawer.DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
             
             itemY += itemSpacing;
         }
         
         // Draw instructions
-        DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, Height * ScreenConstants.CharHeight * DisplayScale - 100, Color.White);
+        _screenDrawer.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, Height * ScreenConstants.CharHeight * DisplayScale - 100, Color.White);
     }
 
     private void HandleShopInput()

@@ -5,12 +5,18 @@ namespace RogueLib;
 
 public interface IScreenDrawer
 {
+    void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color);
     void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false);
 }
 
 
 public class ScreenDrawer : IScreenDrawer
 {
+    public void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color)
+    {
+        Raylib.DrawTextEx(rayConnection.MenuFont, text, new Vector2(x, y), ScreenConstants.MenuFontSize, 1, color);
+    }
+
     public void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false)
     {
         var sourceX = charNum % 32;
