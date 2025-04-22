@@ -22,4 +22,6 @@ public class GameState
     public bool IsInvincible { get; set; } = false;
     public float InvincibilityTimer { get; set; } = 0f;
     public List<ExplosionState> Explosions { get; } = [];
+
+    public readonly List<CrossbowBoltState> CrossbowBolts = [];
 }

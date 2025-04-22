@@ -49,7 +49,7 @@ public class ScreenPresenter : IScreenPresenter
 
     // Add gold items field
     private readonly List<GoldItem> _goldItems = [];
-    private const int MaxGoldItems = 3;  // Reduced from 5 to 3
+    
     private const char GoldChar = '$';   // Character to represent gold
 
     // Add flying gold animation fields
@@ -79,9 +79,8 @@ public class ScreenPresenter : IScreenPresenter
     private float _crossbowCooldown = 2.0f;
     private float _crossbowCooldownTimer = 0f;
     private bool _crossbowOnCooldown = false;
-    private readonly List<CrossbowBoltState> _crossbowBolts = [];
-    private const float BoltSpeed = 8.0f; // Bolts move 8 tiles per second
-    private const char BoltChar = '-';    // Character to represent horizontal bolt
+    
+    
     private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
 
     // Add these fields for tracking enemy kills and the charger
@@ -179,7 +178,7 @@ public class ScreenPresenter : IScreenPresenter
         SpawnEnemy(state);
         
         // Spawn initial gold items
-        for (int i = 0; i < MaxGoldItems; i++)
+        for (int i = 0; i < GameConstants.MaxGoldItems; i++)
         {
             SpawnGoldItem(state);
         }
@@ -464,7 +463,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawSwordAnimation(rayConnection, state);
         DrawFlyingGold(rayConnection);
         DrawCooldownIndicators(rayConnection, state);
-        DrawCrossbowBolts(rayConnection);
+        DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection);
         DrawInstructions(rayConnection);
     }
@@ -682,9 +681,9 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawCrossbowBolts(IRayConnection rayConnection)
+    private void DrawCrossbowBolts(IRayConnection rayConnection, GameState state)
     {
-        foreach (var bolt in _crossbowBolts)
+        foreach (var bolt in state.CrossbowBolts)
         {
             // Choose character based on direction
             char boltChar = bolt.Direction switch
@@ -1059,7 +1058,7 @@ public class ScreenPresenter : IScreenPresenter
             float boltY = state.PlayerY;
             Direction boltDirection = state.LastDirection;
             
-            _crossbowBolts.Add(new CrossbowBoltState
+            state.CrossbowBolts.Add(new CrossbowBoltState
             {
                 X = boltX,
                 Y = boltY,
@@ -1706,12 +1705,12 @@ public class ScreenPresenter : IScreenPresenter
     {
         float frameTime = Raylib.GetFrameTime();
         
-        for (int i = _crossbowBolts.Count - 1; i >= 0; i--)
+        for (int i = state.CrossbowBolts.Count - 1; i >= 0; i--)
         {
-            var bolt = _crossbowBolts[i];
+            var bolt = state.CrossbowBolts[i];
             
             // Move the bolt based on its direction
-            float moveDistance = BoltSpeed * frameTime;
+            float moveDistance = GameConstants.BoltSpeed * frameTime;
             bolt.DistanceTraveled += moveDistance;
             
             switch (bolt.Direction)
@@ -1758,12 +1757,12 @@ public class ScreenPresenter : IScreenPresenter
             // Remove bolt if it hit an enemy or traveled too far (10 tiles)
             if (hitEnemy || bolt.DistanceTraveled > 10)
             {
-                _crossbowBolts.RemoveAt(i);
+                state.CrossbowBolts.RemoveAt(i);
             }
             // Also remove if it went off-screen
             else if (bolt.X < 0 || bolt.X > 19 || bolt.Y < 0 || bolt.Y > 9)
             {
-                _crossbowBolts.RemoveAt(i);
+                state.CrossbowBolts.RemoveAt(i);
             }
         }
     }
