@@ -16,5 +16,6 @@ public static class RogueLibRegistry
             .AddScoped<IScreenDrawer, ScreenDrawer>()
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>()
-            .AddScoped<IChunkPresenter, ChunkPresenter>();
+            .AddScoped<IChunkPresenter, ChunkPresenter>()
+            .AddScoped<DebugPanelPresenter>();
 }

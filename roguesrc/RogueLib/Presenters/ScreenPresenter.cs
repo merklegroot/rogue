@@ -58,6 +58,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
+    private readonly DebugPanelPresenter _debugPanelPresenter;
 
     private const float CameraDeadZone = 5.0f;
 
@@ -66,13 +67,15 @@ public class ScreenPresenter : IScreenPresenter
         IScreenDrawer screenDrawer, 
         IHealthBarPresenter healthBarPresenter,
         IShopPresenter shopPresenter,
-        IChunkPresenter chunkPresenter)
+        IChunkPresenter chunkPresenter,
+        DebugPanelPresenter debugPanelPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawer = screenDrawer;
         _healthBarPresenter = healthBarPresenter;
         _shopPresenter = shopPresenter;
         _chunkPresenter = chunkPresenter;
+        _debugPanelPresenter = debugPanelPresenter;
         
         // Load the map from the embedded resource
         _map = rayLoader.LoadMap();
@@ -537,6 +540,9 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Update camera position to follow player with a dead zone
         UpdateCamera(state);
+        
+        // Draw debug panel
+        _debugPanelPresenter.Draw(rayConnection, state);
         
         // Calculate map dimensions
         int mapHeight = _map.Count;
