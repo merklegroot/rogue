@@ -29,11 +29,21 @@ public class ScreenDrawer : IScreenDrawer
             ScreenConstants.CharHeight
         );
 
+        // Calculate scaled dimensions - only scale height
+        float scaledWidth = ScreenConstants.CharWidth * ScreenConstants.DisplayScale;  // Keep width constant
+        float scaledHeight = ScreenConstants.CharHeight * ScreenConstants.DisplayScale * scale;
+        
+        // Calculate the difference in height to keep bottom anchored
+        float heightDiff = scaledHeight - (ScreenConstants.CharHeight * ScreenConstants.DisplayScale);
+        
+        // Adjust Y position to keep bottom anchored
+        float adjustedY = y - heightDiff;
+
         Rectangle destRect = new(
             x,
-            y,
-            ScreenConstants.CharWidth * ScreenConstants.DisplayScale * scale,
-            ScreenConstants.CharHeight * ScreenConstants.DisplayScale * scale
+            adjustedY,
+            scaledWidth,
+            scaledHeight
         );
 
         // Draw the character

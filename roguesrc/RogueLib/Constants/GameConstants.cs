@@ -16,6 +16,6 @@ public static class GameConstants
     public const float InvincibilityDuration = 1.0f;  
 
     // Wobble animation constants
-    public const float WobbleSpeed = 2.0f; // Speed of the wobble animation
-    public const float WobbleAmount = 0.1f; // How much to scale (10% variation)
+    public const float WobbleFrequency = 1000.0f; // Time in milliseconds for one complete wobble cycle
+    public const float WobbleAmount = 0.025f; // How much to scale (10% variation)
 }

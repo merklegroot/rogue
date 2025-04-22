@@ -717,7 +717,17 @@ public class ScreenPresenter : IScreenPresenter
         
         // Update wobble animation using state
         state.WobbleTimer += Raylib.GetFrameTime();
-        float wobbleScale = 1.0f + (float)Math.Sin(state.WobbleTimer * GameConstants.WobbleSpeed) * GameConstants.WobbleAmount;
+        
+        // Calculate the phase of the wobble (0 to 2π)
+        float phase = (float)(state.WobbleTimer * (2 * Math.PI / (GameConstants.WobbleFrequency / 1000.0f)));
+        
+        // Use a modified sine function that grows twice as fast as it shrinks
+        // When sin(phase) is positive (growing), use 2*sin(phase)
+        // When sin(phase) is negative (shrinking), use sin(phase)
+        float modifiedSine = (float)(Math.Sin(phase) > 0 ? 2 * Math.Sin(phase) : Math.Sin(phase));
+        
+        // Normalize the result to keep the same overall scale range
+        float wobbleScale = 1.0f + (float)(modifiedSine / 1.5f) * GameConstants.WobbleAmount;
         
         // If player is invincible, make them flash
         Color playerColor = ScreenConstants.PlayerColor;
