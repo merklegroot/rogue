@@ -31,28 +31,11 @@ public class ScreenPresenter : IScreenPresenter
         Color.Orange,
         Color.Pink
     };
-
-    private float _timeSinceLastMove;
-
-    private readonly Random _random = new();
-
-    // Multiple enemies support
-    private readonly List<Enemy> _enemies = [];
-    private float _enemySpawnTimer;
-    private const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
     
-    private const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
-    private const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
-    private const int MaxEnemies = 3;  // Back to original: maximum of 3 enemies
-
-    // Add invincibility fields
-    private bool _isInvincible = false;
-    private float _invincibilityTimer = 0f;
-    private const float InvincibilityDuration = 1.0f;  // 1 second of invincibility after taking damage
-
-    // Add these fields for explosion animation
-    private readonly List<Explosion> _explosions = [];
-    private const float ExplosionDuration = 0.5f;  // How long each explosion lasts
+    private readonly Random _random = new();
+    
+    private const float InvincibilityDuration = 1.0f;  
+    
     private readonly Color _explosionColor = new(255, 165, 0, 255);  // Orange color for explosions
 
     // Add gold field
@@ -115,11 +98,7 @@ public class ScreenPresenter : IScreenPresenter
     // Add a single field for player animation
     private int _playerChar = 2; // Default player character
 
-    // Add knockback fields
-    private bool _isKnockedBack = false;
-    private float _knockbackTimer = 0f;
     private const float KnockbackDuration = 0.08f;
-    private Direction _knockbackDirection = Direction.Right;
     private const float KnockbackDistance = 0.5f; // How far to knock the player back
 
     // Add these color fields near the other color definitions
@@ -476,7 +455,7 @@ public class ScreenPresenter : IScreenPresenter
         _healthBarPresenter.Draw(rayConnection, state);
         DrawGoldCounter(rayConnection);
         DrawWorld(rayConnection, state);
-        DrawExplosions(rayConnection);
+        DrawExplosions(state, rayConnection);
         DrawSwordAnimation(rayConnection, state);
         DrawFlyingGold(rayConnection);
         DrawCooldownIndicators(rayConnection, state);
@@ -495,10 +474,10 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawExplosions(IRayConnection rayConnection)
+    private void DrawExplosions(GameState state, IRayConnection rayConnection)
     {
         // Draw explosions (after ground and enemies, but before sword)
-        foreach (var explosion in _explosions)
+        foreach (var explosion in state.Explosions)
         {
             char explosionChar = explosion.Frame switch
             {
@@ -536,7 +515,7 @@ public class ScreenPresenter : IScreenPresenter
         if (state.IsSwordSwinging)
         {
             state.SwordSwingTime += Raylib.GetFrameTime();
-            if (state.SwordSwingTime >= SwordSwingDuration)
+            if (state.SwordSwingTime >= GameConstants.SwordSwingDuration)
             {
                 state.IsSwordSwinging = false;
                 _swordOnCooldown = true;  // Start cooldown when swing finishes
@@ -548,7 +527,7 @@ public class ScreenPresenter : IScreenPresenter
         if (state.IsSwordSwinging)
         {
             // Calculate animation progress (0.0 to 1.0)
-            var progress = state.SwordSwingTime / SwordSwingDuration;
+            var progress = state.SwordSwingTime / GameConstants.SwordSwingDuration;
             if (progress > 1.0f) progress = 1.0f;
 
             // Calculate frame (0, 1, or 2)
@@ -832,7 +811,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // If player is invincible, make them flash
         Color playerColor = _playerColor;
-        if (_isInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
+        if (state.IsInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
         {
             playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
         }
@@ -840,7 +819,7 @@ public class ScreenPresenter : IScreenPresenter
         _screenDrawer.DrawCharacter(rayConnection, (Raylib.GetTime() % 1 < 0.5) ? 2 : 1, playerScreenX, playerScreenY, playerColor);
         
         // Draw enemies - now using camera offset and updated horizontal spacing
-        foreach (var enemy in _enemies)
+        foreach (var enemy in state.Enemies)
         {
             if (enemy.Alive)
             {
@@ -924,10 +903,10 @@ public class ScreenPresenter : IScreenPresenter
         const float moveDelay = 0.1f; // seconds between moves
 
         // Update time since last move
-        _timeSinceLastMove += Raylib.GetFrameTime();
+        state.TimeSinceLastMove += Raylib.GetFrameTime();
 
         // Only move if enough time has passed
-        if (_timeSinceLastMove >= moveDelay)
+        if (state.TimeSinceLastMove >= moveDelay)
         {
             bool moved = false;
 
@@ -973,7 +952,7 @@ public class ScreenPresenter : IScreenPresenter
             // Reset timer if moved
             if (moved)
             {
-                _timeSinceLastMove = 0;
+                state.TimeSinceLastMove = 0;
                 
                 // Check for gold collection after movement
                 CollectGold(state);
@@ -995,31 +974,31 @@ public class ScreenPresenter : IScreenPresenter
         UpdateEnemies(state);
 
         // Update invincibility timer
-        if (_isInvincible)
+        if (state.IsInvincible)
         {
-            _invincibilityTimer += Raylib.GetFrameTime();
-            if (_invincibilityTimer >= InvincibilityDuration)
+            state.InvincibilityTimer += Raylib.GetFrameTime();
+            if (state.InvincibilityTimer >= InvincibilityDuration)
             {
-                _isInvincible = false;
-                _invincibilityTimer = 0f;
+                state.IsInvincible = false;
+                state.InvincibilityTimer = 0f;
             }
         }
 
         // Update explosions
-        for (int i = _explosions.Count - 1; i >= 0; i--)
+        for (int i = state.Explosions.Count - 1; i >= 0; i--)
         {
-            _explosions[i].Timer += Raylib.GetFrameTime();
-            if (_explosions[i].Timer >= ExplosionDuration)
+            state.Explosions[i].Timer += Raylib.GetFrameTime();
+            if (state.Explosions[i].Timer >= GameConstants.ExplosionDuration)
             {
                 // Spawn gold at the explosion location when the explosion finishes
                 _goldItems.Add(new GoldItem { 
-                    X = _explosions[i].X, 
-                    Y = _explosions[i].Y, 
+                    X = state.Explosions[i].X, 
+                    Y = state.Explosions[i].Y, 
                     Value = _random.Next(3, 8)  // Enemies drop more valuable gold (3-7)
                 });
                 
                 // Remove the explosion
-                _explosions.RemoveAt(i);
+                state.Explosions.RemoveAt(i);
             }
         }
 
@@ -1096,12 +1075,12 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Update crossbow bolts
-        UpdateCrossbowBolts();
+        UpdateCrossbowBolts(state);
 
         // Check for collisions with enemies
-        foreach (var enemy in _enemies)
+        foreach (var enemy in state.Enemies)
         {
-            if (enemy.Alive && !_isInvincible)
+            if (enemy.Alive && !state.IsInvincible)
             {
                 // Check if player is colliding with this enemy
                 if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
@@ -1111,8 +1090,8 @@ public class ScreenPresenter : IScreenPresenter
                     Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
                     
                     // Make player invincible briefly
-                    _isInvincible = true;
-                    _invincibilityTimer = 0f;
+                    state.IsInvincible = true;
+                    state.InvincibilityTimer = 0f;
                     
                     // Apply knockback in the opposite direction of the enemy
                     ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
@@ -1123,7 +1102,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collisions with charger (deals more damage)
-        if (_chargerActive && _charger != null && _charger.Alive && !_isInvincible)
+        if (_chargerActive && _charger != null && _charger.Alive && !state.IsInvincible)
         {
             // Check if player is colliding with the charger
             if (Math.Abs(state.PlayerX - _charger.X) < 0.5f && Math.Abs(state.PlayerY - _charger.Y) < 0.5f)
@@ -1133,8 +1112,8 @@ public class ScreenPresenter : IScreenPresenter
                 Console.WriteLine($"Player hit by charger! Health: {state.CurrentHealth}");
                 
                 // Make player invincible briefly
-                _isInvincible = true;
-                _invincibilityTimer = 0f;
+                state.IsInvincible = true;
+                state.InvincibilityTimer = 0f;
                 
                 // Apply stronger knockback from the charger
                 ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.0f); // Double knockback distance
@@ -1142,12 +1121,12 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Update knockback effect
-        if (_isKnockedBack)
+        if (state.IsKnockedBack)
         {
-            _knockbackTimer += Raylib.GetFrameTime();
+            state.KnockbackTimer += Raylib.GetFrameTime();
             
             // Apply knockback movement during the knockback duration
-            if (_knockbackTimer < KnockbackDuration)
+            if (state.KnockbackTimer < KnockbackDuration)
             {
                 // Calculate knockback distance for this frame
                 float frameKnockback = KnockbackDistance * Raylib.GetFrameTime() * (1.0f / KnockbackDuration);
@@ -1171,10 +1150,10 @@ public class ScreenPresenter : IScreenPresenter
             }
             
             // End knockback effect
-            if (_knockbackTimer >= KnockbackDuration)
+            if (state.KnockbackTimer >= KnockbackDuration)
             {
-                _isKnockedBack = false;
-                _knockbackTimer = 0f;
+                state.IsKnockedBack = false;
+                state.KnockbackTimer = 0f;
             }
         }
     }
@@ -1231,25 +1210,25 @@ public class ScreenPresenter : IScreenPresenter
         float frameTime = Raylib.GetFrameTime();
         
         // Update enemy spawn timer
-        _enemySpawnTimer += frameTime;
-        if (_enemySpawnTimer >= EnemySpawnDelay)
+        state.EnemySpawnTimer += frameTime;
+        if (state.EnemySpawnTimer >= GameConstants.EnemySpawnDelay)
         {
-            _enemySpawnTimer = 0f;
+            state.EnemySpawnTimer = 0f;
             
             // Only spawn if we haven't reached the maximum
-            if (_enemies.Count(e => e.Alive) < MaxEnemies)
+            if (state.Enemies.Count(e => e.Alive) < GameConstants.MaxEnemies)
             {
                 SpawnEnemy(state);
             }
         }
         
         // Update existing enemies
-        foreach (var enemy in _enemies)
+        foreach (var enemy in state.Enemies)
         {
             if (!enemy.Alive) continue;
             
             enemy.MoveTimer += frameTime;
-            if (enemy.MoveTimer >= EnemyMoveDelay)
+            if (enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
             {
                 enemy.MoveTimer = 0f;
                 
@@ -1292,7 +1271,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (Math.Abs(enemy.X - state.PlayerX) < 0.5f && Math.Abs(enemy.Y - state.PlayerY) < 0.5f)
                 {
                     // Only damage player if not invincible
-                    if (!_isInvincible)
+                    if (!state.IsInvincible)
                     {
                         state.CurrentHealth--;
                         
@@ -1300,15 +1279,15 @@ public class ScreenPresenter : IScreenPresenter
                         ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
                         
                         // Make player briefly invincible
-                        _isInvincible = true;
-                        _invincibilityTimer = 0f;
+                        state.IsInvincible = true;
+                        state.InvincibilityTimer = 0f;
                     }
                 }
             }
         }
         
         // Remove dead enemies
-        _enemies.RemoveAll(e => !e.Alive);
+        state.Enemies.RemoveAll(e => !e.Alive);
     }
 
     // Also update the charger movement logic
@@ -1374,7 +1353,7 @@ public class ScreenPresenter : IScreenPresenter
             if (Math.Abs(_charger.X - state.PlayerX) < 0.5f && Math.Abs(_charger.Y - state.PlayerY) < 0.5f)
             {
                 // Only damage player if not invincible
-                if (!_isInvincible)
+                if (!state.IsInvincible)
                 {
                     // Charger does 2 damage
                     state.CurrentHealth -= 2;
@@ -1383,8 +1362,8 @@ public class ScreenPresenter : IScreenPresenter
                     ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.5f);
                     
                     // Make player briefly invincible
-                    _isInvincible = true;
-                    _invincibilityTimer = 0f;
+                    state.IsInvincible = true;
+                    state.InvincibilityTimer = 0f;
                 }
             }
         }
@@ -1405,7 +1384,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player or other enemies
                     if ((x != state.PlayerX || y != state.PlayerY) &&
-                        !_enemies.Any(e => e.Alive && e.X == x && e.Y == y))
+                        !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y))
                     {
                         validPositions.Add((x, y));
                     }
@@ -1422,7 +1401,7 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = validPositions[randomIndex];
         
         // Spawn the enemy
-        _enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
+        state.Enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
     }
 
     private void SpawnGoldItem(GameState state)
@@ -1440,7 +1419,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player, enemies, or other gold
                     if ((x != state.PlayerX || y != state.PlayerY) &&
-                        !_enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
+                        !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
                         !_goldItems.Any(g => g.X == x && g.Y == y))
                     {
                         validPositions.Add((x, y));
@@ -1476,7 +1455,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player, enemies, gold, or other health pickups
                     if ((x != state.PlayerX || y != state.PlayerY) &&
-                        !_enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
+                        !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
                         !_goldItems.Any(g => g.X == x && g.Y == y) &&
                         !_healthPickups.Any(h => h.X == x && h.Y == y))
                     {
@@ -1521,14 +1500,6 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         return closeRequested;
-    }
-
-    private class Explosion
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public float Timer { get; set; }
-        public int Frame => (int)((Timer / ExplosionDuration) * 3);  // 3 frames of animation
     }
 
     private class GoldItem
@@ -1592,9 +1563,9 @@ public class ScreenPresenter : IScreenPresenter
             Description = "5 seconds of invincibility",
             Price = 50,
             OnPurchase = () => { 
-                _isInvincible = true;
-                _invincibilityTimer = 0f;
-                _invincibilityTimer = 5f;
+                state.IsInvincible = true;
+                state.InvincibilityTimer = 0f;
+                state.InvincibilityTimer = 5f;
             },
             Category = ShopCategory.Consumable
         });
@@ -1726,7 +1697,7 @@ public class ScreenPresenter : IScreenPresenter
         Header  // Used for section headers
     }
 
-    private void UpdateCrossbowBolts()
+    private void UpdateCrossbowBolts(GameState state)
     {
         float frameTime = Raylib.GetFrameTime();
         
@@ -1756,7 +1727,7 @@ public class ScreenPresenter : IScreenPresenter
             
             // Check if bolt hit any enemy
             bool hitEnemy = false;
-            foreach (var enemy in _enemies)
+            foreach (var enemy in state.Enemies)
             {
                 if (!enemy.Alive) continue;
                 
@@ -1767,7 +1738,7 @@ public class ScreenPresenter : IScreenPresenter
                     enemy.Alive = false;
                     
                     // Create explosion at enemy position
-                    _explosions.Add(new Explosion { 
+                    state.Explosions.Add(new ExplosionState { 
                         X = enemy.X, 
                         Y = enemy.Y, 
                         Timer = 0f 
@@ -1815,7 +1786,7 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Create a completely new method for handling charger damage
-    private void HandleChargerDamage(bool fromSword)
+    private void HandleChargerDamage(GameState state, bool fromSword)
     {
         if (_chargerActive && _charger != null && _charger.Alive && !_charger.IsInvincible)
         {
@@ -1838,7 +1809,7 @@ public class ScreenPresenter : IScreenPresenter
                 _charger.Alive = false;
                 
                 // Create explosion at charger position
-                _explosions.Add(new Explosion { 
+                state.Explosions.Add(new ExplosionState { 
                     X = (int)_charger.X, 
                     Y = (int)_charger.Y, 
                     Timer = 0f 
@@ -1895,7 +1866,7 @@ public class ScreenPresenter : IScreenPresenter
             }
 
             isPositionValid = (Math.Abs(newX - state.PlayerX) > 3 || Math.Abs(newY - state.PlayerY) > 3) &&
-                              !_enemies.Any(e => e.Alive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
+                              !state.Enemies.Any(e => e.Alive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
 
             if (isPositionValid)
                 break;
@@ -2019,7 +1990,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collision with regular enemies
-        foreach (var enemy in _enemies)
+        foreach (var enemy in state.Enemies)
         {
             if (enemy.Alive)
             {
@@ -2030,7 +2001,7 @@ public class ScreenPresenter : IScreenPresenter
                     enemy.Alive = false;
                     
                     // Create explosion at enemy position
-                    _explosions.Add(new Explosion { 
+                    state.Explosions.Add(new ExplosionState { 
                         X = enemy.X, 
                         Y = enemy.Y, 
                         Timer = 0f 
@@ -2057,7 +2028,7 @@ public class ScreenPresenter : IScreenPresenter
             if (Math.Abs(swordX - _charger.X) < 0.5f && Math.Abs(swordY - _charger.Y) < 0.5f)
             {
                 // Handle charger damage
-                HandleChargerDamage(true);
+                HandleChargerDamage(state, true);
             }
         }
     }

@@ -15,4 +15,13 @@ public class GameState
     public Direction KnockbackDirection { get; set; } = Direction.Right;
     public bool IsKnockedBack { get; set; } = false;
     public float KnockbackTimer { get; set; } = 0f;
+
+    public float TimeSinceLastMove { get; set; }
+
+    public List<Enemy> Enemies { get; } = [];
+    public float EnemySpawnTimer { get; set; }
+    
+    public bool IsInvincible { get; set; } = false;
+    public float InvincibilityTimer { get; set; } = 0f;
+    public List<ExplosionState> Explosions { get; } = [];
 }
