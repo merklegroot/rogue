@@ -9,6 +9,7 @@ public static class RogueLibRegistry
             .AddScoped<IResourceReader, ResourceReader>()
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IScreenPresenter, ScreenPresenter>()
+            .AddScoped<IHealthBarPresenter, HealthBarPresenter>()
             .AddScoped<IGame, Game>()
             .AddScoped<IScreenDrawer, ScreenDrawer>()
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()

@@ -56,10 +56,6 @@ public class ScreenPresenter : IScreenPresenter
     private const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
     private const int MaxEnemies = 3;  // Back to original: maximum of 3 enemies
 
-    private readonly int _maxHealth = 10;    
-    private readonly Color _healthColor = Color.Red;
-    private readonly Color _emptyHealthColor = new(100, 100, 100, 255);  // Gray color for empty hearts
-
     // Add invincibility fields
     private bool _isInvincible = false;
     private float _invincibilityTimer = 0f;
@@ -188,10 +184,13 @@ public class ScreenPresenter : IScreenPresenter
     private float _cameraY = 0;
     private const float CameraDeadZone = 5.0f; // Increased from 3.0f to 5.0f
 
-    public ScreenPresenter(IRayLoader rayLoader, IScreenDrawer screenDrawer)
+    private readonly IHealthBarPresenter _healthBarPresenter;
+
+    public ScreenPresenter(IRayLoader rayLoader, IScreenDrawer screenDrawer, IHealthBarPresenter healthBarPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawer = screenDrawer;
+        _healthBarPresenter = healthBarPresenter;
         
         // Load the map from the embedded resource
         _map = rayLoader.LoadMap();
@@ -487,7 +486,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawAnimation(IRayConnection rayConnection, GameState state)
     {
         UpdatePlayerIdleAnimation();
-        DrawHealthBar(rayConnection, state);
+        _healthBarPresenter.Draw(rayConnection, state);
         DrawGoldCounter(rayConnection);
         DrawWorld(rayConnection, state);
         DrawExplosions(rayConnection);
@@ -891,7 +890,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (Math.Abs(health.X - _cameraX) < 15 && Math.Abs(health.Y - _cameraY) < 10)
             {
-                _screenDrawer.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - _cameraX) * 32) + 400, 100 + (int)((health.Y - _cameraY) * 40) + 200, _healthColor); // Heart symbol
+                _screenDrawer.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - _cameraX) * 32) + 400, 100 + (int)((health.Y - _cameraY) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
             }
         }
     }
@@ -1229,7 +1228,7 @@ public class ScreenPresenter : IScreenPresenter
                 Math.Abs(_healthPickups[i].Y - state.PlayerY) <= 1)
             {
                 // Add health to the player
-                state.CurrentHealth = Math.Min(_maxHealth, state.CurrentHealth + _healthPickups[i].HealAmount);
+                state.CurrentHealth = Math.Min(ScreenConstants.MaxHealth, state.CurrentHealth + _healthPickups[i].HealAmount);
                 
                 // Remove the collected health pickup
                 _healthPickups.RemoveAt(i);
@@ -1510,23 +1509,6 @@ public class ScreenPresenter : IScreenPresenter
         
         // Spawn the health pickup
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
-    }
-
-    private void DrawHealthBar(IRayConnection rayConnection, GameState state)
-    {
-        const int heartChar = 3;  // ASCII/CP437 code for heart symbol (♥)
-        const int heartSpacing = 30;  // Pixels between hearts
-        const int startX = 20;
-        const int startY = 20;
-
-        for (int i = 0; i < _maxHealth; i++)
-        {
-            // Determine if this heart should be filled or empty
-            Color heartColor = (i < state.CurrentHealth) ? _healthColor : _emptyHealthColor;
-
-            // Draw the heart
-            _screenDrawer.DrawCharacter(rayConnection, heartChar, startX + (i * heartSpacing), startY, heartColor);
-        }
     }
 
     private void DrawGoldCounter(IRayConnection rayConnection)
