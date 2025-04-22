@@ -1207,6 +1207,10 @@ public class ScreenPresenter : IScreenPresenter
         if (state.Enemies.Count(e => e.Alive) >= GameConstants.MaxEnemies)
             return;
 
+        // Calculate player's chunk coordinates
+        int playerChunkX = (int)state.PlayerX / GameConstants.ChunkSize;
+        int playerChunkY = (int)state.PlayerY / GameConstants.ChunkSize;
+
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
         
@@ -1218,22 +1222,28 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (line[x] == '.')  // Only consider floor tiles
                 {
-                    // Check if position is not occupied by player or other enemies
-                    if ((x != state.PlayerX || y != state.PlayerY) &&
-                        !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y))
-                    {
-                        // Check per-chunk limit
-                        int chunkX = x / GameConstants.ChunkSize;
-                        int chunkY = y / GameConstants.ChunkSize;
-                        int enemiesInChunk = state.Enemies.Count(e => 
-                            e.Alive && 
-                            e.X / GameConstants.ChunkSize == chunkX && 
-                            e.Y / GameConstants.ChunkSize == chunkY);
+                    // Calculate chunk coordinates for this position
+                    int chunkX = x / GameConstants.ChunkSize;
+                    int chunkY = y / GameConstants.ChunkSize;
 
-                        // Allow up to 2 enemies per chunk
-                        if (enemiesInChunk < 2)
+                    // Only consider positions in player's chunk or adjacent chunks
+                    if (Math.Abs(chunkX - playerChunkX) <= 1 && Math.Abs(chunkY - playerChunkY) <= 1)
+                    {
+                        // Check if position is not occupied by player or other enemies
+                        if ((x != state.PlayerX || y != state.PlayerY) &&
+                            !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y))
                         {
-                            validPositions.Add((x, y));
+                            // Check per-chunk limit
+                            int enemiesInChunk = state.Enemies.Count(e => 
+                                e.Alive && 
+                                e.X / GameConstants.ChunkSize == chunkX && 
+                                e.Y / GameConstants.ChunkSize == chunkY);
+
+                            // Allow up to 2 enemies per chunk
+                            if (enemiesInChunk < 2)
+                            {
+                                validPositions.Add((x, y));
+                            }
                         }
                     }
                 }
