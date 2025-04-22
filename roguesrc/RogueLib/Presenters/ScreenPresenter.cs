@@ -1334,28 +1334,6 @@ public class ScreenPresenter : IScreenPresenter
         return closeRequested;
     }
 
-    private class GoldItem
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Value { get; set; }  // How much this gold is worth
-    }
-
-    private class FlyingGold
-    {
-        public int StartX { get; set; }  // Starting X position in pixels
-        public int StartY { get; set; }  // Starting Y position in pixels
-        public int Value { get; set; }   // How much this gold is worth
-        public float Timer { get; set; } // Animation timer
-    }
-
-    private class HealthPickup
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int HealAmount { get; set; }  // How much health this pickup restores
-    }
-
     private void InitializeShop(GameState state)
     {
         // Regular items section
