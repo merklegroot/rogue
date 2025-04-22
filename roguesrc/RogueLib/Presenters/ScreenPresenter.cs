@@ -208,10 +208,10 @@ public class ScreenPresenter : IScreenPresenter
         int menuStartY = lineY + 30; // Start menu options below the line
         int menuSpacing = 60;
         
-        DrawColoredHotkeyText(rayConnection, "Start (A)dventure", centerX - 120, menuStartY);
-        DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
-        DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
-        DrawColoredHotkeyText(rayConnection, "e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
+        _screenDrawer.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", centerX - 120, menuStartY);
+        _screenDrawer.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
+        _screenDrawer.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
+        _screenDrawer.DrawColoredHotkeyText(rayConnection, "e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
         
         // Draw a version number and copyright
         string version = "v0.1 Alpha";
@@ -219,52 +219,6 @@ public class ScreenPresenter : IScreenPresenter
         
         // Draw a small decorative element
         _screenDrawer.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
-    }
-    
-    private void DrawColoredHotkeyText(IRayConnection rayConnection, string text, int x, int y, ColoredHotkeyOptions? options = null)
-    {
-        options ??= new ColoredHotkeyOptions();
-
-        int startParenIndex = text.IndexOf('(');
-        int endParenIndex = text.IndexOf(')');
-
-        // Guard clause: if no valid parentheses found, draw plain text
-        if (startParenIndex == -1 || endParenIndex == -1 || endParenIndex <= startParenIndex + 1)
-        {
-            _screenDrawer.DrawText(rayConnection, text, x, y, options.BaseColor);
-            return;
-        }
-
-        // Calculate positions using MeasureTextEx for more accurate spacing
-        var currentX = x;
-
-        // Draw text before parenthesis
-        var beforeText = text[..startParenIndex];
-        _screenDrawer.DrawText(rayConnection, beforeText, currentX, y, options.BaseColor);
-        
-        // Use MeasureTextEx for more accurate width measurement
-        Vector2 beforeSize = Raylib.MeasureTextEx(rayConnection.MenuFont, beforeText, ScreenConstants.MenuFontSize, 1);
-        currentX += (int)beforeSize.X - 4;  // Reduce spacing before parenthesis
-
-        // Draw opening parenthesis
-        _screenDrawer.DrawText(rayConnection, "(", currentX, y, options.BaseColor);
-        Vector2 parenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, "(", ScreenConstants.MenuFontSize, 1);
-        currentX += (int)parenSize.X - 2;  // Tighter spacing after opening parenthesis
-
-        // Draw hotkey in different color
-        var hotkey = text[(startParenIndex + 1)..endParenIndex];
-        _screenDrawer.DrawText(rayConnection, hotkey, currentX, y, options.HotkeyColor);
-        Vector2 hotkeySize = Raylib.MeasureTextEx(rayConnection.MenuFont, hotkey, ScreenConstants.MenuFontSize, 1);
-        currentX += (int)hotkeySize.X - 2;  // Tighter spacing after hotkey
-
-        // Draw closing parenthesis
-        _screenDrawer.DrawText(rayConnection, ")", currentX, y, options.BaseColor);
-        Vector2 closeParenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, ")", ScreenConstants.MenuFontSize, 1);
-        currentX += (int)closeParenSize.X - 2;  // Tighter spacing after closing parenthesis
-
-        // Draw remaining text
-        var afterText = text[(endParenIndex + 1)..];
-        _screenDrawer.DrawText(rayConnection, afterText, currentX, y, options.BaseColor);
     }
 
     private void HandleMenuInput(GameState state)

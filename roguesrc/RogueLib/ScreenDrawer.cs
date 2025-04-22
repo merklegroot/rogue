@@ -7,6 +7,7 @@ public interface IScreenDrawer
 {
     void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color);
     void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false, float scale = 1.0f);
+    void DrawColoredHotkeyText(IRayConnection rayConnection, string text, int x, int y, ColoredHotkeyOptions? options = null);
 }
 
 
@@ -71,5 +72,51 @@ public class ScreenDrawer : IScreenDrawer
                 Color.DarkGray
             );
         }
+    }
+
+    public void DrawColoredHotkeyText(IRayConnection rayConnection, string text, int x, int y, ColoredHotkeyOptions? options = null)
+    {
+        options ??= new ColoredHotkeyOptions();
+
+        int startParenIndex = text.IndexOf('(');
+        int endParenIndex = text.IndexOf(')');
+
+        // Guard clause: if no valid parentheses found, draw plain text
+        if (startParenIndex == -1 || endParenIndex == -1 || endParenIndex <= startParenIndex + 1)
+        {
+            DrawText(rayConnection, text, x, y, options.BaseColor);
+            return;
+        }
+
+        // Calculate positions using MeasureTextEx for more accurate spacing
+        var currentX = x;
+
+        // Draw text before parenthesis
+        var beforeText = text[..startParenIndex];
+        DrawText(rayConnection, beforeText, currentX, y, options.BaseColor);
+        
+        // Use MeasureTextEx for more accurate width measurement
+        Vector2 beforeSize = Raylib.MeasureTextEx(rayConnection.MenuFont, beforeText, ScreenConstants.MenuFontSize, 1);
+        currentX += (int)beforeSize.X - 4;  // Reduce spacing before parenthesis
+
+        // Draw opening parenthesis
+        DrawText(rayConnection, "(", currentX, y, options.BaseColor);
+        Vector2 parenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, "(", ScreenConstants.MenuFontSize, 1);
+        currentX += (int)parenSize.X - 2;  // Tighter spacing after opening parenthesis
+
+        // Draw hotkey in different color
+        var hotkey = text[(startParenIndex + 1)..endParenIndex];
+        DrawText(rayConnection, hotkey, currentX, y, options.HotkeyColor);
+        Vector2 hotkeySize = Raylib.MeasureTextEx(rayConnection.MenuFont, hotkey, ScreenConstants.MenuFontSize, 1);
+        currentX += (int)hotkeySize.X - 2;  // Tighter spacing after hotkey
+
+        // Draw closing parenthesis
+        DrawText(rayConnection, ")", currentX, y, options.BaseColor);
+        Vector2 closeParenSize = Raylib.MeasureTextEx(rayConnection.MenuFont, ")", ScreenConstants.MenuFontSize, 1);
+        currentX += (int)closeParenSize.X - 2;  // Tighter spacing after closing parenthesis
+
+        // Draw remaining text
+        var afterText = text[(endParenIndex + 1)..];
+        DrawText(rayConnection, afterText, currentX, y, options.BaseColor);
     }
 }
