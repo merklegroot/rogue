@@ -958,21 +958,40 @@ public class ScreenPresenter : IScreenPresenter
                 // Calculate knockback distance for this frame
                 float frameKnockback = KnockbackDistance * Raylib.GetFrameTime() * (1.0f / KnockbackDuration);
                 
-                // Move player in knockback direction
+                // Calculate target position
+                float targetX = state.PlayerX;
+                float targetY = state.PlayerY;
+                
+                // Determine target position based on knockback direction
                 switch (state.KnockbackDirection)
                 {
                     case Direction.Left:
-                        state.PlayerX = Math.Max(0, state.PlayerX - 1);  // Move a full tile left
+                        targetX = state.PlayerX - frameKnockback;
                         break;
                     case Direction.Right:
-                        state.PlayerX = Math.Min(19, state.PlayerX + 1); // Move a full tile right
+                        targetX = state.PlayerX + frameKnockback;
                         break;
                     case Direction.Up:
-                        state.PlayerY = Math.Max(0, state.PlayerY - 1);  // Move a full tile up
+                        targetY = state.PlayerY - frameKnockback;
                         break;
                     case Direction.Down:
-                        state.PlayerY = Math.Min(9, state.PlayerY + 1);  // Move a full tile down
+                        targetY = state.PlayerY + frameKnockback;
                         break;
+                }
+                
+                // Only move if the target position is walkable
+                int checkX = (int)Math.Floor(targetX);
+                int checkY = (int)Math.Floor(targetY);
+                if (IsWalkableTile(checkX, checkY))
+                {
+                    state.PlayerX = (int)targetX;
+                    state.PlayerY = (int)targetY;
+                }
+                else
+                {
+                    // If we hit a barrier, stop the knockback
+                    state.IsKnockedBack = false;
+                    state.KnockbackTimer = 0f;
                 }
             }
             
