@@ -31,9 +31,6 @@ public class ScreenPresenter : IScreenPresenter
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
     private const float HealthSpawnInterval = 30f;
-    private float _swordCooldownTimer = 0f;
-    private float _swordCooldown = 1.0f;
-    private bool _swordOnCooldown = false;
     private int _swordReach = 1;
     private bool _hasCrossbow = false;
     private float _crossbowCooldown = 2.0f;
@@ -321,7 +318,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawSwordAnimation(IRayConnection rayConnection, GameState state)
     {
         // Handle sword swinging
-        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !state.SwordState.IsSwordSwinging && !_swordOnCooldown)
+        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
         {
             state.SwordState.IsSwordSwinging = true;
             state.SwordState.SwordSwingTime = 0;
@@ -330,15 +327,14 @@ public class ScreenPresenter : IScreenPresenter
             CheckSwordCollisions(state);
         }
 
-        // Update sword swing animation
         if (state.SwordState.IsSwordSwinging)
         {
             state.SwordState.SwordSwingTime += Raylib.GetFrameTime();
             if (state.SwordState.SwordSwingTime >= GameConstants.SwordSwingDuration)
             {
                 state.SwordState.IsSwordSwinging = false;
-                _swordOnCooldown = true;  // Start cooldown when swing finishes
-                _swordCooldownTimer = 0f;
+                state.SwordState.SwordOnCooldown = true;  // Start cooldown when swing finishes
+                state.SwordState.SwordCooldownTimer = 0f;
             }
         }
 
@@ -454,10 +450,10 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawCooldownIndicators(IRayConnection rayConnection, GameState state)
     {
         // Draw sword cooldown indicator
-        if (_swordOnCooldown)
+        if (state.SwordState.SwordOnCooldown)
         {
             // Calculate cooldown progress (0.0 to 1.0)
-            float progress = _swordCooldownTimer / _swordCooldown;
+            float progress = state.SwordState.SwordCooldownTimer / state.SwordState.SwordCooldown;
             
             // Draw a small cooldown bar above the player
             int barWidth = 30;
@@ -706,7 +702,7 @@ public class ScreenPresenter : IScreenPresenter
                 state.CurrentScreen = GameScreenEnum.Menu;
                 return;
             }
-            if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !_swordOnCooldown)
+            if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
             {
                 state.SwordState.IsSwordSwinging = true;
                 state.SwordState.SwordSwingTime = 0;
@@ -794,13 +790,13 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Update sword cooldown
-        if (_swordOnCooldown)
+        if (state.SwordState.SwordOnCooldown)
         {
-            _swordCooldownTimer += Raylib.GetFrameTime();
-            if (_swordCooldownTimer >= _swordCooldown)
+            state.SwordState.SwordCooldownTimer += Raylib.GetFrameTime();
+            if (state.SwordState.SwordCooldownTimer >= state.SwordState.SwordCooldown)
             {
-                _swordOnCooldown = false;
-                _swordCooldownTimer = 0f;
+                state.SwordState.SwordOnCooldown = false;
+                state.SwordState.SwordCooldownTimer = 0f;
             }
         }
 
@@ -1378,8 +1374,8 @@ public class ScreenPresenter : IScreenPresenter
             Description = "Reduces sword cooldown by 0.2s",
             Price = 25,
             OnPurchase = () => { 
-                if (_swordCooldown > 0.3f) // Don't let it go below 0.3s
-                    _swordCooldown -= 0.2f; 
+                if (state.SwordState.SwordCooldown > 0.3f) // Don't let it go below 0.3s
+                    state.SwordState.SwordCooldown -= 0.2f; 
             },
             Category = ShopCategory.Upgrade
         });
