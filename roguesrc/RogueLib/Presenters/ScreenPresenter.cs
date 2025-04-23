@@ -621,6 +621,25 @@ public class ScreenPresenter : IScreenPresenter
         int playerScreenX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
         int playerScreenY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
         
+        // Draw ghost character at previous position (gray translucent)
+        int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
+        int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
+        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor);
+        
+        // Draw in-transit ghost (yellow opaque)
+        const float moveDuration = 0.1f; // seconds between moves
+        float moveProgress = Math.Clamp((float)(Raylib.GetTime() - state.MovementStartTime) / moveDuration, 0f, 1f);
+        float ghostX = state.PreviousX + (state.PlayerX - state.PreviousX) * moveProgress;
+        float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * moveProgress;
+        int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
+        int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
+        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, ScreenConstants.InTransitGhostColor);
+        
+        // Draw ghost at new position (blue translucent)
+        int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
+        int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
+        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor);
+        
         // Update wobble animation using state
         state.WobbleTimer += Raylib.GetFrameTime();
         
@@ -742,7 +761,11 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1))
                 {
+                    // Store current position as previous before moving
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
                     state.PlayerY -= 1;  // No Math.Max constraint
+                    state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Up;
                 moved = true;
@@ -751,7 +774,11 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1))
                 {
+                    // Store current position as previous before moving
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
                     state.PlayerY += 1;  // No Math.Min constraint
+                    state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Down;
                 moved = true;
@@ -761,7 +788,11 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY))
                 {
+                    // Store current position as previous before moving
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
                     state.PlayerX -= 1;  // No Math.Max constraint
+                    state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Left;
                 moved = true;
@@ -770,7 +801,11 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY))
                 {
+                    // Store current position as previous before moving
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
                     state.PlayerX += 1;  // No Math.Min constraint
+                    state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Right;
                 moved = true;

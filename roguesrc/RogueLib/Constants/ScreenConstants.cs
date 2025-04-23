@@ -51,4 +51,9 @@ public static class ScreenConstants
     public static readonly Color ExplosionColor = new(255, 165, 0, 255);  // Orange color for explosions
     public static readonly Color BoltColor = new(210, 180, 140, 255);  // Light brown color for bolts
     public static readonly Color ChargerColor = new(255, 50, 50, 255);  // Bright red color for charger  // Health value for the charger enemy
+
+    // Ghost colors for movement visualization
+    public static readonly Color OldPositionGhostColor = new(100, 100, 100, 150);  // Gray translucent
+    public static readonly Color InTransitGhostColor = new(255, 255, 0, 255);  // Yellow opaque
+    public static readonly Color NewPositionGhostColor = new(100, 100, 255, 150);  // Blue translucent
 }

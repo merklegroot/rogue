@@ -8,6 +8,9 @@ public class GameState
     
     public int PlayerX { get; set; } = 10;
     public int PlayerY { get; set; } = 5;
+    public int PreviousX { get; set; } = 10;
+    public int PreviousY { get; set; } = 5;
+    public float MovementStartTime { get; set; } = 0f;
     public int CurrentHealth { get; set; } = 7;    
     
     public SwordState SwordState { get; set; } = new SwordState();
