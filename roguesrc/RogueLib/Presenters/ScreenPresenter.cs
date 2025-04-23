@@ -31,7 +31,6 @@ public class ScreenPresenter : IScreenPresenter
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
     private const float HealthSpawnInterval = 30f;
-    private int _swordReach = 1;
     private bool _hasCrossbow = false;
     private float _crossbowCooldown = 2.0f;
     private float _crossbowCooldownTimer = 0f;
@@ -1385,7 +1384,7 @@ public class ScreenPresenter : IScreenPresenter
             Name = "Longer Sword",
             Description = "Increases sword reach",
             Price = 30,
-            OnPurchase = () => { _swordReach++; },
+            OnPurchase = () => { state.SwordState.SwordReach++; },
             Category = ShopCategory.Upgrade
         });
         
@@ -1734,16 +1733,16 @@ public class ScreenPresenter : IScreenPresenter
         switch (state.LastDirection)
         {
             case Direction.Left:
-                swordX -= _swordReach;
+                swordX -= state.SwordState.SwordReach;
                 break;
             case Direction.Right:
-                swordX += _swordReach;
+                swordX += state.SwordState.SwordReach;
                 break;
             case Direction.Up:
-                swordY -= _swordReach;
+                swordY -= state.SwordState.SwordReach;
                 break;
             case Direction.Down:
-                swordY += _swordReach;
+                swordY += state.SwordState.SwordReach;
                 break;
         }
         
