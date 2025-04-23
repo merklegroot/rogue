@@ -55,7 +55,8 @@ public class ScreenPresenter : IScreenPresenter
     private readonly ISpawnEnemyHandler _spawnEnemyHandler;
     private readonly IPlayerPresenter _playerPresenter;
 
-    private const float CameraDeadZone = 5.0f;
+    private const float CameraDeadZone = GameConstants.CameraDeadZone;
+    private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -701,274 +702,82 @@ public class ScreenPresenter : IScreenPresenter
         // Handle movement with direct key state checks
         // This allows for continuous movement when keys are held down
 
-        // Update time since last move
-        state.TimeSinceLastMove += Raylib.GetFrameTime();
+        float moveAmount = PlayerMoveSpeed * Raylib.GetFrameTime();
 
-        // Only move if enough time has passed
-        if (state.TimeSinceLastMove >= GameConstants.MoveDelay)
+        // Check for diagonal movement first
+        bool upPressed = Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up);
+        bool downPressed = Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down);
+        bool leftPressed = Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left);
+        bool rightPressed = Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right);
+
+        // Apply acceleration based on input
+        if (upPressed) state.VelocityY -= moveAmount;
+        if (downPressed) state.VelocityY += moveAmount;
+        if (leftPressed) state.VelocityX -= moveAmount;
+        if (rightPressed) state.VelocityX += moveAmount;
+
+        // Apply friction
+        state.VelocityX *= GameConstants.PlayerFriction;
+        state.VelocityY *= GameConstants.PlayerFriction;
+
+        // Clamp velocity to maximum
+        float currentSpeed = (float)Math.Sqrt(state.VelocityX * state.VelocityX + state.VelocityY * state.VelocityY);
+        if (currentSpeed > GameConstants.PlayerMaxVelocity)
         {
-            bool moved = false;
+            float ratio = GameConstants.PlayerMaxVelocity / currentSpeed;
+            state.VelocityX *= ratio;
+            state.VelocityY *= ratio;
+        }
 
-            // Check for diagonal movement first
-            bool upPressed = Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up);
-            bool downPressed = Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down);
-            bool leftPressed = Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left);
-            bool rightPressed = Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right);
+        // Apply velocity to position if the new position is walkable
+        bool moved = false;
+        float newX = state.PlayerX + state.VelocityX;
+        float newY = state.PlayerY + state.VelocityY;
 
-            // Check for diagonal movement combinations
-            if (upPressed && rightPressed)
-            {
-                bool canMoveUp = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1);
-                bool canMoveRight = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY);
-                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY - 1);
-                
-                if (canMoveDiagonal)
-                {
-                    // Diagonal is clear, move diagonally
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.PlayerY -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Right;
-                    moved = true;
-                }
-                else if (canMoveUp && canMoveRight)
-                {
-                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Right;
-                    moved = true;
-                }
-                else if (canMoveUp)
-                {
-                    // Only up is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerY -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Up;
-                    moved = true;
-                }
-                else if (canMoveRight)
-                {
-                    // Only right is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Right;
-                    moved = true;
-                }
-            }
-            else if (upPressed && leftPressed)
-            {
-                bool canMoveUp = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1);
-                bool canMoveLeft = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY);
-                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY - 1);
-                
-                if (canMoveDiagonal)
-                {
-                    // Diagonal is clear, move diagonally
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.PlayerY -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Left;
-                    moved = true;
-                }
-                else if (canMoveUp && canMoveLeft)
-                {
-                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Left;
-                    moved = true;
-                }
-                else if (canMoveUp)
-                {
-                    // Only up is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerY -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Up;
-                    moved = true;
-                }
-                else if (canMoveLeft)
-                {
-                    // Only left is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Left;
-                    moved = true;
-                }
-            }
-            else if (downPressed && rightPressed)
-            {
-                bool canMoveDown = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1);
-                bool canMoveRight = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY);
-                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY + 1);
-                
-                if (canMoveDiagonal)
-                {
-                    // Diagonal is clear, move diagonally
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.PlayerY += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Right;
-                    moved = true;
-                }
-                else if (canMoveDown && canMoveRight)
-                {
-                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Right;
-                    moved = true;
-                }
-                else if (canMoveDown)
-                {
-                    // Only down is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerY += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Down;
-                    moved = true;
-                }
-                else if (canMoveRight)
-                {
-                    // Only right is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Right;
-                    moved = true;
-                }
-            }
-            else if (downPressed && leftPressed)
-            {
-                bool canMoveDown = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1);
-                bool canMoveLeft = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY);
-                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY + 1);
-                
-                if (canMoveDiagonal)
-                {
-                    // Diagonal is clear, move diagonally
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.PlayerY += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Left;
-                    moved = true;
-                }
-                else if (canMoveDown && canMoveLeft)
-                {
-                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Left;
-                    moved = true;
-                }
-                else if (canMoveDown)
-                {
-                    // Only down is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerY += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Down;
-                    moved = true;
-                }
-                else if (canMoveLeft)
-                {
-                    // Only left is clear
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                    state.LastDirection = Direction.Left;
-                    moved = true;
-                }
-            }
-            // If no diagonal movement, check regular movement
-            else if (upPressed)
-            {
-                if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1))
-                {
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerY -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                }
-                state.LastDirection = Direction.Up;
-                moved = true;
-            }
-            else if (downPressed)
-            {
-                if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1))
-                {
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerY += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                }
-                state.LastDirection = Direction.Down;
-                moved = true;
-            }
-            else if (leftPressed)
-            {
-                if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY))
-                {
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                }
-                state.LastDirection = Direction.Left;
-                moved = true;
-            }
-            else if (rightPressed)
-            {
-                if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY))
-                {
-                    state.PreviousX = state.PlayerX;
-                    state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;
-                    state.MovementStartTime = (float)Raylib.GetTime();
-                }
-                state.LastDirection = Direction.Right;
-                moved = true;
-            }
+        if (IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(state.PlayerY)))
+        {
+            state.PreviousX = state.PlayerX;
+            state.PlayerX = newX;
+            moved = true;
+        }
+        else
+        {
+            // Stop horizontal movement if we hit a wall
+            state.VelocityX = 0;
+        }
 
-            // Reset timer if moved
-            if (moved)
-            {
-                state.TimeSinceLastMove = 0;
-                
-                // Check for gold collection after movement
-                CollectGold(state);
-                
-                // Check for sword collisions during movement
-                CheckSwordCollisions(state, false);
-            }
+        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerX), (int)Math.Floor(newY)))
+        {
+            state.PreviousY = state.PlayerY;
+            state.PlayerY = newY;
+            moved = true;
+        }
+        else
+        {
+            // Stop vertical movement if we hit a wall
+            state.VelocityY = 0;
+        }
+
+        // Update direction based on velocity
+        if (Math.Abs(state.VelocityX) > Math.Abs(state.VelocityY))
+        {
+            state.LastDirection = state.VelocityX > 0 ? Direction.Right : Direction.Left;
+        }
+        else if (state.VelocityY != 0)
+        {
+            state.LastDirection = state.VelocityY > 0 ? Direction.Down : Direction.Up;
+        }
+
+        // Reset timer if moved
+        if (moved)
+        {
+            state.MovementStartTime = (float)Raylib.GetTime();
+            
+            // Check for gold collection after movement
+            CollectGold(state);
+            
+            // Check for sword collisions during movement
+            CheckSwordCollisions(state, false);
         }
 
         // Update sword cooldown
@@ -1262,30 +1071,36 @@ public class ScreenPresenter : IScreenPresenter
                 enemy.MoveTimer = 0f;
                 
                 // Generate random direction (-1, 0, or 1 for both x and y)
-                int dx = _random.Next(-1, 2);
-                int dy = _random.Next(-1, 2);
+                float dx = _random.Next(-1, 2) * PlayerMoveSpeed;
+                float dy = _random.Next(-1, 2) * PlayerMoveSpeed;
                 
                 // Try to move horizontally first
                 if (dx != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, enemy.X + dx, enemy.Y))
+                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X + (double)dx), (int)Math.Floor((double)enemy.Y)))
                     {
-                        enemy.X += dx;
+                        enemy.X = (int)(enemy.X + dx);
                     }
                     // If horizontal movement is blocked, try vertical
-                    else if (dy != 0 && IsWalkableTile(state.Map, enemy.X, enemy.Y + dy))
+                    else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X), (int)Math.Floor((double)enemy.Y + (double)dy)))
                     {
-                        enemy.Y += dy;
+                        enemy.Y = (int)(enemy.Y + dy);
+                    }
+                    // If both are blocked, try diagonal
+                    else if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X + (double)dx), (int)Math.Floor((double)enemy.Y + (double)dy)))
+                    {
+                        enemy.X = (int)(enemy.X + dx);
+                        enemy.Y = (int)(enemy.Y + dy);
                     }
                 }
                 // If no horizontal movement, try vertical
                 else if (dy != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, enemy.X, enemy.Y + dy))
+                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X), (int)Math.Floor((double)enemy.Y + (double)dy)))
                     {
-                        enemy.Y += dy;
+                        enemy.Y = (int)(enemy.Y + dy);
                     }
                 }
                 
@@ -1341,22 +1156,22 @@ public class ScreenPresenter : IScreenPresenter
             float dy = 0;
             
             // Charger AI: move directly toward player
-            if (_charger.X < state.PlayerX) dx = 1;
-            else if (_charger.X > state.PlayerX) dx = -1;
+            if (_charger.X < state.PlayerX) dx = PlayerMoveSpeed;
+            else if (_charger.X > state.PlayerX) dx = -PlayerMoveSpeed;
             
-            if (_charger.Y < state.PlayerY) dy = 1;
-            else if (_charger.Y > state.PlayerY) dy = -1;
+            if (_charger.Y < state.PlayerY) dy = PlayerMoveSpeed;
+            else if (_charger.Y > state.PlayerY) dy = -PlayerMoveSpeed;
             
             // Try to move horizontally first
             if (dx != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile(state.Map, (int)(_charger.X + dx), (int)_charger.Y))
+                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_charger.X + (double)dx), (int)Math.Floor((double)_charger.Y)))
                 {
                     _charger.X += dx;
                 }
                 // If horizontal movement is blocked, try vertical
-                else if (dy != 0 && IsWalkableTile(state.Map, (int)_charger.X, (int)(_charger.Y + dy)))
+                else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)_charger.X), (int)Math.Floor((double)_charger.Y + (double)dy)))
                 {
                     _charger.Y += dy;
                 }
@@ -1365,7 +1180,7 @@ public class ScreenPresenter : IScreenPresenter
             else if (dy != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile(state.Map, (int)_charger.X, (int)(_charger.Y + dy)))
+                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_charger.X), (int)Math.Floor((double)_charger.Y + (double)dy)))
                 {
                     _charger.Y += dy;
                 }
@@ -1942,7 +1757,7 @@ public class ScreenPresenter : IScreenPresenter
     private void EnsurePlayerOnWalkableTile(GameState state)
     {
         // If player is already on a walkable tile, do nothing
-        if (IsWalkableTile(state.Map, (int)state.PlayerX, (int)state.PlayerY))
+        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerX), (int)Math.Floor(state.PlayerY)))
         {
             return;
         }
@@ -1961,14 +1776,14 @@ public class ScreenPresenter : IScreenPresenter
                     if (Math.Abs(offsetX) != radius && Math.Abs(offsetY) != radius)
                         continue;
                     
-                    var testX = state.PlayerX + offsetX;
-                    var testY = state.PlayerY + offsetY;
+                    var testX = (int)Math.Floor(state.PlayerX + offsetX);
+                    var testY = (int)Math.Floor(state.PlayerY + offsetY);
                     
                     if (IsWalkableTile(state.Map, testX, testY))
                     {
                         // Found a walkable tile, move player there
-                        state.PlayerX = testX;
-                        state.PlayerY = testY;
+                        state.PlayerX = testX + 0.5f; // Center the player in the tile
+                        state.PlayerY = testY + 0.5f;
                         return;
                     }
                 }
@@ -1979,8 +1794,8 @@ public class ScreenPresenter : IScreenPresenter
         // This is a fallback that should rarely be needed
         int roomWidth = 7;
         int roomHeight = 5;
-        int roomX = (int)state.PlayerX - roomWidth / 2;
-        int roomY = (int)state.PlayerY - roomHeight / 2;
+        int roomX = (int)Math.Floor(state.PlayerX) - roomWidth / 2;
+        int roomY = (int)Math.Floor(state.PlayerY) - roomHeight / 2;
         
         // Create a simple room
         for (int y = 0; y < roomHeight; y++)
@@ -2024,8 +1839,8 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Place player in the center of the new room
-        state.PlayerX = roomX + roomWidth / 2;
-        state.PlayerY = roomY + roomHeight / 2;
+        state.PlayerX = roomX + roomWidth / 2 + 0.5f;
+        state.PlayerY = roomY + roomHeight / 2 + 0.5f;
     }
 
     // Add this method to initialize the player position on a floor tile
@@ -2055,9 +1870,9 @@ public class ScreenPresenter : IScreenPresenter
         var randomIndex = _random.Next(floorTiles.Count);
         var (newX, newY) = floorTiles[randomIndex];
         
-        // Set player position
-        state.PlayerX = newX;
-        state.PlayerY = newY;
+        // Set player position (centered in the tile)
+        state.PlayerX = newX + 0.5f;
+        state.PlayerY = newY + 0.5f;
         
         // Immediately center camera on player for initial spawn
         state.CameraState.X = state.PlayerX;

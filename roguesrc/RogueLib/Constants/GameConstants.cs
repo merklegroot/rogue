@@ -4,7 +4,6 @@ public static class GameConstants
 {
     public const float SwordSwingDuration = 0.2f;
     public const float SwordCooldown = 0.5f;
-    public const float MoveDelay = 0.2f;  // Controls how often the player can make a new movement
     public const float EnemyMoveDelay = 0.5f;
     public const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
     public const int MaxEnemies = 8;  // Increased to allow for more enemies while maintaining chunk distribution
@@ -15,6 +14,12 @@ public static class GameConstants
     public const int MaxGoldItems = 3;  // Reduced from 5 to 3
 
     public const float InvincibilityDuration = 1.0f;  
+
+    // Movement constants
+    public const float PlayerMoveSpeed = 2.0f;
+    public const float CameraDeadZone = 5.0f;
+    public const float PlayerMaxVelocity = 15.0f;  // Maximum velocity in any direction
+    public const float PlayerFriction = 0.9f;      // Friction factor (0.9 means 10% reduction per frame)
 
     // Chunk constants
     public const int ChunkSize = 20;  // 20 spaces in each direction

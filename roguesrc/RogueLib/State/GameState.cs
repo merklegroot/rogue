@@ -6,12 +6,16 @@ public class GameState
 
     public int PlayerGold { get; set; } = 0;
     
-    public int PlayerX { get; set; } = 10;
-    public int PlayerY { get; set; } = 5;
-    public int PreviousX { get; set; } = 10;
-    public int PreviousY { get; set; } = 5;
+    public float PlayerX { get; set; } = 10f;
+    public float PlayerY { get; set; } = 5f;
+    public float PreviousX { get; set; } = 10f;
+    public float PreviousY { get; set; } = 5f;
     public float MovementStartTime { get; set; } = 0f;
     public int CurrentHealth { get; set; } = 7;    
+    
+    // Add velocity properties
+    public float VelocityX { get; set; } = 0f;
+    public float VelocityY { get; set; } = 0f;
     
     public SwordState SwordState { get; set; } = new SwordState();
 
