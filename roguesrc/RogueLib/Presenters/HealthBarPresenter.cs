@@ -13,11 +13,11 @@ public class HealthBarPresenter : IHealthBarPresenter
 {
     private readonly Color _emptyHealthColor = new(100, 100, 100, 255);  // Gray color for empty hearts
 
-    private readonly IScreenDrawer _screenDrawer;
+    private readonly IScreenDrawerUtil _screenDrawerUtil;
 
-    public HealthBarPresenter(IScreenDrawer screenDrawer)
+    public HealthBarPresenter(IScreenDrawerUtil screenDrawerUtil)
     {
-        _screenDrawer = screenDrawer;
+        _screenDrawerUtil = screenDrawerUtil;
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -33,7 +33,7 @@ public class HealthBarPresenter : IHealthBarPresenter
             Color heartColor = (i < state.CurrentHealth) ? ScreenConstants.HealthColor : _emptyHealthColor;
 
             // Draw the heart
-            _screenDrawer.DrawCharacter(rayConnection, heartChar, startX + (i * heartSpacing), startY, heartColor);
+            _screenDrawerUtil.DrawCharacter(rayConnection, heartChar, startX + (i * heartSpacing), startY, heartColor);
         }
     }
 }

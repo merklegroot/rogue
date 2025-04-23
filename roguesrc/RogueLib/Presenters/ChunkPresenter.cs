@@ -11,11 +11,11 @@ public interface IChunkPresenter
 
 public class ChunkPresenter : IChunkPresenter
 {
-    private readonly IScreenDrawer _screenDrawer;
+    private readonly IScreenDrawerUtil _screenDrawerUtil;
 
-    public ChunkPresenter(IScreenDrawer screenDrawer)
+    public ChunkPresenter(IScreenDrawerUtil screenDrawerUtil)
     {
-        _screenDrawer = screenDrawer;
+        _screenDrawerUtil = screenDrawerUtil;
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -61,6 +61,6 @@ public class ChunkPresenter : IChunkPresenter
 
         // Draw chunk coordinates
         string chunkLabel = $"({chunkX},{chunkY})";
-        _screenDrawer.DrawText(rayConnection, chunkLabel, screenLeft + 5, screenTop + 5, boundaryColor);
+        _screenDrawerUtil.DrawText(rayConnection, chunkLabel, screenLeft + 5, screenTop + 5, boundaryColor);
     }
 } 

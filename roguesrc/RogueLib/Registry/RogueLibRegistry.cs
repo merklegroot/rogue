@@ -13,7 +13,7 @@ public static class RogueLibRegistry
             .AddScoped<IHealthBarPresenter, HealthBarPresenter>()
             .AddScoped<IShopPresenter, ShopPresenter>()
             .AddScoped<IGameApp, GameAppApp>()
-            .AddScoped<IScreenDrawer, ScreenDrawer>()
+            .AddScoped<IScreenDrawerUtil, ScreenDrawerUtilUtil>()
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IChunkPresenter, ChunkPresenter>()

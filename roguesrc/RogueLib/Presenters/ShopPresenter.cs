@@ -12,11 +12,11 @@ public interface IShopPresenter
 
 public class ShopPresenter : IShopPresenter
 {
-    private readonly IScreenDrawer _screenDrawer;
+    private readonly IScreenDrawerUtil _screenDrawerUtil;
     
-    public ShopPresenter(IScreenDrawer screenDrawer)
+    public ShopPresenter(IScreenDrawerUtil screenDrawerUtil)
     {
-        _screenDrawer = screenDrawer;
+        _screenDrawerUtil = screenDrawerUtil;
     }
     
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -32,7 +32,7 @@ public class ShopPresenter : IShopPresenter
         
         // Draw player's gold
         string goldText = $"Your Gold: {state.PlayerGold}";
-        _screenDrawer.DrawText(rayConnection, goldText, 70, 120, ScreenConstants.GoldColor);
+        _screenDrawerUtil.DrawText(rayConnection, goldText, 70, 120, ScreenConstants.GoldColor);
         
         // Draw shop items
         int itemY = 170;
@@ -50,17 +50,17 @@ public class ShopPresenter : IShopPresenter
             }
             
             // Draw item name and price
-            _screenDrawer.DrawText(rayConnection, item.Name, 70, itemY, itemColor);
+            _screenDrawerUtil.DrawText(rayConnection, item.Name, 70, itemY, itemColor);
             string priceText = $"{item.Price} gold";
-            _screenDrawer.DrawText(rayConnection, priceText, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 200, itemY, itemColor);
+            _screenDrawerUtil.DrawText(rayConnection, priceText, ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale - 200, itemY, itemColor);
             
             // Draw item description
-            _screenDrawer.DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
+            _screenDrawerUtil.DrawText(rayConnection, item.Description, 70, itemY + 20, new Color(150, 150, 150, 200));
             
             itemY += itemSpacing;
         }
         
         // Draw instructions
-        _screenDrawer.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.White);
+        _screenDrawerUtil.DrawText(rayConnection, "Use UP/DOWN to select, ENTER to buy, ESC to exit shop", 70, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 100, Color.White);
     }
 }

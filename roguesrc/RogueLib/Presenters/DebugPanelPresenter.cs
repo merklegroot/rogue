@@ -10,11 +10,11 @@ public interface IDebugPanelPresenter
 
 public class DebugPanelPresenter : IDebugPanelPresenter
 {
-    private readonly IScreenDrawer _screenDrawer;
+    private readonly IScreenDrawerUtil _screenDrawerUtil;
 
-    public DebugPanelPresenter(IScreenDrawer screenDrawer)
+    public DebugPanelPresenter(IScreenDrawerUtil screenDrawerUtil)
     {
-        _screenDrawer = screenDrawer;
+        _screenDrawerUtil = screenDrawerUtil;
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -38,7 +38,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         
         // Show player position first
         string playerText = $"Player at ({state.PlayerX}, {state.PlayerY})";
-        _screenDrawer.DrawText(rayConnection, playerText, panelX + 10, debugY, Color.Yellow);
+        _screenDrawerUtil.DrawText(rayConnection, playerText, panelX + 10, debugY, Color.Yellow);
         debugY += 20;
         
         // Show enemy positions
@@ -47,7 +47,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             if (enemy.Alive)
             {
                 string debugText = $"Enemy at ({enemy.X}, {enemy.Y})";
-                _screenDrawer.DrawText(rayConnection, debugText, panelX + 10, debugY, Color.White);
+                _screenDrawerUtil.DrawText(rayConnection, debugText, panelX + 10, debugY, Color.White);
                 debugY += 20;
             }
         }

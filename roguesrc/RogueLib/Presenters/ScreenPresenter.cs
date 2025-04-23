@@ -47,7 +47,7 @@ public class ScreenPresenter : IScreenPresenter
     private const float KnockbackDistance = 0.5f;
     private bool _gameJustStarted = true;
     private readonly IRayLoader _rayLoader;
-    private readonly IScreenDrawer _screenDrawer;    
+    private readonly IScreenDrawerUtil _screenDrawUtil;    
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
@@ -59,7 +59,7 @@ public class ScreenPresenter : IScreenPresenter
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
-        IScreenDrawer screenDrawer, 
+        IScreenDrawerUtil screenDrawerUtil, 
         IHealthBarPresenter healthBarPresenter,
         IShopPresenter shopPresenter,
         IChunkPresenter chunkPresenter,
@@ -68,7 +68,7 @@ public class ScreenPresenter : IScreenPresenter
         IPlayerPresenter playerPresenter)
     {
         _rayLoader = rayLoader;
-        _screenDrawer = screenDrawer;
+        _screenDrawUtil = screenDrawerUtil;
         _healthBarPresenter = healthBarPresenter;
         _shopPresenter = shopPresenter;
         _chunkPresenter = chunkPresenter;
@@ -204,17 +204,17 @@ public class ScreenPresenter : IScreenPresenter
         int menuStartY = lineY + 30; // Start menu options below the line
         int menuSpacing = 60;
         
-        _screenDrawer.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", centerX - 120, menuStartY);
-        _screenDrawer.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
-        _screenDrawer.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
-        _screenDrawer.DrawColoredHotkeyText(rayConnection, "e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
+        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", centerX - 120, menuStartY);
+        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
+        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
+        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
         
         // Draw a version number and copyright
         string version = "v0.1 Alpha";
-        _screenDrawer.DrawText(rayConnection, version, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, new Color(150, 150, 150, 200));
+        _screenDrawUtil.DrawText(rayConnection, version, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, new Color(150, 150, 150, 200));
         
         // Draw a small decorative element
-        _screenDrawer.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
+        _screenDrawUtil.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
     }
 
     private void HandleMenuInput(GameState state)
@@ -254,7 +254,7 @@ public class ScreenPresenter : IScreenPresenter
             var row = charNum / 32;
             var col = charNum % 32;
 
-            _screenDrawer.DrawCharacter(rayConnection, 
+            _screenDrawUtil.DrawCharacter(rayConnection, 
                 charNum,
                 20 + (col * 40),
                 20 + (row * 60),
@@ -262,7 +262,7 @@ public class ScreenPresenter : IScreenPresenter
             );
         }
 
-        _screenDrawer.DrawText(rayConnection, "Press any key to return", 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, Color.White);
+        _screenDrawUtil.DrawText(rayConnection, "Press any key to return", 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput(GameState state)
@@ -310,7 +310,7 @@ public class ScreenPresenter : IScreenPresenter
             if (explosionX >= 0 && explosionX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
                 explosionY >= 0 && explosionY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
             {
-                _screenDrawer.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, ScreenConstants.ExplosionColor);
+                _screenDrawUtil.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, ScreenConstants.ExplosionColor);
             }
         }
     }
@@ -410,7 +410,7 @@ public class ScreenPresenter : IScreenPresenter
             float swordY = 100 + ((state.PlayerY + yOffset) - state.CameraState.Y) * 40 + 200;
 
             // Draw the sword character with silvery-blue color
-            _screenDrawer.DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, ScreenConstants.SwordColor);
+            _screenDrawUtil.DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, ScreenConstants.SwordColor);
         }
     }
 
@@ -443,7 +443,7 @@ public class ScreenPresenter : IScreenPresenter
             Color fadingGoldColor = new Color(ScreenConstants.GoldColor.R, ScreenConstants.GoldColor.G, ScreenConstants.GoldColor.B, alpha);
             
             // Draw the flying gold character with fading effect
-            _screenDrawer.DrawCharacter(rayConnection, GoldChar, currentX, currentY, fadingGoldColor);
+            _screenDrawUtil.DrawCharacter(rayConnection, GoldChar, currentX, currentY, fadingGoldColor);
         }
     }
 
@@ -505,7 +505,7 @@ public class ScreenPresenter : IScreenPresenter
             };
             
             // Draw the bolt at its current position - updated horizontal spacing
-            _screenDrawer.DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 32), 100 + (int)(bolt.Y * 40), ScreenConstants.BoltColor);
+            _screenDrawUtil.DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 32), 100 + (int)(bolt.Y * 40), ScreenConstants.BoltColor);
         }
     }
 
@@ -515,7 +515,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_chargerActive && _charger != null && _charger.Alive)
         {
             string healthText = $"Charger HP: {_charger.Health}/{GameConstants.ChargerHealth} (Hit {_charger.HitCount} times)";
-            _screenDrawer.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
+            _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
         }
     }
 
@@ -530,7 +530,7 @@ public class ScreenPresenter : IScreenPresenter
         instructionsText += ", ESC to return to menu, (G) for debug gold";
         
         // Changed from Height * ScreenConstants.CharHeight * DisplayScale - 40 to Height * ScreenConstants.CharHeight * DisplayScale - 60
-        _screenDrawer.DrawText(rayConnection, instructionsText, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
+        _screenDrawUtil.DrawText(rayConnection, instructionsText, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
     }
 
     private void DrawWorld(IRayConnection rayConnection, GameState state)
@@ -616,7 +616,7 @@ public class ScreenPresenter : IScreenPresenter
                 }
                 
                 // Draw the tile
-                _screenDrawer.DrawCharacter(rayConnection, tileChar, screenX, screenY, tileColor);
+                _screenDrawUtil.DrawCharacter(rayConnection, tileChar, screenX, screenY, tileColor);
             }
         }
         
@@ -632,7 +632,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (enemyScreenX >= 0 && enemyScreenX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
                     enemyScreenY >= 0 && enemyScreenY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
                 {
-                    _screenDrawer.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, ScreenConstants.EnemyColor);
+                    _screenDrawUtil.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, ScreenConstants.EnemyColor);
                 }
             }
         }
@@ -641,7 +641,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_chargerActive && _charger != null && _charger.Alive && 
             Math.Abs(_charger.X - state.CameraState.X) < 15 && Math.Abs(_charger.Y - state.CameraState.Y) < 10)
         {
-            _screenDrawer.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - state.CameraState.X) * 32) + 400, 100 + (int)((_charger.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
+            _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - state.CameraState.X) * 32) + 400, 100 + (int)((_charger.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
         }
         
         // Draw gold items - with updated horizontal spacing
@@ -649,7 +649,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (Math.Abs(gold.X - state.CameraState.X) < 15 && Math.Abs(gold.Y - state.CameraState.Y) < 10)
             {
-                _screenDrawer.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
+                _screenDrawUtil.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
             }
         }
         
@@ -658,7 +658,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (Math.Abs(health.X - state.CameraState.X) < 15 && Math.Abs(health.Y - state.CameraState.Y) < 10)
             {
-                _screenDrawer.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - state.CameraState.X) * 32) + 400, 100 + (int)((health.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
+                _screenDrawUtil.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - state.CameraState.X) * 32) + 400, 100 + (int)((health.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
             }
         }
     }
@@ -1274,7 +1274,7 @@ public class ScreenPresenter : IScreenPresenter
         string goldText = $"Gold: {state.PlayerGold}";
         int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
         
-        _screenDrawer.DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, ScreenConstants.GoldColor);
+        _screenDrawUtil.DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, ScreenConstants.GoldColor);
     }
 
     public bool WindowShouldClose()

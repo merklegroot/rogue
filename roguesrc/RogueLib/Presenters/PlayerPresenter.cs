@@ -11,11 +11,11 @@ public interface IPlayerPresenter
 
 public class PlayerPresenter : IPlayerPresenter
 {
-    private readonly IScreenDrawer _screenDrawer;
+    private readonly IScreenDrawerUtil _screenDrawerUtil;
 
-    public PlayerPresenter(IScreenDrawer screenDrawer)
+    public PlayerPresenter(IScreenDrawerUtil screenDrawerUtil)
     {
-        _screenDrawer = screenDrawer;
+        _screenDrawerUtil = screenDrawerUtil;
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -33,7 +33,7 @@ public class PlayerPresenter : IPlayerPresenter
         // Draw ghost at previous position (gray translucent)
         int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
         int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
+        _screenDrawerUtil.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
 
         // Draw in-transit ghost (yellow opaque)
         const float moveDuration = 0.2f; // seconds between moves
@@ -45,12 +45,12 @@ public class PlayerPresenter : IPlayerPresenter
         float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * effectiveMoveProgress;
         int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
         int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, ScreenConstants.InTransitGhostColor, false, wobbleScale);
+        _screenDrawerUtil.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, ScreenConstants.InTransitGhostColor, false, wobbleScale);
 
         // Draw ghost at new position
         int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
         int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
+        _screenDrawerUtil.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
 
         // If player is invincible, make them flash
         Color playerColor = ScreenConstants.PlayerColor;
@@ -60,6 +60,6 @@ public class PlayerPresenter : IPlayerPresenter
         }
 
         // Draw player with wobble effect
-        _screenDrawer.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, playerColor, false, wobbleScale);
+        _screenDrawerUtil.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, playerColor, false, wobbleScale);
     }
 } 

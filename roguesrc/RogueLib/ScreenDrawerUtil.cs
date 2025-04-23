@@ -3,7 +3,7 @@ using System.Numerics;
 using RogueLib.Constants;
 namespace RogueLib;
 
-public interface IScreenDrawer
+public interface IScreenDrawerUtil
 {
     void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color);
     void DrawCharacter(IRayConnection rayConnection, int charNum, int x, int y, Color color, bool showBorder = false, float scale = 1.0f);
@@ -11,7 +11,7 @@ public interface IScreenDrawer
 }
 
 
-public class ScreenDrawer : IScreenDrawer
+public class ScreenDrawerUtilUtil : IScreenDrawerUtil
 {
     public void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color)
     {
