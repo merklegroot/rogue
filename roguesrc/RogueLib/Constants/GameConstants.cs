@@ -2,9 +2,10 @@ namespace RogueLib.Constants;
 
 public static class GameConstants
 {
-    public const float SwordSwingDuration = 0.25f;  // Reduced from 0.3f to make animation even faster
-    
-    public const float EnemyMoveDelay = 0.8f;  // Move every 0.8 seconds
+    public const float SwordSwingDuration = 0.2f;
+    public const float SwordCooldown = 0.5f;
+    public const float MoveDelay = 0.2f;  // Controls how often the player can make a new movement
+    public const float EnemyMoveDelay = 0.5f;
     public const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
     public const int MaxEnemies = 8;  // Increased to allow for more enemies while maintaining chunk distribution
     public const float ExplosionDuration = 0.5f;  // How long each explosion lasts

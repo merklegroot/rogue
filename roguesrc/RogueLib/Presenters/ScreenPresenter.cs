@@ -621,25 +621,6 @@ public class ScreenPresenter : IScreenPresenter
         int playerScreenX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
         int playerScreenY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
         
-        // Draw ghost character at previous position (gray translucent)
-        int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor);
-        
-        // Draw in-transit ghost (yellow opaque)
-        const float moveDuration = 0.1f; // seconds between moves
-        float moveProgress = Math.Clamp((float)(Raylib.GetTime() - state.MovementStartTime) / moveDuration, 0f, 1f);
-        float ghostX = state.PreviousX + (state.PlayerX - state.PreviousX) * moveProgress;
-        float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * moveProgress;
-        int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, ScreenConstants.InTransitGhostColor);
-        
-        // Draw ghost at new position (blue translucent)
-        int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor);
-        
         // Update wobble animation using state
         state.WobbleTimer += Raylib.GetFrameTime();
         
@@ -653,6 +634,28 @@ public class ScreenPresenter : IScreenPresenter
         
         // Normalize the result to keep the same overall scale range
         float wobbleScale = 1.0f + (float)(modifiedSine / 1.5f) * GameConstants.WobbleAmount;
+        
+        // Draw ghost character at previous position (gray translucent)
+        int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
+        int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
+        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
+        
+        // Draw in-transit ghost (yellow opaque) only during movement
+        const float moveDuration = 0.2f; // seconds between moves
+        float moveProgress = Math.Clamp((float)(Raylib.GetTime() - state.MovementStartTime) / moveDuration, 0f, 1f);
+
+        // Easement
+        var effectiveMoveProgress = Math.Min(moveProgress, 1.0f);
+        float ghostX = state.PreviousX + (state.PlayerX - state.PreviousX) * effectiveMoveProgress;
+        float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * effectiveMoveProgress;
+        int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
+        int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
+        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, ScreenConstants.InTransitGhostColor, false, wobbleScale);
+        
+        // Draw ghost at new position
+        int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
+        int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
+        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
         
         // If player is invincible, make them flash
         Color playerColor = ScreenConstants.PlayerColor;
@@ -745,14 +748,11 @@ public class ScreenPresenter : IScreenPresenter
         // Handle movement with direct key state checks
         // This allows for continuous movement when keys are held down
 
-        // Add a small delay to control movement speed
-        const float moveDelay = 0.1f; // seconds between moves
-
         // Update time since last move
         state.TimeSinceLastMove += Raylib.GetFrameTime();
 
         // Only move if enough time has passed
-        if (state.TimeSinceLastMove >= moveDelay)
+        if (state.TimeSinceLastMove >= GameConstants.MoveDelay)
         {
             bool moved = false;
 

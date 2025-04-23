@@ -18,7 +18,6 @@ public static class ScreenConstants
 
     public static readonly Color SwordColor = new(180, 210, 230, 255);  // Silvery-blue color
 
-    public static readonly Color PlayerColor = Color.Yellow;  // Yellow for player
     public static readonly Color EnemyColor = new(255, 100, 100, 255); // Red for enemies
 
     public const int SidePadding = 8;
@@ -53,7 +52,8 @@ public static class ScreenConstants
     public static readonly Color ChargerColor = new(255, 50, 50, 255);  // Bright red color for charger  // Health value for the charger enemy
 
     // Ghost colors for movement visualization
-    public static readonly Color OldPositionGhostColor = new(100, 100, 100, 150);  // Gray translucent
-    public static readonly Color InTransitGhostColor = new(255, 255, 0, 255);  // Yellow opaque
-    public static readonly Color NewPositionGhostColor = new(100, 100, 255, 150);  // Blue translucent
+    public static readonly Color PlayerColor = Color.Yellow;  // Yellow for player
+    public static readonly Color OldPositionGhostColor = new(100, 100, 100, 150);
+    public static readonly Color InTransitGhostColor = new(255, 255, 0, 255);
+    public static readonly Color NewPositionGhostColor = new(100, 0, 0, 50); 
 }
