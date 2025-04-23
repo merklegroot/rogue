@@ -324,7 +324,7 @@ public class ScreenPresenter : IScreenPresenter
             state.SwordState.SwordSwingTime = 0;
             
             // Check for sword collisions immediately when swing starts
-            CheckSwordCollisions(state);
+            CheckSwordCollisions(state, true);
         }
 
         if (state.SwordState.IsSwordSwinging)
@@ -680,7 +680,7 @@ public class ScreenPresenter : IScreenPresenter
                 state.SwordState.SwordSwingTime = 0;
                 
                 // Check for sword collisions immediately when swing starts
-                CheckSwordCollisions(state);
+                CheckSwordCollisions(state, true);
             }
             // Add debug option to get free gold with G key
             if (key == KeyboardKey.G)
@@ -771,6 +771,9 @@ public class ScreenPresenter : IScreenPresenter
                 
                 // Check for gold collection after movement
                 CollectGold(state);
+                
+                // Check for sword collisions during movement
+                CheckSwordCollisions(state, false);
             }
         }
 
@@ -1480,7 +1483,7 @@ public class ScreenPresenter : IScreenPresenter
     
 
     // Create a completely new method for handling charger damage
-    private void HandleChargerDamage(GameState state, bool fromSword)
+    private void HandleChargerDamage(GameState state, bool fromSwinging)
     {
         if (_chargerActive && _charger != null && _charger.Alive && !_charger.IsInvincible)
         {
@@ -1660,7 +1663,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void CheckSwordCollisions(GameState state)
+    private void CheckSwordCollisions(GameState state, bool isSwinging)
     {
         // Calculate sword position based on player position and direction
         float swordX = state.PlayerX;
@@ -1710,7 +1713,14 @@ public class ScreenPresenter : IScreenPresenter
                         SpawnCharger(state);
                     }
                     
-                    break; // Only hit one enemy per swing
+                    // If this was a swing hit, start cooldown
+                    if (isSwinging)
+                    {
+                        state.SwordState.SwordOnCooldown = true;
+                        state.SwordState.SwordCooldownTimer = 0f;
+                    }
+                    
+                    break; // Only hit one enemy per swing/movement
                 }
             }
         }
@@ -1722,7 +1732,14 @@ public class ScreenPresenter : IScreenPresenter
             if (Math.Abs(swordX - _charger.X) < 0.5f && Math.Abs(swordY - _charger.Y) < 0.5f)
             {
                 // Handle charger damage
-                HandleChargerDamage(state, true);
+                HandleChargerDamage(state, isSwinging);
+                
+                // If this was a swing hit, start cooldown
+                if (isSwinging)
+                {
+                    state.SwordState.SwordOnCooldown = true;
+                    state.SwordState.SwordCooldownTimer = 0f;
+                }
             }
         }
     }
