@@ -718,8 +718,12 @@ public class ScreenPresenter : IScreenPresenter
             // Check for diagonal movement combinations
             if (upPressed && rightPressed)
             {
-                if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY - 1))
+                bool canMoveUp = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1);
+                bool canMoveRight = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY);
+                
+                if (canMoveUp && canMoveRight)
                 {
+                    // Both directions clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX += 1;
@@ -728,11 +732,35 @@ public class ScreenPresenter : IScreenPresenter
                     state.LastDirection = Direction.Right;
                     moved = true;
                 }
+                else if (canMoveUp)
+                {
+                    // Only up is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerY -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Up;
+                    moved = true;
+                }
+                else if (canMoveRight)
+                {
+                    // Only right is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Right;
+                    moved = true;
+                }
             }
             else if (upPressed && leftPressed)
             {
-                if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY - 1))
+                bool canMoveUp = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1);
+                bool canMoveLeft = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY);
+                
+                if (canMoveUp && canMoveLeft)
                 {
+                    // Both directions clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX -= 1;
@@ -741,11 +769,35 @@ public class ScreenPresenter : IScreenPresenter
                     state.LastDirection = Direction.Left;
                     moved = true;
                 }
+                else if (canMoveUp)
+                {
+                    // Only up is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerY -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Up;
+                    moved = true;
+                }
+                else if (canMoveLeft)
+                {
+                    // Only left is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Left;
+                    moved = true;
+                }
             }
             else if (downPressed && rightPressed)
             {
-                if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY + 1))
+                bool canMoveDown = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1);
+                bool canMoveRight = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY);
+                
+                if (canMoveDown && canMoveRight)
                 {
+                    // Both directions clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX += 1;
@@ -754,15 +806,59 @@ public class ScreenPresenter : IScreenPresenter
                     state.LastDirection = Direction.Right;
                     moved = true;
                 }
+                else if (canMoveDown)
+                {
+                    // Only down is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Down;
+                    moved = true;
+                }
+                else if (canMoveRight)
+                {
+                    // Only right is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Right;
+                    moved = true;
+                }
             }
             else if (downPressed && leftPressed)
             {
-                if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY + 1))
+                bool canMoveDown = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1);
+                bool canMoveLeft = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY);
+                
+                if (canMoveDown && canMoveLeft)
                 {
+                    // Both directions clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX -= 1;
                     state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Left;
+                    moved = true;
+                }
+                else if (canMoveDown)
+                {
+                    // Only down is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Down;
+                    moved = true;
+                }
+                else if (canMoveLeft)
+                {
+                    // Only left is clear
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX -= 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                     state.LastDirection = Direction.Left;
                     moved = true;
