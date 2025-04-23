@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RogueLib.Presenters;
-
+using RogueLib.Handlers;
 namespace RogueLib.Registry;
 
 public static class RogueLibRegistry
@@ -17,5 +17,6 @@ public static class RogueLibRegistry
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IChunkPresenter, ChunkPresenter>()
-            .AddScoped<DebugPanelPresenter>();
+            .AddScoped<DebugPanelPresenter>()
+            .AddScoped<ISpawnEnemyHandler, SpawnEnemyHandler>();
 }

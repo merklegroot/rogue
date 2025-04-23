@@ -2,7 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using RogueLib.Constants;
 using RogueLib.State;
-
+using RogueLib.Handlers;
 namespace RogueLib.Presenters;
 
 public interface IScreenPresenter
@@ -36,7 +36,6 @@ public class ScreenPresenter : IScreenPresenter
     private float _crossbowCooldownTimer = 0f;
     private bool _crossbowOnCooldown = false;
     
-    private readonly Color _boltColor = new(210, 180, 140, 255); // Light brown color for bolts
 
     private int _enemiesKilled = 0;
     private const int KillsForCharger = 10;
@@ -48,13 +47,12 @@ public class ScreenPresenter : IScreenPresenter
     private const float KnockbackDistance = 0.5f;
     private bool _gameJustStarted = true;
     private readonly IRayLoader _rayLoader;
-    private readonly IScreenDrawer _screenDrawer;
-    private List<string> _map;
-
+    private readonly IScreenDrawer _screenDrawer;    
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
     private readonly DebugPanelPresenter _debugPanelPresenter;
+    private readonly ISpawnEnemyHandler _spawnEnemyHandler;
 
     private const float CameraDeadZone = 5.0f;
 
@@ -64,7 +62,8 @@ public class ScreenPresenter : IScreenPresenter
         IHealthBarPresenter healthBarPresenter,
         IShopPresenter shopPresenter,
         IChunkPresenter chunkPresenter,
-        DebugPanelPresenter debugPanelPresenter)
+        DebugPanelPresenter debugPanelPresenter,
+        ISpawnEnemyHandler spawnEnemyHandler)
     {
         _rayLoader = rayLoader;
         _screenDrawer = screenDrawer;
@@ -72,21 +71,20 @@ public class ScreenPresenter : IScreenPresenter
         _shopPresenter = shopPresenter;
         _chunkPresenter = chunkPresenter;
         _debugPanelPresenter = debugPanelPresenter;
-        
+        _spawnEnemyHandler = spawnEnemyHandler;
         // Load the map from the embedded resource
-        _map = rayLoader.LoadMap();
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
     {
         // Load the map from the embedded resource
-        _map = _rayLoader.LoadMap();
+        state.Map = _rayLoader.LoadMap();
         
         // Initialize player position on a floor tile
         InitializePlayerPosition(state);
         
         // Rest of initialization code...
-        SpawnEnemy(state);
+        _spawnEnemyHandler.Handle(state);
         
         // Spawn initial gold items
         for (int i = 0; i < GameConstants.MaxGoldItems; i++)
@@ -538,8 +536,8 @@ public class ScreenPresenter : IScreenPresenter
         UpdateCamera(state);
         
         // Calculate map dimensions
-        int mapHeight = _map.Count;
-        int mapWidth = _map.Max(line => line.Length);
+        int mapHeight = state.Map.Count;
+        int mapWidth = state.Map.Max(line => line.Length);
         
         // Draw the map
         for (int y = 0; y < mapHeight; y++)
@@ -552,9 +550,9 @@ public class ScreenPresenter : IScreenPresenter
                 
                 // Get the character at this position in the map
                 char mapChar = ' '; // Default to empty space (not a dot)
-                if (y < _map.Count && x < _map[y].Length)
+                if (y < state.Map.Count && x < state.Map[y].Length)
                 {
-                    mapChar = _map[y][x];
+                    mapChar = state.Map[y][x];
                 }
                 
                 // Calculate screen position with camera offset
@@ -742,7 +740,7 @@ public class ScreenPresenter : IScreenPresenter
             // Check WASD keys
             if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up))
             {
-                if (IsWalkableTile(state.PlayerX, state.PlayerY - 1))
+                if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1))
                 {
                     state.PlayerY -= 1;  // No Math.Max constraint
                 }
@@ -751,7 +749,7 @@ public class ScreenPresenter : IScreenPresenter
             }
             else if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))
             {
-                if (IsWalkableTile(state.PlayerX, state.PlayerY + 1))
+                if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1))
                 {
                     state.PlayerY += 1;  // No Math.Min constraint
                 }
@@ -761,7 +759,7 @@ public class ScreenPresenter : IScreenPresenter
 
             if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left))
             {
-                if (IsWalkableTile(state.PlayerX - 1, state.PlayerY))
+                if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY))
                 {
                     state.PlayerX -= 1;  // No Math.Max constraint
                 }
@@ -770,7 +768,7 @@ public class ScreenPresenter : IScreenPresenter
             }
             else if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right))
             {
-                if (IsWalkableTile(state.PlayerX + 1, state.PlayerY))
+                if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY))
                 {
                     state.PlayerX += 1;  // No Math.Min constraint
                 }
@@ -982,7 +980,7 @@ public class ScreenPresenter : IScreenPresenter
                 // Only move if the target position is walkable
                 int checkX = (int)Math.Floor(targetX);
                 int checkY = (int)Math.Floor(targetY);
-                if (IsWalkableTile(checkX, checkY))
+                if (IsWalkableTile(state.Map, checkX, checkY))
                 {
                     state.PlayerX = (int)targetX;
                     state.PlayerY = (int)targetY;
@@ -1064,7 +1062,7 @@ public class ScreenPresenter : IScreenPresenter
             // Only spawn if we haven't reached the maximum
             if (state.Enemies.Count(e => e.Alive) < GameConstants.MaxEnemies)
             {
-                SpawnEnemy(state);
+                _spawnEnemyHandler.Handle(state);
             }
         }
         
@@ -1093,12 +1091,12 @@ public class ScreenPresenter : IScreenPresenter
                 if (dx != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(enemy.X + dx, enemy.Y))
+                    if (IsWalkableTile(state.Map, enemy.X + dx, enemy.Y))
                     {
                         enemy.X += dx;
                     }
                     // If horizontal movement is blocked, try vertical
-                    else if (dy != 0 && IsWalkableTile(enemy.X, enemy.Y + dy))
+                    else if (dy != 0 && IsWalkableTile(state.Map, enemy.X, enemy.Y + dy))
                     {
                         enemy.Y += dy;
                     }
@@ -1107,7 +1105,7 @@ public class ScreenPresenter : IScreenPresenter
                 else if (dy != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(enemy.X, enemy.Y + dy))
+                    if (IsWalkableTile(state.Map, enemy.X, enemy.Y + dy))
                     {
                         enemy.Y += dy;
                     }
@@ -1175,12 +1173,12 @@ public class ScreenPresenter : IScreenPresenter
             if (dx != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile((int)(_charger.X + dx), (int)_charger.Y))
+                if (IsWalkableTile(state.Map, (int)(_charger.X + dx), (int)_charger.Y))
                 {
                     _charger.X += dx;
                 }
                 // If horizontal movement is blocked, try vertical
-                else if (dy != 0 && IsWalkableTile((int)_charger.X, (int)(_charger.Y + dy)))
+                else if (dy != 0 && IsWalkableTile(state.Map, (int)_charger.X, (int)(_charger.Y + dy)))
                 {
                     _charger.Y += dy;
                 }
@@ -1189,7 +1187,7 @@ public class ScreenPresenter : IScreenPresenter
             else if (dy != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile((int)_charger.X, (int)(_charger.Y + dy)))
+                if (IsWalkableTile(state.Map, (int)_charger.X, (int)(_charger.Y + dy)))
                 {
                     _charger.Y += dy;
                 }
@@ -1215,76 +1213,15 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void SpawnEnemy(GameState state)
-    {
-        // Check total enemy limit first
-        if (state.Enemies.Count(e => e.Alive) >= GameConstants.MaxEnemies)
-            return;
-
-        // Calculate player's chunk coordinates
-        int playerChunkX = (int)state.PlayerX / GameConstants.ChunkSize;
-        int playerChunkY = (int)state.PlayerY / GameConstants.ChunkSize;
-
-        // Create a list of all valid spawn positions (floor tiles only)
-        var validPositions = new List<(int x, int y)>();
-        
-        // Scan the entire map for floor tiles ('.')
-        for (int y = 0; y < _map.Count; y++)
-        {
-            string line = _map[y];
-            for (int x = 0; x < line.Length; x++)
-            {
-                if (line[x] == '.')  // Only consider floor tiles
-                {
-                    // Calculate chunk coordinates for this position
-                    int chunkX = x / GameConstants.ChunkSize;
-                    int chunkY = y / GameConstants.ChunkSize;
-
-                    // Only consider positions in player's chunk or adjacent chunks
-                    if (Math.Abs(chunkX - playerChunkX) <= 1 && Math.Abs(chunkY - playerChunkY) <= 1)
-                    {
-                        // Check if position is not occupied by player or other enemies
-                        if ((x != state.PlayerX || y != state.PlayerY) &&
-                            !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y))
-                        {
-                            // Check per-chunk limit
-                            int enemiesInChunk = state.Enemies.Count(e => 
-                                e.Alive && 
-                                e.X / GameConstants.ChunkSize == chunkX && 
-                                e.Y / GameConstants.ChunkSize == chunkY);
-
-                            // Allow up to 2 enemies per chunk
-                            if (enemiesInChunk < 2)
-                            {
-                                validPositions.Add((x, y));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // If no valid positions found, don't spawn
-        if (validPositions.Count == 0)
-            return;
-        
-        // Pick a random valid position
-        var randomIndex = _random.Next(validPositions.Count);
-        var (newX, newY) = validPositions[randomIndex];
-        
-        // Spawn the enemy
-        state.Enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
-    }
-
     private void SpawnGoldItem(GameState state)
     {
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
         
         // Scan the entire map for floor tiles ('.')
-        for (int y = 0; y < _map.Count; y++)
+        for (int y = 0; y < state.Map.Count; y++)
         {
-            string line = _map[y];
+            string line = state.Map[y];
             for (int x = 0; x < line.Length; x++)
             {
                 if (line[x] == '.')  // Only consider floor tiles
@@ -1318,9 +1255,9 @@ public class ScreenPresenter : IScreenPresenter
         var validPositions = new List<(int x, int y)>();
         
         // Scan the entire map for floor tiles ('.')
-        for (int y = 0; y < _map.Count; y++)
+        for (int y = 0; y < state.Map.Count; y++)
         {
-            string line = _map[y];
+            string line = state.Map[y];
             for (int x = 0; x < line.Length; x++)
             {
                 if (line[x] == '.')  // Only consider floor tiles
@@ -1699,18 +1636,18 @@ public class ScreenPresenter : IScreenPresenter
     }
 
     // Add a helper method to check if a tile is walkable
-    private bool IsWalkableTile(int x, int y)
+    private bool IsWalkableTile(List<string> map, int x, int y)
     {
         // Check if position is within map bounds
-        if (y < 0 || y >= _map.Count)
+        if (y < 0 || y >= map.Count)
             return false; // Out of bounds vertically
         
         // Check if x is within the bounds of the current line
-        if (x < 0 || x >= _map[y].Length)
+        if (x < 0 || x >= map[y].Length)
             return false; // Out of bounds horizontally
         
         // Check if the tile is a wall or other non-walkable object
-        char mapChar = _map[y][x];
+        char mapChar = map[y][x];
 
         var walkableTiles = new List<char> { '.', 'X', '╬' };
 
@@ -1813,29 +1750,29 @@ public class ScreenPresenter : IScreenPresenter
     private void EnsurePlayerOnWalkableTile(GameState state)
     {
         // If player is already on a walkable tile, do nothing
-        if (IsWalkableTile((int)state.PlayerX, (int)state.PlayerY))
+        if (IsWalkableTile(state.Map, (int)state.PlayerX, (int)state.PlayerY))
         {
             return;
         }
         
         // Search for a walkable tile in an expanding spiral pattern
-        int maxSearchRadius = 20;  // Maximum search distance
+        var maxSearchRadius = 20;  // Maximum search distance
         
-        for (int radius = 1; radius <= maxSearchRadius; radius++)
+        for (var radius = 1; radius <= maxSearchRadius; radius++)
         {
             // Check in a square pattern around the player
-            for (int offsetX = -radius; offsetX <= radius; offsetX++)
+            for (var offsetX = -radius; offsetX <= radius; offsetX++)
             {
-                for (int offsetY = -radius; offsetY <= radius; offsetY++)
+                for (var offsetY = -radius; offsetY <= radius; offsetY++)
                 {
                     // Skip if not on the perimeter of the square
                     if (Math.Abs(offsetX) != radius && Math.Abs(offsetY) != radius)
                         continue;
                     
-                    int testX = (int)state.PlayerX + offsetX;
-                    int testY = (int)state.PlayerY + offsetY;
+                    var testX = state.PlayerX + offsetX;
+                    var testY = state.PlayerY + offsetY;
                     
-                    if (IsWalkableTile(testX, testY))
+                    if (IsWalkableTile(state.Map, testX, testY))
                     {
                         // Found a walkable tile, move player there
                         state.PlayerX = testX;
@@ -1856,12 +1793,12 @@ public class ScreenPresenter : IScreenPresenter
         // Create a simple room
         for (int y = 0; y < roomHeight; y++)
         {
-            while (_map.Count <= roomY + y)
+            while (state.Map.Count <= roomY + y)
             {
-                _map.Add(new string(' ', roomX + roomWidth));
+                state.Map.Add(new string(' ', roomX + roomWidth));
             }
             
-            string line = _map[roomY + y];
+            string line = state.Map[roomY + y];
             while (line.Length <= roomX + roomWidth)
             {
                 line += ' ';
@@ -1891,7 +1828,7 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
             
-            _map[roomY + y] = new string(lineChars);
+            state.Map[roomY + y] = new string(lineChars);
         }
         
         // Place player in the center of the new room
@@ -1906,9 +1843,9 @@ public class ScreenPresenter : IScreenPresenter
         var floorTiles = new List<(int x, int y)>();
         
         // Scan the entire map for floor tiles ('.')
-        for (int y = 0; y < _map.Count; y++)
+        for (int y = 0; y < state.Map.Count; y++)
         {
-            string line = _map[y];
+            string line = state.Map[y];
             for (int x = 0; x < line.Length; x++)
             {
                 if (line[x] == '.')  // Only consider floor tiles
