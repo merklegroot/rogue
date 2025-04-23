@@ -1076,16 +1076,9 @@ public class ScreenPresenter : IScreenPresenter
             {
                 enemy.MoveTimer = 0f;
                 
-                // Calculate direction to player
-                int dx = 0;
-                int dy = 0;
-                
-                // Simple AI: move toward player
-                if (enemy.X < state.PlayerX) dx = 1;
-                else if (enemy.X > state.PlayerX) dx = -1;
-                
-                if (enemy.Y < state.PlayerY) dy = 1;
-                else if (enemy.Y > state.PlayerY) dy = -1;
+                // Generate random direction (-1, 0, or 1 for both x and y)
+                int dx = _random.Next(-1, 2);
+                int dy = _random.Next(-1, 2);
                 
                 // Try to move horizontally first
                 if (dx != 0)
