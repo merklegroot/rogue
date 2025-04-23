@@ -709,55 +709,109 @@ public class ScreenPresenter : IScreenPresenter
         {
             bool moved = false;
 
-            // Check WASD keys
-            if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up))
+            // Check for diagonal movement first
+            bool upPressed = Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up);
+            bool downPressed = Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down);
+            bool leftPressed = Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left);
+            bool rightPressed = Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right);
+
+            // Check for diagonal movement combinations
+            if (upPressed && rightPressed)
+            {
+                if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY - 1))
+                {
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX += 1;
+                    state.PlayerY -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Right;
+                    moved = true;
+                }
+            }
+            else if (upPressed && leftPressed)
+            {
+                if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY - 1))
+                {
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX -= 1;
+                    state.PlayerY -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Left;
+                    moved = true;
+                }
+            }
+            else if (downPressed && rightPressed)
+            {
+                if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY + 1))
+                {
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX += 1;
+                    state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Right;
+                    moved = true;
+                }
+            }
+            else if (downPressed && leftPressed)
+            {
+                if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY + 1))
+                {
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX -= 1;
+                    state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Left;
+                    moved = true;
+                }
+            }
+            // If no diagonal movement, check regular movement
+            else if (upPressed)
             {
                 if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1))
                 {
-                    // Store current position as previous before moving
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
-                    state.PlayerY -= 1;  // No Math.Max constraint
+                    state.PlayerY -= 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Up;
                 moved = true;
             }
-            else if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down))
+            else if (downPressed)
             {
                 if (IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1))
                 {
-                    // Store current position as previous before moving
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
-                    state.PlayerY += 1;  // No Math.Min constraint
+                    state.PlayerY += 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Down;
                 moved = true;
             }
-
-            if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left))
+            else if (leftPressed)
             {
                 if (IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY))
                 {
-                    // Store current position as previous before moving
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
-                    state.PlayerX -= 1;  // No Math.Max constraint
+                    state.PlayerX -= 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Left;
                 moved = true;
             }
-            else if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right))
+            else if (rightPressed)
             {
                 if (IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY))
                 {
-                    // Store current position as previous before moving
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
-                    state.PlayerX += 1;  // No Math.Min constraint
+                    state.PlayerX += 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                 }
                 state.LastDirection = Direction.Right;
