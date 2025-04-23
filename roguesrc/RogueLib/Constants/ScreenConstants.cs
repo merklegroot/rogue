@@ -53,6 +53,7 @@ public static class ScreenConstants
 
     // Ghost colors for movement visualization
     public static readonly Color PlayerColor = Color.Yellow;  // Yellow for player
+    public static readonly Color InvinciblePlayerColor = new(255, 255, 255, 150);  // Semi-transparent white for invincible player
     public static readonly Color OldPositionGhostColor = new(100, 100, 100, 150);
     public static readonly Color InTransitGhostColor = new(255, 255, 0, 255);
     public static readonly Color NewPositionGhostColor = new(100, 0, 0, 50); 

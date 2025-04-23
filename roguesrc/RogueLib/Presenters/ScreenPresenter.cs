@@ -661,7 +661,7 @@ public class ScreenPresenter : IScreenPresenter
         Color playerColor = ScreenConstants.PlayerColor;
         if (state.IsInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
         {
-            playerColor = new Color(255, 255, 255, 150); // Semi-transparent white
+            playerColor = ScreenConstants.InvinciblePlayerColor;
         }
         
         // Draw player with wobble effect
