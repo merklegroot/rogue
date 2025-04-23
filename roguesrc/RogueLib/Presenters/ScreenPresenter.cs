@@ -720,14 +720,25 @@ public class ScreenPresenter : IScreenPresenter
             {
                 bool canMoveUp = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1);
                 bool canMoveRight = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY);
+                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY - 1);
                 
-                if (canMoveUp && canMoveRight)
+                if (canMoveDiagonal)
                 {
-                    // Both directions clear, move diagonally
+                    // Diagonal is clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX += 1;
                     state.PlayerY -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Right;
+                    moved = true;
+                }
+                else if (canMoveUp && canMoveRight)
+                {
+                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX += 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                     state.LastDirection = Direction.Right;
                     moved = true;
@@ -757,14 +768,25 @@ public class ScreenPresenter : IScreenPresenter
             {
                 bool canMoveUp = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY - 1);
                 bool canMoveLeft = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY);
+                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY - 1);
                 
-                if (canMoveUp && canMoveLeft)
+                if (canMoveDiagonal)
                 {
-                    // Both directions clear, move diagonally
+                    // Diagonal is clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX -= 1;
                     state.PlayerY -= 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Left;
+                    moved = true;
+                }
+                else if (canMoveUp && canMoveLeft)
+                {
+                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX -= 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                     state.LastDirection = Direction.Left;
                     moved = true;
@@ -794,14 +816,25 @@ public class ScreenPresenter : IScreenPresenter
             {
                 bool canMoveDown = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1);
                 bool canMoveRight = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY);
+                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX + 1, state.PlayerY + 1);
                 
-                if (canMoveDown && canMoveRight)
+                if (canMoveDiagonal)
                 {
-                    // Both directions clear, move diagonally
+                    // Diagonal is clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX += 1;
                     state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Right;
+                    moved = true;
+                }
+                else if (canMoveDown && canMoveRight)
+                {
+                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX += 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                     state.LastDirection = Direction.Right;
                     moved = true;
@@ -831,14 +864,25 @@ public class ScreenPresenter : IScreenPresenter
             {
                 bool canMoveDown = IsWalkableTile(state.Map, state.PlayerX, state.PlayerY + 1);
                 bool canMoveLeft = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY);
+                bool canMoveDiagonal = IsWalkableTile(state.Map, state.PlayerX - 1, state.PlayerY + 1);
                 
-                if (canMoveDown && canMoveLeft)
+                if (canMoveDiagonal)
                 {
-                    // Both directions clear, move diagonally
+                    // Diagonal is clear, move diagonally
                     state.PreviousX = state.PlayerX;
                     state.PreviousY = state.PlayerY;
                     state.PlayerX -= 1;
                     state.PlayerY += 1;
+                    state.MovementStartTime = (float)Raylib.GetTime();
+                    state.LastDirection = Direction.Left;
+                    moved = true;
+                }
+                else if (canMoveDown && canMoveLeft)
+                {
+                    // Both directions clear but diagonal blocked (probably a corner), move in preferred direction
+                    state.PreviousX = state.PlayerX;
+                    state.PreviousY = state.PlayerY;
+                    state.PlayerX -= 1;
                     state.MovementStartTime = (float)Raylib.GetTime();
                     state.LastDirection = Direction.Left;
                     moved = true;
