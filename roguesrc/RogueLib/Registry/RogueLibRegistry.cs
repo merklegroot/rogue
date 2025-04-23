@@ -17,6 +17,7 @@ public static class RogueLibRegistry
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IChunkPresenter, ChunkPresenter>()
-            .AddScoped<DebugPanelPresenter>()
+            .AddScoped<IDebugPanelPresenter, DebugPanelPresenter>()
+            .AddScoped<IPlayerPresenter, PlayerPresenter>()
             .AddScoped<ISpawnEnemyHandler, SpawnEnemyHandler>();
 }

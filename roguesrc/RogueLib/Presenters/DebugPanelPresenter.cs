@@ -3,7 +3,12 @@ using RogueLib.State;
 
 namespace RogueLib.Presenters;
 
-public class DebugPanelPresenter
+public interface IDebugPanelPresenter
+{
+    void Draw(IRayConnection rayConnection, GameState state);
+}
+
+public class DebugPanelPresenter : IDebugPanelPresenter
 {
     private readonly IScreenDrawer _screenDrawer;
 

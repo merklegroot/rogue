@@ -51,8 +51,9 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
-    private readonly DebugPanelPresenter _debugPanelPresenter;
+    private readonly IDebugPanelPresenter _debugPanelPresenter;
     private readonly ISpawnEnemyHandler _spawnEnemyHandler;
+    private readonly IPlayerPresenter _playerPresenter;
 
     private const float CameraDeadZone = 5.0f;
 
@@ -62,8 +63,9 @@ public class ScreenPresenter : IScreenPresenter
         IHealthBarPresenter healthBarPresenter,
         IShopPresenter shopPresenter,
         IChunkPresenter chunkPresenter,
-        DebugPanelPresenter debugPanelPresenter,
-        ISpawnEnemyHandler spawnEnemyHandler)
+        IDebugPanelPresenter debugPanelPresenter,
+        ISpawnEnemyHandler spawnEnemyHandler,
+        IPlayerPresenter playerPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawer = screenDrawer;
@@ -72,7 +74,7 @@ public class ScreenPresenter : IScreenPresenter
         _chunkPresenter = chunkPresenter;
         _debugPanelPresenter = debugPanelPresenter;
         _spawnEnemyHandler = spawnEnemyHandler;
-        // Load the map from the embedded resource
+        _playerPresenter = playerPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -276,6 +278,7 @@ public class ScreenPresenter : IScreenPresenter
         _healthBarPresenter.Draw(rayConnection, state);
         DrawGoldCounter(rayConnection, state);
         DrawWorld(rayConnection, state);
+        _playerPresenter.Draw(rayConnection, state);
         _debugPanelPresenter.Draw(rayConnection, state);
         DrawExplosions(state, rayConnection);
         DrawSwordAnimation(rayConnection, state);
@@ -616,56 +619,6 @@ public class ScreenPresenter : IScreenPresenter
                 _screenDrawer.DrawCharacter(rayConnection, tileChar, screenX, screenY, tileColor);
             }
         }
-        
-        // Update player position calculation with the new spacing
-        int playerScreenX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
-        int playerScreenY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
-        
-        // Update wobble animation using state
-        state.WobbleTimer += Raylib.GetFrameTime();
-        
-        // Calculate the phase of the wobble (0 to 2π)
-        float phase = (float)(state.WobbleTimer * (2 * Math.PI / (GameConstants.WobbleFrequency / 1000.0f)));
-        
-        // Use a modified sine function that grows twice as fast as it shrinks
-        // When sin(phase) is positive (growing), use 2*sin(phase)
-        // When sin(phase) is negative (shrinking), use sin(phase)
-        float modifiedSine = (float)(Math.Sin(phase) > 0 ? 2 * Math.Sin(phase) : Math.Sin(phase));
-        
-        // Normalize the result to keep the same overall scale range
-        float wobbleScale = 1.0f + (float)(modifiedSine / 1.5f) * GameConstants.WobbleAmount;
-        
-        // Draw ghost character at previous position (gray translucent)
-        int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
-        
-        // Draw in-transit ghost (yellow opaque) only during movement
-        const float moveDuration = 0.2f; // seconds between moves
-        float moveProgress = Math.Clamp((float)(Raylib.GetTime() - state.MovementStartTime) / moveDuration, 0f, 1f);
-
-        // Easement
-        var effectiveMoveProgress = Math.Min(moveProgress, 1.0f);
-        float ghostX = state.PreviousX + (state.PlayerX - state.PreviousX) * effectiveMoveProgress;
-        float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * effectiveMoveProgress;
-        int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, ScreenConstants.InTransitGhostColor, false, wobbleScale);
-        
-        // Draw ghost at new position
-        int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
-        _screenDrawer.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
-        
-        // If player is invincible, make them flash
-        Color playerColor = ScreenConstants.PlayerColor;
-        if (state.IsInvincible && (int)(Raylib.GetTime() * 10) % 2 == 0)
-        {
-            playerColor = ScreenConstants.InvinciblePlayerColor;
-        }
-        
-        // Draw player with wobble effect
-        _screenDrawer.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, playerColor, false, wobbleScale);
         
         // Draw enemies - now using camera offset and updated horizontal spacing
         foreach (var enemy in state.Enemies)
