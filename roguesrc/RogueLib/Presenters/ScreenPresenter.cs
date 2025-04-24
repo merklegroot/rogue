@@ -525,8 +525,8 @@ public class ScreenPresenter : IScreenPresenter
         // Create a collection of instructions
         var instructions = new List<string>
         {
-            "Use WASD to move",
-            "SPACE to swing sword"
+            "Use (W/A/S/D) to move",
+            "(SPACE) to swing sword"
         };
 
         if (_hasCrossbow)
