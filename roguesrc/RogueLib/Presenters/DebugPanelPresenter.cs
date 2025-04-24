@@ -5,7 +5,7 @@ namespace RogueLib.Presenters;
 
 public interface IDebugPanelPresenter
 {
-    void Draw(IRayConnection rayConnection, GameState state);
+    void Draw(IRayConnection rayConnection, GameState state, bool chargerActive, ChargerEnemyState? charger);
 }
 
 public class DebugPanelPresenter : IDebugPanelPresenter
@@ -17,10 +17,14 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         _screenDrawerUtil = screenDrawerUtil;
     }
 
-    public void Draw(IRayConnection rayConnection, GameState state)
+    public void Draw(IRayConnection rayConnection, GameState state, bool chargerActive, ChargerEnemyState? charger)
     {
-        // Calculate how many lines we'll need (1 for player + number of alive enemies)
+        // Calculate how many lines we'll need (1 for player + number of alive enemies + 1 for charger if active)
         int lineCount = 1 + state.Enemies.Count(e => e.Alive);
+        if (chargerActive && charger != null)
+        {
+            lineCount++;
+        }
         int panelHeight = lineCount * 20 + 20; // 20 pixels per line + 10px padding top and bottom
         int panelWidth = 300; // Increased width to make it more visible
         
@@ -40,6 +44,14 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         string playerText = $"Player at ({state.PlayerX}, {state.PlayerY})";
         _screenDrawerUtil.DrawText(rayConnection, playerText, panelX + 10, debugY, Color.Yellow);
         debugY += 20;
+        
+        // Show charger position if active
+        if (chargerActive && charger != null)
+        {
+            string chargerText = $"Charger at ({charger.X}, {charger.Y})";
+            _screenDrawerUtil.DrawText(rayConnection, chargerText, panelX + 10, debugY, Color.Orange);
+            debugY += 20;
+        }
         
         // Show enemy positions
         foreach (var enemy in state.Enemies)

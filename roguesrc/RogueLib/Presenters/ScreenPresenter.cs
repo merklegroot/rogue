@@ -280,7 +280,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawGoldCounter(rayConnection, state);
         DrawWorld(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
-        _debugPanelPresenter.Draw(rayConnection, state);
+        _debugPanelPresenter.Draw(rayConnection, state, _chargerActive, _charger);
         DrawExplosions(state, rayConnection);
         DrawSwordAnimation(rayConnection, state);
         DrawFlyingGold(rayConnection, state);
@@ -537,6 +537,7 @@ public class ScreenPresenter : IScreenPresenter
         instructions.Add("(ESC) to return to menu");
         instructions.Add("(G) for instant gold");
         instructions.Add("(B) to open the shop");
+        instructions.Add("(C) to spawn charger");
 
         // Join instructions with commas and "and" before the last one
         string instructionsText = string.Join(", ", instructions.Take(instructions.Count - 1)) + 
@@ -731,6 +732,11 @@ public class ScreenPresenter : IScreenPresenter
                     Value = 100,
                     Timer = 0f
                 });
+            }
+            // Add debug option to spawn charger with C key
+            if (key == KeyboardKey.C)
+            {
+                SpawnCharger(state);
             }
         }
 
