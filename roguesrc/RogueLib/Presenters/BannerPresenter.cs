@@ -74,16 +74,16 @@ public class BannerPresenter : IBannerPresenter
         var skullY = bannerY + (BannerHeight - SkullSize) / 2;
 
         // Draw skull textures on both sides
-        // Draw left skull
+        // Draw left skull - offset by half size to center
         Raylib.DrawTexture(rayConnection.SkullTexture, 
-            (int)leftSkullX, 
-            (int)skullY, 
+            (int)(leftSkullX - SkullSize/2), 
+            (int)(skullY - SkullSize/2), 
             Color.White);
         
-        // Draw right skull
+        // Draw right skull - offset by half size to center
         Raylib.DrawTexture(rayConnection.SkullTexture, 
-            (int)rightSkullX, 
-            (int)skullY, 
+            (int)(rightSkullX - SkullSize/2), 
+            (int)(skullY - SkullSize/2), 
             Color.White);
 
         // Draw text with a slight glow effect
