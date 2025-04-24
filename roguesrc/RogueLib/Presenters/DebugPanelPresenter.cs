@@ -10,11 +10,11 @@ public interface IDebugPanelPresenter
 
 public class DebugPanelPresenter : IDebugPanelPresenter
 {
-    private readonly IScreenDrawerUtil _screenDrawerUtil;
+    private readonly IDrawUtil _drawUtil;
 
-    public DebugPanelPresenter(IScreenDrawerUtil screenDrawerUtil)
+    public DebugPanelPresenter(IDrawUtil drawUtil)
     {
-        _screenDrawerUtil = screenDrawerUtil;
+        _drawUtil = drawUtil;
     }
 
     public void Draw(IRayConnection rayConnection, GameState state, bool chargerActive, ChargerEnemyState? charger)
@@ -42,14 +42,14 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         
         // Show player position first
         string playerText = $"Player at ({state.PlayerX}, {state.PlayerY})";
-        _screenDrawerUtil.DrawText(rayConnection, playerText, panelX + 10, debugY, Color.Yellow);
+        _drawUtil.DrawText(rayConnection, playerText, panelX + 10, debugY, Color.Yellow);
         debugY += 20;
         
         // Show charger position if active
         if (chargerActive && charger != null)
         {
             string chargerText = $"Charger at ({charger.X}, {charger.Y})";
-            _screenDrawerUtil.DrawText(rayConnection, chargerText, panelX + 10, debugY, Color.Orange);
+            _drawUtil.DrawText(rayConnection, chargerText, panelX + 10, debugY, Color.Orange);
             debugY += 20;
         }
         
@@ -59,7 +59,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             if (enemy.Alive)
             {
                 string debugText = $"Enemy at ({enemy.X}, {enemy.Y})";
-                _screenDrawerUtil.DrawText(rayConnection, debugText, panelX + 10, debugY, Color.White);
+                _drawUtil.DrawText(rayConnection, debugText, panelX + 10, debugY, Color.White);
                 debugY += 20;
             }
         }

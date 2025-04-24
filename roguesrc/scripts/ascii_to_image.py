@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw
 import os
 
-# Constants from ScreenDrawerUtil.cs
+# Constants from drawUtil.cs
 SIDE_PADDING = 8
 TOP_PADDING = 10
 CHAR_WIDTH = 8

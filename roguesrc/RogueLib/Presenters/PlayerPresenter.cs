@@ -11,11 +11,11 @@ public interface IPlayerPresenter
 
 public class PlayerPresenter : IPlayerPresenter
 {
-    private readonly IScreenDrawerUtil _screenDrawerUtil;
+    private readonly IDrawUtil _drawUtil;
 
-    public PlayerPresenter(IScreenDrawerUtil screenDrawerUtil)
+    public PlayerPresenter(IDrawUtil drawUtil)
     {
-        _screenDrawerUtil = screenDrawerUtil;
+        _drawUtil = drawUtil;
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -41,7 +41,7 @@ public class PlayerPresenter : IPlayerPresenter
         // Draw ghost at new position
         int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
         int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
-        _screenDrawerUtil.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
+        _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
     }
 
     private void DrawOldPositionGhost(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
@@ -49,7 +49,7 @@ public class PlayerPresenter : IPlayerPresenter
         // Draw ghost at previous position (gray translucent)
         int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
         int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
-        _screenDrawerUtil.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
+        _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
     }
 
     private void DrawInTransitPlayer(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
@@ -70,6 +70,6 @@ public class PlayerPresenter : IPlayerPresenter
         float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * effectiveMoveProgress;
         int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
         int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
-        _screenDrawerUtil.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, playerColor, false, wobbleScale);
+        _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, playerColor, false, wobbleScale);
     }
 } 

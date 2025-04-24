@@ -47,7 +47,7 @@ public class ScreenPresenter : IScreenPresenter
     private const float KnockbackDistance = 0.5f;
     private bool _gameJustStarted = true;
     private readonly IRayLoader _rayLoader;
-    private readonly IScreenDrawerUtil _screenDrawUtil;    
+    private readonly IDrawUtil _screenDrawUtil;    
     private readonly IHealthBarPresenter _healthBarPresenter;
     private readonly IShopPresenter _shopPresenter;
     private readonly IChunkPresenter _chunkPresenter;
@@ -56,13 +56,14 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IPlayerPresenter _playerPresenter;
     private readonly IBannerPresenter _bannerPresenter;
     private readonly IMenuPresenter _menuPresenter;
+    private readonly ICharacterSetPresenter _characterSetPresenter;
 
     private const float CameraDeadZone = GameConstants.CameraDeadZone;
     private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
-        IScreenDrawerUtil screenDrawerUtil, 
+        IDrawUtil drawUtil, 
         IHealthBarPresenter healthBarPresenter,
         IShopPresenter shopPresenter,
         IChunkPresenter chunkPresenter,
@@ -70,10 +71,11 @@ public class ScreenPresenter : IScreenPresenter
         ISpawnEnemyHandler spawnEnemyHandler,
         IPlayerPresenter playerPresenter,
         IBannerPresenter bannerPresenter,
-        IMenuPresenter menuPresenter)
+        IMenuPresenter menuPresenter,
+        ICharacterSetPresenter characterSetPresenter)
     {
         _rayLoader = rayLoader;
-        _screenDrawUtil = screenDrawerUtil;
+        _screenDrawUtil = drawUtil;
         _healthBarPresenter = healthBarPresenter;
         _shopPresenter = shopPresenter;
         _chunkPresenter = chunkPresenter;
@@ -82,6 +84,7 @@ public class ScreenPresenter : IScreenPresenter
         _playerPresenter = playerPresenter;
         _bannerPresenter = bannerPresenter;
         _menuPresenter = menuPresenter;
+        _characterSetPresenter = characterSetPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -133,12 +136,12 @@ public class ScreenPresenter : IScreenPresenter
         switch (state.CurrentScreen)
         {
             case GameScreenEnum.Menu:
-                DrawMenu(rayConnection);
+                _menuPresenter.Draw(rayConnection);
                 HandleMenuInput(state);
                 break;
 
             case GameScreenEnum.CharacterSet:
-                DrawCharacterSet(rayConnection);
+                _characterSetPresenter.Draw(rayConnection);
                 HandleCharacterSetInput(state);
                 break;
 
@@ -188,11 +191,6 @@ public class ScreenPresenter : IScreenPresenter
         _keyEvents.Clear();
     }
 
-    private void DrawMenu(IRayConnection rayConnection)
-    {
-        _menuPresenter.Draw(rayConnection);
-    }
-
     private void HandleMenuInput(GameState state)
     {
         while (_keyEvents.Count > 0)
@@ -220,25 +218,6 @@ public class ScreenPresenter : IScreenPresenter
                 break;
             }
         }
-    }
-
-    private void DrawCharacterSet(IRayConnection rayConnection)
-    {
-        // Draw all characters in a grid
-        for (var charNum = 0; charNum < 256; charNum++)
-        {
-            var row = charNum / 32;
-            var col = charNum % 32;
-
-            _screenDrawUtil.DrawCharacter(rayConnection, 
-                charNum,
-                20 + (col * 40),
-                20 + (row * 60),
-                ScreenConstants.SampleColors[charNum % ScreenConstants.SampleColors.Length]
-            );
-        }
-
-        _screenDrawUtil.DrawText(rayConnection, "Press any key to return", 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, Color.White);
     }
 
     private void HandleCharacterSetInput(GameState state)

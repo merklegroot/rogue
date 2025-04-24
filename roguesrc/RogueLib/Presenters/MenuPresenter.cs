@@ -17,11 +17,11 @@ public class MenuPresenter : IMenuPresenter
     private const int LineHeight = 2;
     private const int VersionYOffset = 40;
     private const int DecorativeElementYOffset = 10;
-    private readonly IScreenDrawerUtil _screenDrawerUtil;
+    private readonly IDrawUtil _drawUtil;
 
-    public MenuPresenter(IScreenDrawerUtil screenDrawerUtil)
+    public MenuPresenter(IDrawUtil drawUtil)
     {
-        _screenDrawerUtil = screenDrawerUtil;
+        _drawUtil = drawUtil;
     }
 
     public void Draw(IRayConnection rayConnection)
@@ -50,22 +50,22 @@ public class MenuPresenter : IMenuPresenter
         var menuStartY = lineY + 30;
         
         // Draw menu options with colored hotkeys
-        _screenDrawerUtil.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", 
+        _drawUtil.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", 
             centerX - 120, menuStartY);
-        _screenDrawerUtil.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", 
+        _drawUtil.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", 
             centerX - 120, menuStartY + MenuSpacing);
-        _screenDrawerUtil.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", 
+        _drawUtil.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", 
             centerX - 120, menuStartY + MenuSpacing * 2);
-        _screenDrawerUtil.DrawColoredHotkeyText(rayConnection, "e(X)it Game", 
+        _drawUtil.DrawColoredHotkeyText(rayConnection, "e(X)it Game", 
             centerX - 120, menuStartY + MenuSpacing * 3);
         
         // Draw version number
         var version = "v0.1 Alpha";
-        _screenDrawerUtil.DrawText(rayConnection, version, 20, 
+        _drawUtil.DrawText(rayConnection, version, 20, 
             screenHeight - VersionYOffset, new Color(150, 150, 150, 200));
         
         // Draw decorative element
-        _screenDrawerUtil.DrawCharacter(rayConnection, 2, 
+        _drawUtil.DrawCharacter(rayConnection, 2, 
             centerX - 10, menuStartY + MenuSpacing * 4 + DecorativeElementYOffset, Color.White);
     }
 } 
