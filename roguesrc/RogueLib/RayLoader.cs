@@ -8,6 +8,7 @@ public interface IRayLoader
     Texture2D LoadCharsetTexture();
     Shader LoadCrtShader();
     Texture2D LoadSkullImage();
+    Texture2D LoadSwordImage();
     List<string> LoadMap();
 }
 
@@ -36,6 +37,9 @@ public class RayLoader : IRayLoader
 
     public Texture2D LoadSkullImage() =>
         LoadTextureFromEmbeddedResource("skull.png");
+
+    public Texture2D LoadSwordImage() =>
+        LoadTextureFromEmbeddedResource("sword.png");
 
     public Shader LoadCrtShader() =>
         LoadShaderFromEmbeddedResource("crt.fs");

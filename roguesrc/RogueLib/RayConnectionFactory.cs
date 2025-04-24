@@ -10,6 +10,7 @@ public interface IRayConnection : IDisposable
     Shader CrtShader { get; init; }
     RenderTexture2D GameTexture { get; init; }
     Texture2D SkullTexture { get; init; }
+    Texture2D SwordTexture { get; init; }
     int TimeLoc { get; init; }    
 }
 
@@ -25,6 +26,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
         public Font MenuFont { get; init; }
         public Texture2D CharsetTexture { get; init; }
         public Texture2D SkullTexture { get; init; }
+        public Texture2D SwordTexture { get; init; }
         public Shader CrtShader { get; init; }
         public RenderTexture2D GameTexture { get; init; }
         public int ResolutionLoc { get; init; }
@@ -42,6 +44,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
             MenuFont = rayLoader.LoadRobotoFont();
             CharsetTexture = rayLoader.LoadCharsetTexture();
             SkullTexture = rayLoader.LoadSkullImage();
+            SwordTexture = rayLoader.LoadSwordImage();
 
             // Create a render texture the size of the window
             int width = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
@@ -82,6 +85,8 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
             Raylib.UnloadRenderTexture(GameTexture);
             
             Raylib.UnloadTexture(CharsetTexture);
+            Raylib.UnloadTexture(SkullTexture);
+            Raylib.UnloadTexture(SwordTexture);
             Raylib.UnloadFont(MenuFont);
             Raylib.CloseWindow();
         }
