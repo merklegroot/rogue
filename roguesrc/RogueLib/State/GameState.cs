@@ -53,4 +53,10 @@ public class GameState
     public bool IsBannerVisible { get; set; }
     public string BannerText { get; set; } = "";
     public float BannerTimer { get; set; }
+
+    // Crossbow state
+    public bool HasCrossbow { get; set; }
+    public float CrossbowCooldown { get; set; } = 2.0f;
+    public float CrossbowCooldownTimer { get; set; }
+    public bool CrossbowOnCooldown { get; set; }
 }

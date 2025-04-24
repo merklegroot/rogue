@@ -27,16 +27,9 @@ public class ScreenPresenter : IScreenPresenter
 
     private bool _enableCrtEffect = true;
     private float _shaderTime = 0f;
-
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
     private const float HealthSpawnInterval = 30f;
-    private bool _hasCrossbow = false;
-    private float _crossbowCooldown = 2.0f;
-    private float _crossbowCooldownTimer = 0f;
-    private bool _crossbowOnCooldown = false;
-    
-
     private int _enemiesKilled = 0;
     private const int KillsForCharger = 10;
     private bool _chargerActive = false;
@@ -242,7 +235,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection, state);
         _bannerPresenter.Draw(rayConnection, state);
-        DrawInstructions(rayConnection);
+        DrawInstructions(rayConnection, state);
         _chunkPresenter.Draw(rayConnection, state);
     }
 
@@ -427,10 +420,10 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Draw crossbow cooldown indicator if player has crossbow
-        if (_hasCrossbow && _crossbowOnCooldown)
+        if (state.HasCrossbow && state.CrossbowOnCooldown)
         {
             // Calculate cooldown progress (0.0 to 1.0)
-            float progress = _crossbowCooldownTimer / _crossbowCooldown;
+            float progress = state.CrossbowCooldownTimer / state.CrossbowCooldown;
             
             // Draw a small cooldown bar below the player
             int barWidth = 30;
@@ -475,7 +468,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawInstructions(IRayConnection rayConnection)
+    private void DrawInstructions(IRayConnection rayConnection, GameState state)
     {
         // Create a collection of instructions
         var instructions = new List<string>
@@ -484,7 +477,7 @@ public class ScreenPresenter : IScreenPresenter
             "(SPACE) to swing sword"
         };
 
-        if (_hasCrossbow)
+        if (state.HasCrossbow)
         {
             instructions.Add("(F) to fire crossbow");
         }
@@ -859,10 +852,10 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Handle crossbow firing with F key
-        if (Raylib.IsKeyPressed(KeyboardKey.F) && _hasCrossbow && !_crossbowOnCooldown)
+        if (Raylib.IsKeyPressed(KeyboardKey.F) && state.HasCrossbow && !state.CrossbowOnCooldown)
         {
-            _crossbowOnCooldown = true;
-            _crossbowCooldownTimer = 0f;
+            state.CrossbowOnCooldown = true;
+            state.CrossbowCooldownTimer = 0f;
             
             // Create a new bolt based on player direction
             float boltX = state.PlayerX;
@@ -879,13 +872,13 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Update crossbow cooldown
-        if (_crossbowOnCooldown)
+        if (state.CrossbowOnCooldown)
         {
-            _crossbowCooldownTimer += Raylib.GetFrameTime();
-            if (_crossbowCooldownTimer >= _crossbowCooldown)
+            state.CrossbowCooldownTimer += Raylib.GetFrameTime();
+            if (state.CrossbowCooldownTimer >= state.CrossbowCooldown)
             {
-                _crossbowOnCooldown = false;
-                _crossbowCooldownTimer = 0f;
+                state.CrossbowOnCooldown = false;
+                state.CrossbowCooldownTimer = 0f;
             }
         }
         
@@ -1363,7 +1356,7 @@ public class ScreenPresenter : IScreenPresenter
             Name = "Crossbow",
             Description = "Fires bolts at enemies from a distance",
             Price = 75,
-            OnPurchase = () => { _hasCrossbow = true; },
+            OnPurchase = () => { state.HasCrossbow = true; },
             Category = ShopCategory.Weapon
         });
     }
