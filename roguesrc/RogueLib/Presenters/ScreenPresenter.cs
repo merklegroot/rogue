@@ -531,10 +531,10 @@ public class ScreenPresenter : IScreenPresenter
 
         if (_hasCrossbow)
         {
-            instructions.Add("F to fire crossbow");
+            instructions.Add("(F) to fire crossbow");
         }
 
-        instructions.Add("ESC to return to menu");
+        instructions.Add("(ESC) to return to menu");
         instructions.Add("(G) for instant gold");
         instructions.Add("(B) to open the shop");
 
