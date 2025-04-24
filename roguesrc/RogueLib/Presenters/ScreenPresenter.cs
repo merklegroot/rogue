@@ -54,6 +54,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IDebugPanelPresenter _debugPanelPresenter;
     private readonly ISpawnEnemyHandler _spawnEnemyHandler;
     private readonly IPlayerPresenter _playerPresenter;
+    private readonly IBannerPresenter _bannerPresenter;
 
     private const float CameraDeadZone = GameConstants.CameraDeadZone;
     private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
@@ -66,7 +67,8 @@ public class ScreenPresenter : IScreenPresenter
         IChunkPresenter chunkPresenter,
         IDebugPanelPresenter debugPanelPresenter,
         ISpawnEnemyHandler spawnEnemyHandler,
-        IPlayerPresenter playerPresenter)
+        IPlayerPresenter playerPresenter,
+        IBannerPresenter bannerPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = screenDrawerUtil;
@@ -76,6 +78,7 @@ public class ScreenPresenter : IScreenPresenter
         _debugPanelPresenter = debugPanelPresenter;
         _spawnEnemyHandler = spawnEnemyHandler;
         _playerPresenter = playerPresenter;
+        _bannerPresenter = bannerPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -287,61 +290,9 @@ public class ScreenPresenter : IScreenPresenter
         DrawCooldownIndicators(rayConnection, state);
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection, state);
-        DrawBanner(rayConnection, state);
+        _bannerPresenter.Draw(rayConnection, state);
         DrawInstructions(rayConnection);
         _chunkPresenter.Draw(rayConnection, state);
-    }
-
-    private void DrawBanner(IRayConnection rayConnection, GameState state)
-    {
-        if (state.IsBannerVisible)
-        {
-            // Update banner timer
-            state.BannerTimer += Raylib.GetFrameTime();
-            if (state.BannerTimer >= 3.0f) // Show for 3 seconds
-            {
-                state.IsBannerVisible = false;
-                state.BannerTimer = 0;
-                return;
-            }
-
-            // Calculate banner position and size
-            int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-            int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
-            int bannerHeight = 100;
-            int bannerY = screenHeight / 3;
-
-            // Draw semi-transparent background
-            Raylib.DrawRectangle(0, bannerY, screenWidth, bannerHeight, new Color(0, 0, 0, 200));
-
-            // Draw text with a slight glow effect
-            string bannerText = "Everybody's gangsta until the charger appears";
-            int fontSize = 24;
-            Vector2 textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, bannerText, fontSize, 1);
-            float textX = (screenWidth - textSize.X) / 2;
-            float textY = bannerY + (bannerHeight - textSize.Y) / 2;
-
-            // Draw skull textures on both sides
-            int skullSize = 32; // Size of the skull texture
-            int skullSpacing = 20; // Space between skull and text
-            
-            // Draw left skull
-            Raylib.DrawTexture(rayConnection.SkullTexture, 
-                (int)(textX - skullSize - skullSpacing), 
-                (int)(textY + (textSize.Y - skullSize) / 2), 
-                Color.White);
-            
-            // Draw right skull
-            Raylib.DrawTexture(rayConnection.SkullTexture, 
-                (int)(textX + textSize.X + skullSpacing), 
-                (int)(textY + (textSize.Y - skullSize) / 2), 
-                Color.White);
-
-            // Draw text with a slight glow effect
-            Color glowColor = new Color(200, 0, 0, 100);
-            _screenDrawUtil.DrawText(rayConnection, bannerText, (int)textX + 2, (int)textY + 2, glowColor);
-            _screenDrawUtil.DrawText(rayConnection, bannerText, (int)textX, (int)textY, Color.Red);
-        }
     }
 
     private void DrawExplosions(GameState state, IRayConnection rayConnection)

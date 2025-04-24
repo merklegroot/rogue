@@ -19,5 +19,6 @@ public static class RogueLibRegistry
             .AddScoped<IChunkPresenter, ChunkPresenter>()
             .AddScoped<IDebugPanelPresenter, DebugPanelPresenter>()
             .AddScoped<IPlayerPresenter, PlayerPresenter>()
-            .AddScoped<ISpawnEnemyHandler, SpawnEnemyHandler>();
+            .AddScoped<ISpawnEnemyHandler, SpawnEnemyHandler>()
+            .AddScoped<IBannerPresenter, BannerPresenter>();
 }
