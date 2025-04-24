@@ -7,6 +7,7 @@ public interface IRayLoader
     Font LoadRobotoFont();
     Texture2D LoadCharsetTexture();
     Shader LoadCrtShader();
+    Texture2D LoadSkullImage();
 
     /// <summary>
     /// Loads the map from the embedded resource.
@@ -83,4 +84,7 @@ public class RayLoader : IRayLoader
 
     private Font LoadFontFromEmbeddedResource(string resourceName) =>
         LoadFromEmbeddedResource(resourceName, Raylib.LoadFont);
+
+    public Texture2D LoadSkullImage() =>
+        LoadTextureFromEmbeddedResource("skull.png");
 }

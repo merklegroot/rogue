@@ -76,6 +76,7 @@ public class ScreenPresenter : IScreenPresenter
         _debugPanelPresenter = debugPanelPresenter;
         _spawnEnemyHandler = spawnEnemyHandler;
         _playerPresenter = playerPresenter;
+        // _skullTexture = _rayLoader.LoadSkullImage();
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -308,22 +309,23 @@ public class ScreenPresenter : IScreenPresenter
             // Calculate banner position and size
             int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
             int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
-            int bannerHeight = 60;
+            int bannerHeight = 100;
             int bannerY = screenHeight / 3;
 
             // Draw semi-transparent background
             Raylib.DrawRectangle(0, bannerY, screenWidth, bannerHeight, new Color(0, 0, 0, 200));
 
-            // Draw text centered
-            int fontSize = 32;
-            Vector2 textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, state.BannerText, fontSize, 1);
+            // Draw text with a slight glow effect
+            string bannerText = state.BannerText;
+            int fontSize = 24;
+            Vector2 textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, bannerText, fontSize, 1);
             float textX = (screenWidth - textSize.X) / 2;
             float textY = bannerY + (bannerHeight - textSize.Y) / 2;
 
             // Draw text with a slight glow effect
             Color glowColor = new Color(200, 0, 0, 100);
-            _screenDrawUtil.DrawText(rayConnection, state.BannerText, (int)textX + 2, (int)textY + 2, glowColor);
-            _screenDrawUtil.DrawText(rayConnection, state.BannerText, (int)textX, (int)textY, Color.Red);
+            _screenDrawUtil.DrawText(rayConnection, bannerText, (int)textX + 2, (int)textY + 2, glowColor);
+            _screenDrawUtil.DrawText(rayConnection, bannerText, (int)textX, (int)textY, Color.Red);
         }
     }
 
@@ -1667,9 +1669,9 @@ public class ScreenPresenter : IScreenPresenter
         };
         state.IsChargerActive = true;
         
-        // Show boss banner
+        // Show the boss banner
+        state.BannerText = "\u0001 Everybody's gangsta until the charger appears \u0001";
         state.IsBannerVisible = true;
-        state.BannerText = "💀 Everybody's gangsta until the charger appears 💀";
         state.BannerTimer = 0;
         
         Console.WriteLine($"NEW IMPLEMENTATION: Spawned charger with {state.Charger.Health} health");
