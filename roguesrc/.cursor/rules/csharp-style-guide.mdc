@@ -1,3 +1,8 @@
+---
+description: 
+globs: *.cs
+alwaysApply: false
+---
 When writing C# code:
 
 1. Prefer early returns over nested if statements
