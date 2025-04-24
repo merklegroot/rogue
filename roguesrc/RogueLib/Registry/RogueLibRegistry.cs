@@ -22,5 +22,6 @@ public static class RogueLibRegistry
             .AddScoped<ISpawnEnemyHandler, SpawnEnemyHandler>()
             .AddScoped<IBannerPresenter, BannerPresenter>()
             .AddScoped<IMenuPresenter, MenuPresenter>()
-            .AddScoped<ICharacterSetPresenter, CharacterSetPresenter>();
+            .AddScoped<ICharacterSetPresenter, CharacterSetPresenter>()
+            .AddScoped<ISwordPresenter, SwordPresenter>();
 }

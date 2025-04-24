@@ -50,6 +50,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IBannerPresenter _bannerPresenter;
     private readonly IMenuPresenter _menuPresenter;
     private readonly ICharacterSetPresenter _characterSetPresenter;
+    private readonly ISwordPresenter _swordPresenter;
 
     private const float CameraDeadZone = GameConstants.CameraDeadZone;
     private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
@@ -65,7 +66,8 @@ public class ScreenPresenter : IScreenPresenter
         IPlayerPresenter playerPresenter,
         IBannerPresenter bannerPresenter,
         IMenuPresenter menuPresenter,
-        ICharacterSetPresenter characterSetPresenter)
+        ICharacterSetPresenter characterSetPresenter,
+        ISwordPresenter swordPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -78,6 +80,7 @@ public class ScreenPresenter : IScreenPresenter
         _bannerPresenter = bannerPresenter;
         _menuPresenter = menuPresenter;
         _characterSetPresenter = characterSetPresenter;
+        _swordPresenter = swordPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -229,7 +232,7 @@ public class ScreenPresenter : IScreenPresenter
         _playerPresenter.Draw(rayConnection, state);
         _debugPanelPresenter.Draw(rayConnection, state, state.IsChargerActive, state.Charger);
         DrawExplosions(state, rayConnection);
-        DrawSwordAnimation(rayConnection, state);
+        _swordPresenter.Draw(rayConnection, state);
         DrawFlyingGold(rayConnection, state);
         DrawCooldownIndicators(rayConnection, state);
         DrawCrossbowBolts(rayConnection, state);
@@ -261,105 +264,6 @@ public class ScreenPresenter : IScreenPresenter
             {
                 _screenDrawUtil.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, ScreenConstants.ExplosionColor);
             }
-        }
-    }
-
-    private void DrawSwordAnimation(IRayConnection rayConnection, GameState state)
-    {
-        // Handle sword swinging
-        if (Raylib.IsKeyPressed(KeyboardKey.Space) && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
-        {
-            state.SwordState.IsSwordSwinging = true;
-            state.SwordState.SwordSwingTime = 0;
-            
-            // Check for sword collisions immediately when swing starts
-            CheckSwordCollisions(state, true);
-        }
-
-        if (state.SwordState.IsSwordSwinging)
-        {
-            state.SwordState.SwordSwingTime += Raylib.GetFrameTime();
-            if (state.SwordState.SwordSwingTime >= GameConstants.SwordSwingDuration)
-            {
-                state.SwordState.IsSwordSwinging = false;
-                state.SwordState.SwordOnCooldown = true;  // Start cooldown when swing finishes
-                state.SwordState.SwordCooldownTimer = 0f;
-            }
-        }
-
-        // Draw sword if swinging (drawn after ground to appear on top)
-        if (state.SwordState.IsSwordSwinging)
-        {
-            // Calculate animation progress (0.0 to 1.0)
-            var progress = state.SwordState.SwordSwingTime / GameConstants.SwordSwingDuration;
-            if (progress > 1.0f) progress = 1.0f;
-
-            // Calculate frame (0, 1, or 2)
-            var frame = (int)(progress * 3);
-            if (frame > 2) frame = 2;
-
-            // Calculate fractional position
-            var xOffset = 0f;
-            var yOffset = 0f;
-
-            // Determine position based on direction and animation progress
-            switch (state.LastDirection)
-            {
-                case Direction.Left:
-                    // Fixed position to the left, sweeping from top to bottom
-                    xOffset = -0.9f;
-                    yOffset = (progress - 0.5f) * 1.2f;
-                    break;
-                case Direction.Right:
-                    // Fixed position to the right, sweeping from top to bottom
-                    xOffset = 0.9f;
-                    yOffset = (progress - 0.5f) * 1.2f;
-                    break;
-                case Direction.Up:
-                    // Fixed position above, sweeping from left to right
-                    yOffset = -1.2f;
-                    xOffset = (progress - 0.5f) * 1.2f;
-                    break;
-                case Direction.Down:
-                    // Fixed position below, sweeping from left to right
-                    yOffset = 1.2f;
-                    xOffset = (progress - 0.5f) * 1.2f;
-                    break;
-            }
-
-            // Get sword character based on direction and animation frame
-            char swordChar = (state.LastDirection, frame) switch
-            {
-                // Left side: \ → - → /
-                (Direction.Left, 0) => '\\',
-                (Direction.Left, 1) => '-',
-                (Direction.Left, 2) => '/',
-
-                // Right side: / → - → \
-                (Direction.Right, 0) => '/',
-                (Direction.Right, 1) => '-',
-                (Direction.Right, 2) => '\\',
-
-                // Up: \ → | → /
-                (Direction.Up, 0) => '\\',
-                (Direction.Up, 1) => '|',
-                (Direction.Up, 2) => '/',
-
-                // Down: / → | → \
-                (Direction.Down, 0) => '/',
-                (Direction.Down, 1) => '|',
-                (Direction.Down, 2) => '\\',
-
-                // Fallback
-                _ => '+'
-            };
-
-            // Calculate exact pixel position with camera offset - updated horizontal spacing
-            float swordX = 100 + ((state.PlayerX + xOffset) - state.CameraState.X) * 32 + 400;
-            float swordY = 100 + ((state.PlayerY + yOffset) - state.CameraState.Y) * 40 + 200;
-
-            // Draw the sword character with silvery-blue color
-            _screenDrawUtil.DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, ScreenConstants.SwordColor);
         }
     }
 
@@ -983,6 +887,9 @@ public class ScreenPresenter : IScreenPresenter
                 state.KnockbackTimer = 0f;
             }
         }
+
+        // Update sword animation
+        _swordPresenter.Update(state);
     }
 
     private void CollectGold(GameState state)
