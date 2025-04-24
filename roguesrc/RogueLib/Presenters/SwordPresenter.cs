@@ -29,20 +29,21 @@ public class SwordPresenter : ISwordPresenter
         if (progress > 1.0f) progress = 1.0f;
 
         // Calculate rotation based on direction and progress
+        // Since hilt is at bottom, we need to offset by 90 degrees
         float rotation = 0f;
         switch (state.LastDirection)
         {
             case Direction.Left:
-                rotation = 180f + (progress - 0.5f) * 180f; // Start at 180°, swing 180°
-                break;
-            case Direction.Right:
-                rotation = 0f + (progress - 0.5f) * 180f; // Start at 0°, swing 180°
-                break;
-            case Direction.Up:
                 rotation = 270f + (progress - 0.5f) * 180f; // Start at 270°, swing 180°
                 break;
-            case Direction.Down:
+            case Direction.Right:
                 rotation = 90f + (progress - 0.5f) * 180f; // Start at 90°, swing 180°
+                break;
+            case Direction.Up:
+                rotation = 0f + (progress - 0.5f) * 180f; // Start at 0°, swing 180°
+                break;
+            case Direction.Down:
+                rotation = 180f + (progress - 0.5f) * 180f; // Start at 180°, swing 180°
                 break;
         }
 
@@ -80,7 +81,7 @@ public class SwordPresenter : ISwordPresenter
         // Create source and destination rectangles
         Rectangle source = new(0, 0, textureWidth, textureHeight);
         Rectangle dest = new(swordX, swordY, textureWidth, textureHeight);
-        Vector2 origin = new(textureWidth / 2, textureHeight / 2);
+        Vector2 origin = new(textureWidth / 2, textureHeight); // Rotate around the hilt (bottom center)
 
         // Draw the sword texture with rotation and color tint
         Raylib.DrawTexturePro(
