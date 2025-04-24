@@ -8,21 +8,6 @@ public interface IRayLoader
     Texture2D LoadCharsetTexture();
     Shader LoadCrtShader();
     Texture2D LoadSkullImage();
-
-    /// <summary>
-    /// Loads the map from the embedded resource.
-    /// The map looks similar to this:
-    /// 
-    /// -------------------
-    /// |.................|
-    /// |.................|
-    /// |.................|
-    /// |.................|-----    -------
-    /// |......................|    |.....|
-    /// |......................+====+.....|
-    /// ------------------------    |.....|
-    //                             -------
-    /// </summary>
     List<string> LoadMap();
 }
 
@@ -48,6 +33,9 @@ public class RayLoader : IRayLoader
 
     public Texture2D LoadCharsetTexture() =>
         LoadTextureFromEmbeddedResource("Codepage-437-transparent.png");
+
+    public Texture2D LoadSkullImage() =>
+        LoadTextureFromEmbeddedResource("skull.png");
 
     public Shader LoadCrtShader() =>
         LoadShaderFromEmbeddedResource("crt.fs");
@@ -84,7 +72,4 @@ public class RayLoader : IRayLoader
 
     private Font LoadFontFromEmbeddedResource(string resourceName) =>
         LoadFromEmbeddedResource(resourceName, Raylib.LoadFont);
-
-    public Texture2D LoadSkullImage() =>
-        LoadTextureFromEmbeddedResource("skull.png");
 }

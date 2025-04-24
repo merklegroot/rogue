@@ -76,7 +76,6 @@ public class ScreenPresenter : IScreenPresenter
         _debugPanelPresenter = debugPanelPresenter;
         _spawnEnemyHandler = spawnEnemyHandler;
         _playerPresenter = playerPresenter;
-        // _skullTexture = _rayLoader.LoadSkullImage();
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
