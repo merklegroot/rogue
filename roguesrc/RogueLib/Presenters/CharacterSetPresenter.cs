@@ -19,6 +19,9 @@ public class CharacterSetPresenter : ICharacterSetPresenter
 
     public void Draw(IRayConnection rayConnection)
     {
+        const int offsetX = 32;
+        const int offsetY = 32;
+
         // Draw all characters in a grid
         for (var charNum = 0; charNum < 256; charNum++)
         {
@@ -27,8 +30,8 @@ public class CharacterSetPresenter : ICharacterSetPresenter
 
             _drawUtil.DrawCharacter(rayConnection, 
                 charNum,
-                20 + (col * 40),
-                20 + (row * 60),
+                offsetX + (col * 35),
+                offsetY + (row * 60),
                 ScreenConstants.SampleColors[charNum % ScreenConstants.SampleColors.Length]
             );
         }
