@@ -55,6 +55,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly ISpawnEnemyHandler _spawnEnemyHandler;
     private readonly IPlayerPresenter _playerPresenter;
     private readonly IBannerPresenter _bannerPresenter;
+    private readonly IMenuPresenter _menuPresenter;
 
     private const float CameraDeadZone = GameConstants.CameraDeadZone;
     private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
@@ -68,7 +69,8 @@ public class ScreenPresenter : IScreenPresenter
         IDebugPanelPresenter debugPanelPresenter,
         ISpawnEnemyHandler spawnEnemyHandler,
         IPlayerPresenter playerPresenter,
-        IBannerPresenter bannerPresenter)
+        IBannerPresenter bannerPresenter,
+        IMenuPresenter menuPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = screenDrawerUtil;
@@ -79,6 +81,7 @@ public class ScreenPresenter : IScreenPresenter
         _spawnEnemyHandler = spawnEnemyHandler;
         _playerPresenter = playerPresenter;
         _bannerPresenter = bannerPresenter;
+        _menuPresenter = menuPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -187,38 +190,7 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawMenu(IRayConnection rayConnection)
     {
-        const int titleSize = 48;
-        
-        // Use MeasureTextEx instead of MeasureText to account for spacing
-        Vector2 titleSize2D = Raylib.MeasureTextEx(rayConnection.MenuFont, ScreenConstants.Title, titleSize, 1);
-        int titleWidth = (int)titleSize2D.X;
-        
-        int centerX = (ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale) / 2;
-        
-        // Draw title with shadow effect
-        Raylib.DrawTextEx(rayConnection.MenuFont, ScreenConstants.Title, new Vector2(centerX - titleWidth/2 + 3, 40 + 3), titleSize, 1, new Color(30, 30, 30, 200));
-        Raylib.DrawTextEx(rayConnection.MenuFont, ScreenConstants.Title, new Vector2(centerX - titleWidth/2, 40), titleSize, 1, Color.Gold);
-        
-        // Draw a decorative line under the title - with correct width
-        int lineY = 40 + titleSize + 10; // Position it directly under the title with a small gap
-        int lineWidth = titleWidth - 20; // Make the line slightly shorter than the title text
-        Raylib.DrawRectangle(centerX - lineWidth/2, lineY, lineWidth, 2, Color.Gold);
-        
-        // Draw menu options centered with more spacing
-        int menuStartY = lineY + 30; // Start menu options below the line
-        int menuSpacing = 60;
-        
-        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", centerX - 120, menuStartY);
-        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", centerX - 120, menuStartY + menuSpacing);
-        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", centerX - 120, menuStartY + menuSpacing * 2);
-        _screenDrawUtil.DrawColoredHotkeyText(rayConnection, "e(X)it Game", centerX - 120, menuStartY + menuSpacing * 3);
-        
-        // Draw a version number and copyright
-        string version = "v0.1 Alpha";
-        _screenDrawUtil.DrawText(rayConnection, version, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, new Color(150, 150, 150, 200));
-        
-        // Draw a small decorative element
-        _screenDrawUtil.DrawCharacter(rayConnection, 2, centerX - 10, menuStartY + menuSpacing * 4, Color.White);
+        _menuPresenter.Draw(rayConnection);
     }
 
     private void HandleMenuInput(GameState state)
