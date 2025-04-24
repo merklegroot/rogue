@@ -28,72 +28,69 @@ public class SwordPresenter : ISwordPresenter
         var progress = state.SwordState.SwordSwingTime / GameConstants.SwordSwingDuration;
         if (progress > 1.0f) progress = 1.0f;
 
-        // Calculate frame (0, 1, or 2)
-        var frame = (int)(progress * 3);
-        if (frame > 2) frame = 2;
-
-        // Calculate fractional position
-        var xOffset = 0f;
-        var yOffset = 0f;
-
-        // Determine position based on direction and animation progress
+        // Calculate rotation based on direction and progress
+        float rotation = 0f;
         switch (state.LastDirection)
         {
             case Direction.Left:
-                // Fixed position to the left, sweeping from top to bottom
+                rotation = 180f + (progress - 0.5f) * 180f; // Start at 180°, swing 180°
+                break;
+            case Direction.Right:
+                rotation = 0f + (progress - 0.5f) * 180f; // Start at 0°, swing 180°
+                break;
+            case Direction.Up:
+                rotation = 270f + (progress - 0.5f) * 180f; // Start at 270°, swing 180°
+                break;
+            case Direction.Down:
+                rotation = 90f + (progress - 0.5f) * 180f; // Start at 90°, swing 180°
+                break;
+        }
+
+        // Calculate position based on direction
+        float xOffset = 0f;
+        float yOffset = 0f;
+        switch (state.LastDirection)
+        {
+            case Direction.Left:
                 xOffset = -0.9f;
                 yOffset = (progress - 0.5f) * 1.2f;
                 break;
             case Direction.Right:
-                // Fixed position to the right, sweeping from top to bottom
                 xOffset = 0.9f;
                 yOffset = (progress - 0.5f) * 1.2f;
                 break;
             case Direction.Up:
-                // Fixed position above, sweeping from left to right
                 yOffset = -1.2f;
                 xOffset = (progress - 0.5f) * 1.2f;
                 break;
             case Direction.Down:
-                // Fixed position below, sweeping from left to right
                 yOffset = 1.2f;
                 xOffset = (progress - 0.5f) * 1.2f;
                 break;
         }
 
-        // Calculate exact pixel position with camera offset - updated horizontal spacing
+        // Calculate exact pixel position with camera offset
         float swordX = 100 + ((state.PlayerX + xOffset) - state.CameraState.X) * 32 + 400;
         float swordY = 100 + ((state.PlayerY + yOffset) - state.CameraState.Y) * 40 + 200;
 
-        // Get sword character based on direction and animation frame
-        char swordChar = (state.LastDirection, frame) switch
-        {
-            // Left side: \ → - → /
-            (Direction.Left, 0) => '\\',
-            (Direction.Left, 1) => '-',
-            (Direction.Left, 2) => '/',
+        // Get texture dimensions
+        float textureWidth = rayConnection.SwordTexture.Width;
+        float textureHeight = rayConnection.SwordTexture.Height;
 
-            // Right side: / → - → \
-            (Direction.Right, 0) => '/',
-            (Direction.Right, 1) => '-',
-            (Direction.Right, 2) => '\\',
+        // Create source and destination rectangles
+        Rectangle source = new(0, 0, textureWidth, textureHeight);
+        Rectangle dest = new(swordX, swordY, textureWidth, textureHeight);
+        Vector2 origin = new(textureWidth / 2, textureHeight / 2);
 
-            // Up: \ → | → /
-            (Direction.Up, 0) => '\\',
-            (Direction.Up, 1) => '|',
-            (Direction.Up, 2) => '/',
-
-            // Down: / → | → \
-            (Direction.Down, 0) => '/',
-            (Direction.Down, 1) => '|',
-            (Direction.Down, 2) => '\\',
-
-            // Fallback
-            _ => '+'
-        };
-
-        // Draw the sword character with silvery-blue color
-        _drawUtil.DrawCharacter(rayConnection, swordChar, (int)swordX, (int)swordY, ScreenConstants.SwordColor);
+        // Draw the sword texture with rotation and color tint
+        Raylib.DrawTexturePro(
+            rayConnection.SwordTexture,
+            source,
+            dest,
+            origin,
+            rotation,
+            ScreenConstants.SwordColor
+        );
     }
 
     public void Update(GameState state)
