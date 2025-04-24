@@ -33,25 +33,25 @@ public class BannerPresenter : IBannerPresenter
         }
 
         // Calculate banner position and size
-        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-        int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
-        int bannerY = screenHeight / 3;
+        var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+        var screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
+        var bannerY = screenHeight / 3;
 
         // Draw semi-transparent background
         Raylib.DrawRectangle(0, bannerY, screenWidth, BannerHeight, new Color(0, 0, 0, 200));
 
         // Draw text with a slight glow effect
-        string bannerText = "Everybody's gangsta until the charger appears";
-        Vector2 textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, bannerText, _fontSize, 1);
+        var bannerText = "Everybody's gangsta until the charger appears";
+        var textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, bannerText, _fontSize, 1);
         
         // Calculate total width needed for skulls and text
-        float totalWidth = textSize.X + (2 * SkullSize) + (2 * SkullSpacing);
+        var totalWidth = textSize.X + (2 * SkullSize) + (2 * SkullSpacing);
         
         // Ensure we have enough space for everything
         if (totalWidth > screenWidth)
         {
             // If not enough space, reduce font size until it fits
-            int adjustedFontSize = _fontSize;
+            var adjustedFontSize = _fontSize;
             while (totalWidth > screenWidth && adjustedFontSize > 12)
             {
                 adjustedFontSize--;
@@ -62,16 +62,16 @@ public class BannerPresenter : IBannerPresenter
         }
 
         // Calculate center position
-        float centerX = screenWidth / 2;
+        var centerX = screenWidth / 2;
         
         // Position elements relative to center
-        float leftSkullX = centerX - (totalWidth / 2);
-        float textX = leftSkullX + SkullSize + SkullSpacing;
-        float rightSkullX = textX + textSize.X + SkullSpacing;
+        var leftSkullX = centerX - (totalWidth / 2);
+        var textX = leftSkullX + SkullSize + SkullSpacing;
+        var rightSkullX = textX + textSize.X + SkullSpacing;
 
         // Calculate vertical positions
-        float textY = bannerY + (BannerHeight - textSize.Y) / 2;
-        float skullY = bannerY + (BannerHeight - SkullSize) / 2;
+        var textY = bannerY + (BannerHeight - textSize.Y) / 2;
+        var skullY = bannerY + (BannerHeight - SkullSize) / 2;
 
         // Draw skull textures on both sides
         // Draw left skull
@@ -87,7 +87,7 @@ public class BannerPresenter : IBannerPresenter
             Color.White);
 
         // Draw text with a slight glow effect
-        Color glowColor = new Color(200, 0, 0, 100);
+        var glowColor = new Color(200, 0, 0, 100);
         Raylib.DrawTextEx(rayConnection.MenuFont, bannerText, 
             new Vector2(textX + 2, textY + 2), _fontSize, 1, glowColor);
         Raylib.DrawTextEx(rayConnection.MenuFont, bannerText, 
