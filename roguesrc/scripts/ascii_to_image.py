@@ -22,7 +22,7 @@ def get_char_rect(char_num):
 def draw_char(draw, char_num, x, y):
     """Draw a CP437 character at the specified position."""
     # Load the CP437 charset
-    charset = Image.open('RogueLib/images/Codepage-437-transparent.png')
+    charset = Image.open('../RogueLib/images/Codepage-437-transparent.png')
     
     # Get the character from the charset
     char_rect = get_char_rect(char_num)
@@ -33,7 +33,7 @@ def draw_char(draw, char_num, x, y):
 
 def create_skull_image():
     # Read the skull pattern from file
-    with open('RogueLib/images/skull.txt', 'r') as f:
+    with open('data/skull.txt', 'r') as f:
         skull_lines = f.readlines()
     
     # Remove empty lines and strip whitespace
@@ -68,9 +68,47 @@ def create_skull_image():
                          y * (CHAR_HEIGHT + CHAR_V_GAP))
     
     # Save the image
-    output_path = 'RogueLib/images/skull.png'
+    output_path = '../RogueLib/images/skull.png'
     image.save(output_path)
     print(f"Skull image saved to {output_path}")
 
+def create_sword_image():
+    # Read the sword pattern from file
+    with open('data/sword.txt', 'r') as f:
+        sword_lines = f.readlines()
+    
+    # Remove empty lines and strip whitespace
+    sword_lines = [line.rstrip() for line in sword_lines if line.strip()]
+    
+    # Calculate dimensions
+    width = max(len(line) for line in sword_lines)
+    height = len(sword_lines)
+    
+    # Create a new image with transparent background
+    image = Image.new('RGBA', (width * (CHAR_WIDTH + CHAR_H_GAP), height * (CHAR_HEIGHT + CHAR_V_GAP)), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    
+    # Convert ASCII characters to CP437 characters
+    char_map = {
+        '^': 0x5E,  # ^
+        '|': 0xBA,  # ║
+        '=': 0xCD,  # ═
+        ' ': 0,     # space
+    }
+    
+    # Draw each character
+    for y, line in enumerate(sword_lines):
+        for x, char in enumerate(line):
+            if char in char_map:
+                draw_char(draw, char_map[char], 
+                         x * (CHAR_WIDTH + CHAR_H_GAP), 
+                         y * (CHAR_HEIGHT + CHAR_V_GAP))
+    
+    # Save the image
+    output_path = '../RogueLib/images/sword.png'
+    image.save(output_path)
+    print(f"Sword image saved to {output_path}")
+
 if __name__ == "__main__":
-    create_skull_image() 
+    create_skull_image()
+    create_sword_image() 

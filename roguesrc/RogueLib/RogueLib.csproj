@@ -15,6 +15,7 @@
       <EmbeddedResource Include="fonts/Roboto-Regular.ttf" />
       <EmbeddedResource Include="images/Codepage-437-transparent.png" />
       <EmbeddedResource Include="images/skull.png" />
+      <EmbeddedResource Include="images/sword.png" />
       <EmbeddedResource Include="resources/crt.fs" />
       <EmbeddedResource Include="resources/map.txt" />
     </ItemGroup>
