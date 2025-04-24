@@ -1,1 +1,81 @@
- 
+When using dependency injection in C#:
+
+1. Always register new types in the registry (RogueLibRegistry.cs)
+2. Maintain the order of registration to match constructor parameters
+3. Use appropriate lifetime scopes (Scoped, Singleton, Transient)
+4. Keep the registry organized and well-documented
+
+Example of good practice:
+```csharp
+// In RogueLibRegistry.cs
+public static IServiceCollection RegisterRogueLib(this IServiceCollection services) =>
+    services
+        .AddScoped<IServiceInterface, ServiceImplementation>()
+        .AddScoped<IPresenterInterface, PresenterImplementation>()
+        .AddScoped<IHandlerInterface, HandlerImplementation>();
+```
+
+When adding a new presenter or service:
+
+1. Create the interface first
+2. Implement the class with constructor injection
+3. Add the interface and implementation to the registry
+4. Update any dependent classes to use the new interface
+
+Example of adding a new presenter:
+```csharp
+// 1. Create interface
+public interface IMyPresenter
+{
+    void Draw(IRayConnection rayConnection);
+}
+
+// 2. Implement class with constructor injection
+public class MyPresenter : IMyPresenter
+{
+    private readonly IScreenDrawerUtil _screenDrawerUtil;
+
+    public MyPresenter(IScreenDrawerUtil screenDrawerUtil)
+    {
+        _screenDrawerUtil = screenDrawerUtil;
+    }
+
+    public void Draw(IRayConnection rayConnection)
+    {
+        // Implementation
+    }
+}
+
+// 3. Add to registry
+.AddScoped<IMyPresenter, MyPresenter>()
+
+// 4. Use in dependent class
+private readonly IMyPresenter _myPresenter;
+
+public MyDependentClass(IMyPresenter myPresenter)
+{
+    _myPresenter = myPresenter;
+}
+```
+
+This rule applies to:
+- Presenters
+- Services
+- Handlers
+- Any class that needs dependency injection
+
+Remember to:
+- Always use interfaces for dependencies
+- Keep constructors simple and focused
+- Document any special lifetime requirements
+- Update the registry when adding new dependencies
+
+Do NOT register:
+- Types that are instantiated directly with `new`
+- Types that are only used internally within a class
+- Types that are never injected into other classes
+
+Remember:
+- Only register types that will be resolved through dependency injection
+- If you add a new dependency to a constructor, it must be registered
+- If you create a new class that will be injected into other classes, it must be registered 
