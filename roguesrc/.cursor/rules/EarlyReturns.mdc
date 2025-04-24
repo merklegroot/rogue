@@ -1,1 +1,43 @@
- 
+When writing C# code:
+
+1. Prefer early returns over nested if statements
+2. Return as soon as possible when a condition is met
+3. Use guard clauses at the start of methods
+4. Avoid deep nesting of if statements
+
+Example of good practice:
+```csharp
+public void ProcessItem(Item item)
+{
+    if (item == null)
+        return;
+        
+    if (!item.IsValid)
+        return;
+        
+    // Main logic here
+    ProcessValidItem(item);
+}
+```
+
+Instead of:
+```csharp
+public void ProcessItem(Item item)
+{
+    if (item != null)
+    {
+        if (item.IsValid)
+        {
+            // Main logic here
+            ProcessValidItem(item);
+        }
+    }
+}
+```
+
+This rule applies to:
+- Methods
+- Properties
+- Indexers
+- Operators
+- Any code block that can return early 
