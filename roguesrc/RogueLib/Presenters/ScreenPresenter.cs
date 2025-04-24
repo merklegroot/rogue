@@ -315,11 +315,27 @@ public class ScreenPresenter : IScreenPresenter
             Raylib.DrawRectangle(0, bannerY, screenWidth, bannerHeight, new Color(0, 0, 0, 200));
 
             // Draw text with a slight glow effect
-            string bannerText = state.BannerText;
+            string bannerText = "Everybody's gangsta until the charger appears";
             int fontSize = 24;
             Vector2 textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, bannerText, fontSize, 1);
             float textX = (screenWidth - textSize.X) / 2;
             float textY = bannerY + (bannerHeight - textSize.Y) / 2;
+
+            // Draw skull textures on both sides
+            int skullSize = 32; // Size of the skull texture
+            int skullSpacing = 20; // Space between skull and text
+            
+            // Draw left skull
+            Raylib.DrawTexture(rayConnection.SkullTexture, 
+                (int)(textX - skullSize - skullSpacing), 
+                (int)(textY + (textSize.Y - skullSize) / 2), 
+                Color.White);
+            
+            // Draw right skull
+            Raylib.DrawTexture(rayConnection.SkullTexture, 
+                (int)(textX + textSize.X + skullSpacing), 
+                (int)(textY + (textSize.Y - skullSize) / 2), 
+                Color.White);
 
             // Draw text with a slight glow effect
             Color glowColor = new Color(200, 0, 0, 100);

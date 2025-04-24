@@ -9,7 +9,8 @@ public interface IRayConnection : IDisposable
     Texture2D CharsetTexture { get; init; }
     Shader CrtShader { get; init; }
     RenderTexture2D GameTexture { get; init; }
-    int TimeLoc { get; init; }
+    Texture2D SkullTexture { get; init; }
+    int TimeLoc { get; init; }    
 }
 
 public interface IRayConnectionFactory
@@ -41,7 +42,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
             MenuFont = rayLoader.LoadRobotoFont();
             CharsetTexture = rayLoader.LoadCharsetTexture();
             SkullTexture = rayLoader.LoadSkullImage();
-            
+
             // Create a render texture the size of the window
             int width = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
             int height = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
