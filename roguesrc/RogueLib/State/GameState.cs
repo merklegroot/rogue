@@ -45,4 +45,12 @@ public class GameState
     public CameraState CameraState { get; set; } = new CameraState();
 
     public List<string> Map { get; set; } = [];
+
+    public bool IsChargerActive { get; set; }
+    public ChargerEnemyState? Charger { get; set; }
+    
+    // Banner state
+    public bool IsBannerVisible { get; set; }
+    public string BannerText { get; set; } = "";
+    public float BannerTimer { get; set; }
 }

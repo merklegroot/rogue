@@ -280,15 +280,51 @@ public class ScreenPresenter : IScreenPresenter
         DrawGoldCounter(rayConnection, state);
         DrawWorld(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
-        _debugPanelPresenter.Draw(rayConnection, state, _chargerActive, _charger);
+        _debugPanelPresenter.Draw(rayConnection, state, state.IsChargerActive, state.Charger);
         DrawExplosions(state, rayConnection);
         DrawSwordAnimation(rayConnection, state);
         DrawFlyingGold(rayConnection, state);
         DrawCooldownIndicators(rayConnection, state);
         DrawCrossbowBolts(rayConnection, state);
-        DrawChargerHealth(rayConnection);
+        DrawChargerHealth(rayConnection, state);
+        DrawBanner(rayConnection, state);
         DrawInstructions(rayConnection);
         _chunkPresenter.Draw(rayConnection, state);
+    }
+
+    private void DrawBanner(IRayConnection rayConnection, GameState state)
+    {
+        if (state.IsBannerVisible)
+        {
+            // Update banner timer
+            state.BannerTimer += Raylib.GetFrameTime();
+            if (state.BannerTimer >= 3.0f) // Show for 3 seconds
+            {
+                state.IsBannerVisible = false;
+                state.BannerTimer = 0;
+                return;
+            }
+
+            // Calculate banner position and size
+            int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+            int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
+            int bannerHeight = 60;
+            int bannerY = screenHeight / 3;
+
+            // Draw semi-transparent background
+            Raylib.DrawRectangle(0, bannerY, screenWidth, bannerHeight, new Color(0, 0, 0, 200));
+
+            // Draw text centered
+            int fontSize = 32;
+            Vector2 textSize = Raylib.MeasureTextEx(rayConnection.MenuFont, state.BannerText, fontSize, 1);
+            float textX = (screenWidth - textSize.X) / 2;
+            float textY = bannerY + (bannerHeight - textSize.Y) / 2;
+
+            // Draw text with a slight glow effect
+            Color glowColor = new Color(200, 0, 0, 100);
+            _screenDrawUtil.DrawText(rayConnection, state.BannerText, (int)textX + 2, (int)textY + 2, glowColor);
+            _screenDrawUtil.DrawText(rayConnection, state.BannerText, (int)textX, (int)textY, Color.Red);
+        }
     }
 
     private void DrawExplosions(GameState state, IRayConnection rayConnection)
@@ -510,12 +546,12 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawChargerHealth(IRayConnection rayConnection)
+    private void DrawChargerHealth(IRayConnection rayConnection, GameState state)
     {
         // Draw charger health if active
-        if (_chargerActive && _charger != null && _charger.Alive)
+        if (state.IsChargerActive && state.Charger != null && state.Charger.Alive)
         {
-            string healthText = $"Charger HP: {_charger.Health}/{GameConstants.ChargerHealth} (Hit {_charger.HitCount} times)";
+            string healthText = $"Charger HP: {state.Charger.Health}/{GameConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
             _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
         }
     }
@@ -1623,15 +1659,20 @@ public class ScreenPresenter : IScreenPresenter
             return;
 
         // Create a new charger with hardcoded health value
-        _charger = new ChargerEnemyState { 
+        state.Charger = new ChargerEnemyState { 
             X = newX, 
             Y = newY, 
-            Health = GameConstants.ChargerHealth, // Use constant from ScreenConstants
+            Health = GameConstants.ChargerHealth,
             Alive = true 
         };
-        _chargerActive = true;
+        state.IsChargerActive = true;
         
-        Console.WriteLine($"NEW IMPLEMENTATION: Spawned charger with {_charger.Health} health");
+        // Show boss banner
+        state.IsBannerVisible = true;
+        state.BannerText = "💀 Everybody's gangsta until the charger appears 💀";
+        state.BannerTimer = 0;
+        
+        Console.WriteLine($"NEW IMPLEMENTATION: Spawned charger with {state.Charger.Health} health");
     }
 
     // Add this new method for applying knockback
