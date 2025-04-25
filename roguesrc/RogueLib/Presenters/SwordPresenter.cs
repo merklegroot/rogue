@@ -29,12 +29,11 @@ public class SwordPresenter : ISwordPresenter
         if (progress > 1.0f) progress = 1.0f;
 
         // Calculate rotation based on direction and progress
-        // Since hilt is at bottom, we need to offset by 90 degrees
         float rotation = 0f;
         switch (state.LastDirection)
         {
             case Direction.Left:
-                rotation = 270f + (progress - 0.5f) * 180f; // Start at 270°, swing 180°
+                rotation = 270f - (progress - 0.5f) * 180f; // Start at 270°, swing 180°
                 break;
             case Direction.Right:
                 rotation = 90f + (progress - 0.5f) * 180f; // Start at 90°, swing 180°
@@ -43,45 +42,40 @@ public class SwordPresenter : ISwordPresenter
                 rotation = 0f + (progress - 0.5f) * 180f; // Start at 0°, swing 180°
                 break;
             case Direction.Down:
-                rotation = 180f + (progress - 0.5f) * 180f; // Start at 180°, swing 180°
+                rotation = 180f - (progress - 0.5f) * 180f; // Start at 180°, swing 180°
                 break;
         }
 
-        // Calculate position based on direction
-        float xOffset = 0f;
-        float yOffset = 0f;
+        // Calculate base position with camera offset
+        float baseX = 100 + (state.PlayerX - state.CameraState.X) * 32 + 400;
+        float baseY = 100 + (state.PlayerY - state.CameraState.Y) * 40 + 200;
+
+        // Scale the sword to match player character size
+        float scaledWidth = ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+        float scaledHeight = ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
+
+        // Adjust position based on direction to center the hilt
+        float swordX = baseX;
+        float swordY = baseY;
+
         switch (state.LastDirection)
         {
             case Direction.Left:
-                xOffset = -0.9f;
-                yOffset = (progress - 0.5f) * 1.2f;
-                break;
             case Direction.Right:
-                xOffset = 0.9f;
-                yOffset = (progress - 0.5f) * 1.2f;
+                // Center vertically for horizontal swings
+                swordY -= scaledHeight / 2;
                 break;
             case Direction.Up:
-                yOffset = -1.2f;
-                xOffset = (progress - 0.5f) * 1.2f;
-                break;
             case Direction.Down:
-                yOffset = 1.2f;
-                xOffset = (progress - 0.5f) * 1.2f;
+                // Center horizontally for vertical swings
+                swordX -= scaledWidth / 2;
                 break;
         }
 
-        // Calculate exact pixel position with camera offset
-        float swordX = 100 + ((state.PlayerX + xOffset) - state.CameraState.X) * 32 + 400;
-        float swordY = 100 + ((state.PlayerY + yOffset) - state.CameraState.Y) * 40 + 200;
-
-        // Get texture dimensions
-        float textureWidth = rayConnection.SwordTexture.Width;
-        float textureHeight = rayConnection.SwordTexture.Height;
-
         // Create source and destination rectangles
-        Rectangle source = new(0, 0, textureWidth, textureHeight);
-        Rectangle dest = new(swordX, swordY, textureWidth, textureHeight);
-        Vector2 origin = new(textureWidth / 2, textureHeight); // Rotate around the hilt (bottom center)
+        Rectangle source = new(0, 0, rayConnection.SwordTexture.Width, rayConnection.SwordTexture.Height);
+        Rectangle dest = new(swordX, swordY, scaledWidth, scaledHeight);
+        Vector2 origin = new(scaledWidth / 2, scaledHeight); // Rotate around the hilt (bottom center)
 
         // Draw the sword texture with rotation and color tint
         Raylib.DrawTexturePro(
