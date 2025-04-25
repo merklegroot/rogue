@@ -49,6 +49,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IMenuPresenter _menuPresenter;
     private readonly ICharacterSetPresenter _characterSetPresenter;
     private readonly ISwordPresenter _swordPresenter;
+    private readonly IInstructionsPresenter _instructionsPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -62,7 +63,8 @@ public class ScreenPresenter : IScreenPresenter
         IBannerPresenter bannerPresenter,
         IMenuPresenter menuPresenter,
         ICharacterSetPresenter characterSetPresenter,
-        ISwordPresenter swordPresenter)
+        ISwordPresenter swordPresenter,
+        IInstructionsPresenter instructionsPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -76,6 +78,7 @@ public class ScreenPresenter : IScreenPresenter
         _menuPresenter = menuPresenter;
         _characterSetPresenter = characterSetPresenter;
         _swordPresenter = swordPresenter;
+        _instructionsPresenter = instructionsPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -233,7 +236,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection, state);
         _bannerPresenter.Draw(rayConnection, state);
-        DrawInstructions(rayConnection, state);
+        _instructionsPresenter.Draw(rayConnection, state);
         _chunkPresenter.Draw(rayConnection, state);
     }
 
