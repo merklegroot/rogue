@@ -538,38 +538,8 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
 
-        // Update explosions
-        for (int i = state.Explosions.Count - 1; i >= 0; i--)
-        {
-            state.Explosions[i].Timer += Raylib.GetFrameTime();
-            if (state.Explosions[i].Timer >= GameConstants.ExplosionDuration)
-            {
-                // Spawn gold at the explosion location when the explosion finishes
-                state.GoldItems.Add(new GoldItem { 
-                    X = state.Explosions[i].X, 
-                    Y = state.Explosions[i].Y, 
-                    Value = _random.Next(3, 8)  // Enemies drop more valuable gold (3-7)
-                });
-                
-                // Remove the explosion
-                state.Explosions.RemoveAt(i);
-            }
-        }
-
-        // Update flying gold animations
-        for (int i = state.FlyingGold.Count - 1; i >= 0; i--)
-        {
-            state.FlyingGold[i].Timer += Raylib.GetFrameTime();
-            if (state.FlyingGold[i].Timer >= GameConstants.GoldFlyDuration)
-            {
-                // Add the gold value to player's total when animation completes
-                state.PlayerGold += state.FlyingGold[i].Value;
-                
-                // Remove the flying gold
-                state.FlyingGold.RemoveAt(i);
-            }
-        }
-
+        AdvanceExplosions(state);
+        AdvanceFlyingGold(state);
 
         // Update health pickup spawn timer
         state.HealthPickupState._timeSinceLastHealthSpawn += Raylib.GetFrameTime();
@@ -629,26 +599,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Update crossbow bolts
         UpdateCrossbowBolts(state);
-
-        // Check for collisions with enemies
-        foreach (var enemy in state.Enemies)
-        {
-            if (enemy.IsAlive && !state.IsInvincible)
-            {
-                // Check if player is colliding with this enemy
-                if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
-                {
-                    // Player takes damage
-                    state.CurrentHealth--;
-                    Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
-                    
-                    // Apply knockback
-                    ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
-                    
-                    break; // Only take damage from one enemy per frame
-                }
-            }
-        }
+        HandlePlayerBumpsEnemies(state);
         
         // Check for collisions with charger (deals more damage)
         if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && !state.IsInvincible)
@@ -667,8 +618,70 @@ public class ScreenPresenter : IScreenPresenter
 
         AdvanceKnockback(state);
 
-        // Update sword animation
         _swordPresenter.Update(state);
+    }
+
+    private void AdvanceExplosions(GameState state)
+    {
+        for (int i = state.Explosions.Count - 1; i >= 0; i--)
+        {
+            state.Explosions[i].Timer += Raylib.GetFrameTime();
+            if (state.Explosions[i].Timer >= GameConstants.ExplosionDuration)
+            {
+                // Spawn gold at the explosion location when the explosion finishes
+                state.GoldItems.Add(new GoldItem { 
+                    X = state.Explosions[i].X, 
+                    Y = state.Explosions[i].Y, 
+                    Value = _random.Next(3, 8)  // Enemies drop more valuable gold (3-7)
+                });
+                
+                // Remove the explosion
+                state.Explosions.RemoveAt(i);
+            }
+        }
+    }
+
+    private void AdvanceFlyingGold(GameState state)
+    {
+                // Update flying gold animations
+        for (int i = state.FlyingGold.Count - 1; i >= 0; i--)
+        {
+            state.FlyingGold[i].Timer += Raylib.GetFrameTime();
+            if (state.FlyingGold[i].Timer >= GameConstants.GoldFlyDuration)
+            {
+                // Add the gold value to player's total when animation completes
+                state.PlayerGold += state.FlyingGold[i].Value;
+                
+                // Remove the flying gold
+                state.FlyingGold.RemoveAt(i);
+            }
+        }
+    }
+
+    private void HandlePlayerBumpsEnemies(GameState state)
+    {
+        if (state.IsInvincible)
+            return;
+
+        // Check for collisions with enemies
+        foreach (var enemy in state.Enemies)
+        {
+            if (enemy.IsAlive)
+            {
+                // Check if player is colliding with this enemy
+                if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
+                {
+                    // Player takes damage
+                    state.CurrentHealth--;
+                    Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
+                    
+                    // Apply knockback
+                    ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
+                    
+                    break; // Only take damage from one enemy per frame
+                }
+            }
+        }
     }
 
     private void AdvanceKnockback(GameState state)
