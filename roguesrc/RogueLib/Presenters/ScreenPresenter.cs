@@ -15,18 +15,7 @@ public interface IScreenPresenter
 }
 
 public class ScreenPresenter : IScreenPresenter
-{    
-    
-    private const float GoldFlyDuration = 0.3f;
-    private const float HealthSpawnInterval = 30f;
-    private const int KillsForCharger = 10;
-    private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
-    private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
-    private const float KnockbackDuration = 0.08f;
-    private const float KnockbackDistance = 0.5f;
-    private const float CameraDeadZone = GameConstants.CameraDeadZone;
-    private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
-
+{
     private readonly Random _random = new();
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
@@ -517,7 +506,7 @@ public class ScreenPresenter : IScreenPresenter
         // Handle movement with direct key state checks
         // This allows for continuous movement when keys are held down
 
-        float moveAmount = PlayerMoveSpeed * Raylib.GetFrameTime();
+        float moveAmount = GameConstants.PlayerMoveSpeed * Raylib.GetFrameTime();
 
         // Check for diagonal movement first
         bool upPressed = Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up);
@@ -642,7 +631,7 @@ public class ScreenPresenter : IScreenPresenter
         for (int i = state.FlyingGold.Count - 1; i >= 0; i--)
         {
             state.FlyingGold[i].Timer += Raylib.GetFrameTime();
-            if (state.FlyingGold[i].Timer >= GoldFlyDuration)
+            if (state.FlyingGold[i].Timer >= GameConstants.GoldFlyDuration)
             {
                 // Add the gold value to player's total when animation completes
                 state.PlayerGold += state.FlyingGold[i].Value;
@@ -655,7 +644,7 @@ public class ScreenPresenter : IScreenPresenter
 
         // Update health pickup spawn timer
         state.HealthPickupState._timeSinceLastHealthSpawn += Raylib.GetFrameTime();
-        if (state.HealthPickupState._timeSinceLastHealthSpawn >= HealthSpawnInterval)
+        if (state.HealthPickupState._timeSinceLastHealthSpawn >= GameConstants.HealthSpawnInterval)
         {
             SpawnHealthPickup(state);
             state.HealthPickupState._timeSinceLastHealthSpawn = 0f;
@@ -761,10 +750,10 @@ public class ScreenPresenter : IScreenPresenter
             state.KnockbackTimer += Raylib.GetFrameTime();
             
             // Apply knockback movement during the knockback duration
-            if (state.KnockbackTimer < KnockbackDuration)
+            if (state.KnockbackTimer < GameConstants.KnockbackDuration)
             {
                 // Calculate knockback distance for this frame
-                float frameKnockback = KnockbackDistance * Raylib.GetFrameTime() * (1.0f / KnockbackDuration);
+                float frameKnockback = GameConstants.KnockbackDistance * Raylib.GetFrameTime() * (1.0f / GameConstants.KnockbackDuration);
                 
                 // Calculate target position
                 float targetX = state.PlayerX;
@@ -804,7 +793,7 @@ public class ScreenPresenter : IScreenPresenter
             }
             
             // End knockback effect
-            if (state.KnockbackTimer >= KnockbackDuration)
+            if (state.KnockbackTimer >= GameConstants.KnockbackDuration)
             {
                 state.IsKnockedBack = false;
                 state.KnockbackTimer = 0f;
@@ -890,8 +879,8 @@ public class ScreenPresenter : IScreenPresenter
                 enemy.MoveTimer = 0f;
                 
                 // Generate random direction (-1, 0, or 1 for both x and y)
-                float dx = _random.Next(-1, 2) * PlayerMoveSpeed;
-                float dy = _random.Next(-1, 2) * PlayerMoveSpeed;
+                float dx = _random.Next(-1, 2) * GameConstants.PlayerMoveSpeed;
+                float dy = _random.Next(-1, 2) * GameConstants.PlayerMoveSpeed;
                 
                 // Try to move horizontally first
                 if (dx != 0)
@@ -966,7 +955,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Update charger movement
         _chargerState.MoveTimer += frameTime;
-        if (_chargerState.MoveTimer >= ChargerSpeed) // Charger moves faster than regular enemies
+        if (_chargerState.MoveTimer >= GameConstants.ChargerSpeed) // Charger moves faster than regular enemies
         {
             _chargerState.MoveTimer = 0f;
             
@@ -975,11 +964,11 @@ public class ScreenPresenter : IScreenPresenter
             float dy = 0;
             
             // Charger AI: move directly toward player
-            if (_chargerState.X < state.PlayerX) dx = PlayerMoveSpeed;
-            else if (_chargerState.X > state.PlayerX) dx = -PlayerMoveSpeed;
+            if (_chargerState.X < state.PlayerX) dx = GameConstants.PlayerMoveSpeed;
+            else if (_chargerState.X > state.PlayerX) dx = -GameConstants.PlayerMoveSpeed;
             
-            if (_chargerState.Y < state.PlayerY) dy = PlayerMoveSpeed;
-            else if (_chargerState.Y > state.PlayerY) dy = -PlayerMoveSpeed;
+            if (_chargerState.Y < state.PlayerY) dy = GameConstants.PlayerMoveSpeed;
+            else if (_chargerState.Y > state.PlayerY) dy = -GameConstants.PlayerMoveSpeed;
             
             // Try to move horizontally first
             if (dx != 0)
@@ -1469,20 +1458,20 @@ public class ScreenPresenter : IScreenPresenter
         float deltaY = state.PlayerY - state.CameraState.Y;
         
         // If player is outside the dead zone, move the camera
-        if (Math.Abs(deltaX) > CameraDeadZone)
+        if (Math.Abs(deltaX) > GameConstants.CameraDeadZone)
         {
             // Move camera in the direction of the player
             state.CameraState.X += deltaX > 0 ? 
-                Math.Min(deltaX - CameraDeadZone, 0.5f) : 
-                Math.Max(deltaX + CameraDeadZone, -0.5f);
+                Math.Min(deltaX - GameConstants.CameraDeadZone, 0.5f) : 
+                Math.Max(deltaX + GameConstants.CameraDeadZone, -0.5f);
         }
         
-        if (Math.Abs(deltaY) > CameraDeadZone)
+        if (Math.Abs(deltaY) > GameConstants.CameraDeadZone)
         {
             // Move camera in the direction of the player
             state.CameraState.Y += deltaY > 0 ? 
-                Math.Min(deltaY - CameraDeadZone, 0.5f) : 
-                Math.Max(deltaY + CameraDeadZone, -0.5f);
+                Math.Min(deltaY - GameConstants.CameraDeadZone, 0.5f) : 
+                Math.Max(deltaY + GameConstants.CameraDeadZone, -0.5f);
         }
     }
 
@@ -1531,7 +1520,7 @@ public class ScreenPresenter : IScreenPresenter
                     _enemiesKilled++;
                     
                     // Check if we should spawn a charger
-                    if (_enemiesKilled >= KillsForCharger && !_isChargerActive)
+                    if (_enemiesKilled >= GameConstants.KillsForCharger && !_isChargerActive)
                     {
                         SpawnCharger(state);
                     }
