@@ -43,6 +43,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IFlyingGoldPresenter _flyingGoldPresenter;
     private readonly ICooldownIndicatorPresenter _cooldownIndicatorPresenter;
     private readonly IUpdateEnemiesHandler _updateEnemiesHandler;
+    private readonly IMenuInputHandler _menuInputHandler;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -61,7 +62,8 @@ public class ScreenPresenter : IScreenPresenter
         IGoldCounterPresenter goldCounterPresenter,
         IFlyingGoldPresenter flyingGoldPresenter,
         ICooldownIndicatorPresenter cooldownIndicatorPresenter,
-        IUpdateEnemiesHandler updateEnemiesHandler)
+        IUpdateEnemiesHandler updateEnemiesHandler,
+        IMenuInputHandler menuInputHandler)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -80,6 +82,7 @@ public class ScreenPresenter : IScreenPresenter
         _flyingGoldPresenter = flyingGoldPresenter;
         _cooldownIndicatorPresenter = cooldownIndicatorPresenter;
         _updateEnemiesHandler = updateEnemiesHandler;
+        _menuInputHandler = menuInputHandler;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -132,7 +135,7 @@ public class ScreenPresenter : IScreenPresenter
         {
             case GameScreenEnum.Menu:
                 _menuPresenter.Draw(rayConnection);
-                HandleMenuInput(state);
+                _menuInputHandler.Handle(state);
                 break;
 
             case GameScreenEnum.CharacterSet:
@@ -184,35 +187,6 @@ public class ScreenPresenter : IScreenPresenter
 
         // Clear processed events
         state.KeyEvents.Clear();
-    }
-
-    private void HandleMenuInput(GameState state)
-    {
-        while (state.KeyEvents.Count > 0)
-        {
-            var key = state.KeyEvents.Dequeue();
-            if (key == KeyboardKey.C)
-            {
-                state.CurrentScreen = GameScreenEnum.CharacterSet;
-                break;
-            }
-            if (key == KeyboardKey.A)
-            {
-                state.CurrentScreen = GameScreenEnum.Animation;
-                break;
-            }
-            if (key == KeyboardKey.X)
-            {
-                Raylib.CloseWindow();
-                break;
-            }
-            // Toggle CRT effect with T key
-            if (key == KeyboardKey.T)
-            {
-                _shouldEnableCrtEffect = !_shouldEnableCrtEffect;
-                break;
-            }
-        }
     }
 
     private void HandleCharacterSetInput(GameState state)
