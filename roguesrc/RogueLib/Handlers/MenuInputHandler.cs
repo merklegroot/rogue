@@ -25,7 +25,7 @@ public class MenuInputHandler : IMenuInputHandler
             }
             if (key == KeyboardKey.A)
             {
-                state.CurrentScreen = GameScreenEnum.Animation;
+                state.CurrentScreen = GameScreenEnum.Adventure;
                 break;
             }
             if (key == KeyboardKey.X)

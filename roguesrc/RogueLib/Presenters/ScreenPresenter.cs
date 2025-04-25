@@ -143,9 +143,9 @@ public class ScreenPresenter : IScreenPresenter
                 HandleCharacterSetInput(state);
                 break;
 
-            case GameScreenEnum.Animation:
-                DrawAnimation(rayConnection, state);
-                HandleAnimationInput(state);
+            case GameScreenEnum.Adventure:
+                DrawAdventure(rayConnection, state);
+                HandleAdventureInput(state);
                 break;
 
             case GameScreenEnum.Shop:
@@ -197,7 +197,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawAnimation(IRayConnection rayConnection, GameState state)
+    private void DrawAdventure(IRayConnection rayConnection, GameState state)
     {
         _healthBarPresenter.Draw(rayConnection, state);
         _goldCounterPresenter.Draw(rayConnection, state);
@@ -398,7 +398,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void HandleAnimationInput(GameState state)
+    private void HandleAdventureInput(GameState state)
     {
         // Handle ESC key via event queue for menu navigation
         while (state.KeyEvents.Count > 0)
@@ -1024,7 +1024,7 @@ public class ScreenPresenter : IScreenPresenter
             
             if (key == KeyboardKey.Escape)
             {
-                state.CurrentScreen = GameScreenEnum.Animation;
+                state.CurrentScreen = GameScreenEnum.Adventure;
             }
             else if (key == KeyboardKey.Up)
             {
