@@ -5,7 +5,7 @@ namespace RogueLib.Presenters;
 
 public interface IPanelPresenter
 {
-    void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, int? maxWidth);
+    void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines);
 }
 
 public class PanelPresenter : IPanelPresenter
@@ -13,6 +13,7 @@ public class PanelPresenter : IPanelPresenter
     private readonly IDrawUtil _drawUtil;
     private const int LineHeight = 20;
     private const int PanelPadding = 10;
+    private const int PanelWidth = 300;
 
     // Panel colors
     private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
@@ -23,7 +24,7 @@ public class PanelPresenter : IPanelPresenter
         _drawUtil = drawUtil;
     }
 
-    public void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, int? maxWidth = null)
+    public void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines)
     {
         if (rayConnection == null || lines == null)
             return;
@@ -31,7 +32,7 @@ public class PanelPresenter : IPanelPresenter
         var lineList = lines.ToList();
         var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2);
         
-        DrawPanelBackground(position, new Coord2dInt(maxWidth ?? 300, panelHeight));
+        DrawPanelBackground(position, new Coord2dInt(PanelWidth, panelHeight));
         DrawPanelLines(rayConnection, position, lineList);
     }
 

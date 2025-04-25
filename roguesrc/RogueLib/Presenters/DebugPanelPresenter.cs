@@ -1,7 +1,6 @@
 using Raylib_cs;
 using RogueLib.Models;
 using RogueLib.State;
-using System.Collections.Generic;
 
 namespace RogueLib.Presenters;
 
@@ -11,8 +10,7 @@ public interface IDebugPanelPresenter
 }
 
 public class DebugPanelPresenter : IDebugPanelPresenter
-{
-    private const int PanelWidth = 300;
+{    
     private static readonly Coord2dInt PanelPosition = new(10, 100);
     private readonly IPanelPresenter _panelPresenter;
 
@@ -27,7 +25,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             return;
 
         var debugLines = CollectDebugLines(state);
-        _panelPresenter.Draw(rayConnection, PanelPosition, debugLines, PanelWidth);
+        _panelPresenter.Draw(rayConnection, PanelPosition, debugLines);
     }
 
     private List<LineInfo> CollectDebugLines(GameState state)
