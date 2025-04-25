@@ -46,6 +46,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IMenuInputHandler _menuInputHandler;
     private readonly IEnemyPresenter _enemyPresenter;
     private readonly IExplosionPresenter _explosionPresenter;
+    private readonly IMapPresenter _mapPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -67,7 +68,8 @@ public class ScreenPresenter : IScreenPresenter
         IUpdateEnemiesHandler updateEnemiesHandler,
         IMenuInputHandler menuInputHandler,
         IEnemyPresenter enemyPresenter,
-        IExplosionPresenter explosionPresenter)
+        IExplosionPresenter explosionPresenter,
+        IMapPresenter mapPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -89,6 +91,7 @@ public class ScreenPresenter : IScreenPresenter
         _menuInputHandler = menuInputHandler;
         _enemyPresenter = enemyPresenter;
         _explosionPresenter = explosionPresenter;
+        _mapPresenter = mapPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -207,7 +210,12 @@ public class ScreenPresenter : IScreenPresenter
     {
         _healthBarPresenter.Draw(rayConnection, state);
         _goldCounterPresenter.Draw(rayConnection, state);
-        DrawWorld(rayConnection, state);
+        UpdateCamera(state);
+        _mapPresenter.Draw(rayConnection, state);
+        _enemyPresenter.Draw(rayConnection, state);
+        DrawCharger(rayConnection, state);        
+        DrawGoldItems(rayConnection, state);
+        DrawHealthPickups(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
         _debugPanelPresenter.Draw(rayConnection, state);
         _explosionPresenter.Draw(rayConnection, state);
@@ -248,102 +256,6 @@ public class ScreenPresenter : IScreenPresenter
             string healthText = $"Charger HP: {state.Charger.Health}/{GameConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
             _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
         }
-    }
-
-    private void DrawWorld(IRayConnection rayConnection, GameState state)
-    {
-        // Update camera position to follow player with a dead zone
-        UpdateCamera(state);
-        DrawMap(rayConnection, state);
-        _enemyPresenter.Draw(rayConnection, state);
-        DrawCharger(rayConnection, state);        
-        DrawGoldItems(rayConnection, state);
-        DrawHealthPickups(rayConnection, state);
-    }
-
-    private void DrawMap(IRayConnection rayConnection, GameState state)
-    {
-        // Calculate map dimensions
-        int mapHeight = state.Map.Count;
-        int mapWidth = state.Map.Max(line => line.Length);
-
-        // Draw the map
-        for (int y = 0; y < mapHeight; y++)
-        {
-            for (int x = 0; x < mapWidth; x++)
-            {
-                // Skip tiles that are too far from the camera (optimization)
-                if (Math.Abs(x - state.CameraState.X) > 25 || Math.Abs(y - state.CameraState.Y) > 20)
-                    continue;
-                
-                // Get the character at this position in the map
-                char mapChar = ' '; // Default to empty space (not a dot)
-                if (y < state.Map.Count && x < state.Map[y].Length)
-                {
-                    mapChar = state.Map[y][x];
-                }
-                
-                // Calculate screen position with camera offset
-                // Using 32 pixels for horizontal spacing
-                int screenX = 100 + (int)((x - state.CameraState.X) * 32) + 400;
-                int screenY = 100 + (int)((y - state.CameraState.Y) * 40) + 200;
-                
-                // Draw the appropriate tile based on the map character
-                Color tileColor = Color.DarkGray;
-                int tileChar = 0; // Default to space (empty) instead of 250 (dot)
-                
-                var wallColor = Color.Brown;
-
-                switch (mapChar)
-                {
-                    case '╔': // Top left corner
-                        tileChar = 0xC9; // ╔
-                        tileColor = wallColor;
-                        break;
-                    case '╗': // Top right corner
-                        tileChar = 0xBB; // ╗
-                        tileColor = wallColor;
-                        break;
-                    case '╚': // Bottom left corner
-                        tileChar = 0xC8; // ╚
-                        tileColor = wallColor;
-                        break;
-                    case '╝': // Bottom right corner
-                        tileChar = 0xBC; // ╝
-                        tileColor = wallColor;
-                        break;
-                    case '║': // Vertical wall
-                    case '|': // Vertical wall
-                        tileChar = 0xBA; // ║
-                        tileColor = wallColor;
-                        break;
-                    case '-': // Horizontal wall
-                    case '═': // Horizontal wall
-                        tileChar = 0xCD; // ═
-                        tileColor = wallColor;
-                        break;
-                    case '╬': // door
-                    case '+': // door
-                        tileChar = 0xCE; // ╬
-                        tileColor = Color.Brown;
-                        break;
-                    case '.': // Floor
-                        tileChar = 250; // ·
-                        tileColor = Color.Green;
-                        break;
-                    case 'X': // Hallway
-                        tileChar = 0xB1; // partially filled square
-                        tileColor = Color.Gray;
-                        break;
-                    default:
-                        tileChar = 0; // Empty space
-                        break;
-                }
-                
-                // Draw the tile
-                _screenDrawUtil.DrawCharacter(rayConnection, tileChar, screenX, screenY, tileColor);
-            }
-        }        
     }
 
     private void DrawHealthPickups(IRayConnection rayConnection, GameState state)
