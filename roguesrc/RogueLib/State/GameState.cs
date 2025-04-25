@@ -63,4 +63,6 @@ public class GameState
     public readonly List<GoldItem> GoldItems = [];
     
     public readonly List<FlyingGold> FlyingGold = [];
+
+    public HealthPickupState HealthPickupState { get; set; } = new HealthPickupState();
 }

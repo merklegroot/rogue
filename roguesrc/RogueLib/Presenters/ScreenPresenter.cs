@@ -31,8 +31,7 @@ public class ScreenPresenter : IScreenPresenter
 
     private bool _shouldEnableCrtEffect = true;
     private float _shaderTime = 0f;
-    private readonly List<HealthPickup> _healthPickups = [];
-    private float _timeSinceLastHealthSpawn = 0f;
+
     private int _enemiesKilled = 0;
     private bool _isChargerActive = false;
     private ChargerEnemyState? _chargerState = null;
@@ -494,7 +493,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Draw health pickups - with updated horizontal spacing
-        foreach (var health in _healthPickups)
+        foreach (var health in state.HealthPickupState.HealthPickups)
         {
             if (Math.Abs(health.X - state.CameraState.X) < 15 && Math.Abs(health.Y - state.CameraState.Y) < 10)
             {
@@ -682,12 +681,13 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
 
+
         // Update health pickup spawn timer
-        _timeSinceLastHealthSpawn += Raylib.GetFrameTime();
-        if (_timeSinceLastHealthSpawn >= HealthSpawnInterval)
+        state.HealthPickupState._timeSinceLastHealthSpawn += Raylib.GetFrameTime();
+        if (state.HealthPickupState._timeSinceLastHealthSpawn >= HealthSpawnInterval)
         {
             SpawnHealthPickup(state);
-            _timeSinceLastHealthSpawn = 0f;
+            state.HealthPickupState._timeSinceLastHealthSpawn = 0f;
         }
         
         // Check for health pickup collection
@@ -873,17 +873,17 @@ public class ScreenPresenter : IScreenPresenter
     private void CollectHealth(GameState state)
     {
         // Find any health pickup within one square of the player's position
-        for (int i = _healthPickups.Count - 1; i >= 0; i--)
+        for (int i = state.HealthPickupState.HealthPickups.Count - 1; i >= 0; i--)
         {
             // Check if health pickup is at the player's position or one square away
-            if (Math.Abs(_healthPickups[i].X - state.PlayerX) <= 1 && 
-                Math.Abs(_healthPickups[i].Y - state.PlayerY) <= 1)
+            if (Math.Abs(state.HealthPickupState.HealthPickups[i].X - state.PlayerX) <= 1 && 
+                Math.Abs(state.HealthPickupState.HealthPickups[i].Y - state.PlayerY) <= 1)
             {
                 // Add health to the player
-                state.CurrentHealth = Math.Min(ScreenConstants.MaxHealth, state.CurrentHealth + _healthPickups[i].HealAmount);
+                state.CurrentHealth = Math.Min(ScreenConstants.MaxHealth, state.CurrentHealth + state.HealthPickupState.HealthPickups[i].HealAmount);
                 
                 // Remove the collected health pickup
-                _healthPickups.RemoveAt(i);
+                state.HealthPickupState.HealthPickups.RemoveAt(i);
                 
                 // Only collect one health pickup per move
                 break;
@@ -1107,7 +1107,7 @@ public class ScreenPresenter : IScreenPresenter
                     if ((x != state.PlayerX || y != state.PlayerY) &&
                         !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
                         !state.GoldItems.Any(g => g.X == x && g.Y == y) &&
-                        !_healthPickups.Any(h => h.X == x && h.Y == y))
+                        !state.HealthPickupState.HealthPickups.Any(h => h.X == x && h.Y == y))
                     {
                         validPositions.Add((x, y));
                     }
@@ -1124,7 +1124,7 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = validPositions[randomIndex];
         
         // Spawn the health pickup
-        _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
+        state.HealthPickupState.HealthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
     }
 
     public bool WindowShouldClose()
