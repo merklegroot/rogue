@@ -418,20 +418,13 @@ public class ScreenPresenter : IScreenPresenter
                 // Check for sword collisions immediately when swing starts
                 CheckSwordCollisions(state, true);
             }
+
             // Add debug option to get free gold with G key
             if (key == KeyboardKey.G)
             {
-                state.PlayerGold += 100;
-                
-                // Optional: Add a visual indicator that gold was added
-                int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-                state.FlyingGold.Add(new FlyingGold { 
-                    StartX = screenWidth / 2,
-                    StartY = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale / 2,
-                    Value = 100,
-                    Timer = 0f
-                });
+                GenerateFreeGold(state);
             }
+
             // Add debug option to spawn charger with C key
             if (key == KeyboardKey.C)
             {
@@ -672,66 +665,84 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
 
-        // Update knockback effect
-        if (state.IsKnockedBack)
-        {
-            state.KnockbackTimer += Raylib.GetFrameTime();
-            
-            // Apply knockback movement during the knockback duration
-            if (state.KnockbackTimer < GameConstants.KnockbackDuration)
-            {
-                // Calculate knockback distance for this frame
-                float frameKnockback = GameConstants.KnockbackDistance * Raylib.GetFrameTime() * (1.0f / GameConstants.KnockbackDuration);
-                
-                // Calculate target position
-                float targetX = state.PlayerX;
-                float targetY = state.PlayerY;
-                
-                // Determine target position based on knockback direction
-                switch (state.KnockbackDirection)
-                {
-                    case Direction.Left:
-                        targetX = state.PlayerX - frameKnockback;
-                        break;
-                    case Direction.Right:
-                        targetX = state.PlayerX + frameKnockback;
-                        break;
-                    case Direction.Up:
-                        targetY = state.PlayerY - frameKnockback;
-                        break;
-                    case Direction.Down:
-                        targetY = state.PlayerY + frameKnockback;
-                        break;
-                }
-                
-                // Only move if the target position is walkable
-                int checkX = (int)Math.Floor(targetX);
-                int checkY = (int)Math.Floor(targetY);
-                if (IsWalkableTile(state.Map, checkX, checkY))
-                {
-                    state.PlayerX = (int)targetX;
-                    state.PlayerY = (int)targetY;
-                }
-                else
-                {
-                    // If we hit a barrier, stop the knockback
-                    state.IsKnockedBack = false;
-                    state.KnockbackTimer = 0f;
-                }
-            }
-            
-            // End knockback effect
-            if (state.KnockbackTimer >= GameConstants.KnockbackDuration)
-            {
-                state.IsKnockedBack = false;
-                state.KnockbackTimer = 0f;
-            }
-        }
+        AdvanceKnockback(state);
 
         // Update sword animation
         _swordPresenter.Update(state);
     }
 
+    private void AdvanceKnockback(GameState state)
+    {
+        // Update knockback effect
+        if (!state.IsKnockedBack)
+            return;
+
+        state.KnockbackTimer += Raylib.GetFrameTime();
+        
+        // Apply knockback movement during the knockback duration
+        if (state.KnockbackTimer < GameConstants.KnockbackDuration)
+        {
+            // Calculate knockback distance for this frame
+            float frameKnockback = GameConstants.KnockbackDistance * Raylib.GetFrameTime() * (1.0f / GameConstants.KnockbackDuration);
+            
+            // Calculate target position
+            float targetX = state.PlayerX;
+            float targetY = state.PlayerY;
+            
+            // Determine target position based on knockback direction
+            switch (state.KnockbackDirection)
+            {
+                case Direction.Left:
+                    targetX = state.PlayerX - frameKnockback;
+                    break;
+                case Direction.Right:
+                    targetX = state.PlayerX + frameKnockback;
+                    break;
+                case Direction.Up:
+                    targetY = state.PlayerY - frameKnockback;
+                    break;
+                case Direction.Down:
+                    targetY = state.PlayerY + frameKnockback;
+                    break;
+            }
+            
+            // Only move if the target position is walkable
+            int checkX = (int)Math.Floor(targetX);
+            int checkY = (int)Math.Floor(targetY);
+            if (IsWalkableTile(state.Map, checkX, checkY))
+            {
+                state.PlayerX = (int)targetX;
+                state.PlayerY = (int)targetY;
+            }
+            else
+            {
+                // If we hit a barrier, stop the knockback
+                state.IsKnockedBack = false;
+                state.KnockbackTimer = 0f;
+            }
+        }
+        
+        // End knockback effect
+        if (state.KnockbackTimer >= GameConstants.KnockbackDuration)
+        {
+            state.IsKnockedBack = false;
+            state.KnockbackTimer = 0f;
+        }
+    }
+
+    private void GenerateFreeGold(GameState state)
+    {
+        state.PlayerGold += 100;
+                    
+        // Optional: Add a visual indicator that gold was added
+        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+        state.FlyingGold.Add(new FlyingGold { 
+            StartX = screenWidth / 2,
+            StartY = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale / 2,
+            Value = 100,
+            Timer = 0f
+        });
+    }
     private void CollectGold(GameState state)
     {
         // Find any gold within one square of the player's position
