@@ -284,10 +284,10 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Draw crossbow cooldown indicator if player has crossbow
-        if (state.HasCrossbow && state.CrossbowOnCooldown)
+        if (state.CrossbowState.HasCrossbow && state.CrossbowState.CrossbowOnCooldown)
         {
             // Calculate cooldown progress (0.0 to 1.0)
-            float progress = state.CrossbowCooldownTimer / state.CrossbowCooldown;
+            float progress = state.CrossbowState.CrossbowCooldownTimer / state.CrossbowState.CrossbowCooldown;
             
             // Draw a small cooldown bar below the player
             int barWidth = 30;
@@ -668,10 +668,10 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Handle crossbow firing with F key
-        if (Raylib.IsKeyPressed(KeyboardKey.F) && state.HasCrossbow && !state.CrossbowOnCooldown)
+        if (Raylib.IsKeyPressed(KeyboardKey.F) && state.CrossbowState.HasCrossbow && !state.CrossbowState.CrossbowOnCooldown)
         {
-            state.CrossbowOnCooldown = true;
-            state.CrossbowCooldownTimer = 0f;
+            state.CrossbowState.CrossbowOnCooldown = true;
+            state.CrossbowState.CrossbowCooldownTimer = 0f;
             
             // Create a new bolt based on player direction
             float boltX = state.PlayerX;
@@ -688,13 +688,13 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Update crossbow cooldown
-        if (state.CrossbowOnCooldown)
+        if (state.CrossbowState.CrossbowOnCooldown)
         {
-            state.CrossbowCooldownTimer += Raylib.GetFrameTime();
-            if (state.CrossbowCooldownTimer >= state.CrossbowCooldown)
+            state.CrossbowState.CrossbowCooldownTimer += Raylib.GetFrameTime();
+            if (state.CrossbowState.CrossbowCooldownTimer >= state.CrossbowState.CrossbowCooldown)
             {
-                state.CrossbowOnCooldown = false;
-                state.CrossbowCooldownTimer = 0f;
+                state.CrossbowState.CrossbowOnCooldown = false;
+                state.CrossbowState.CrossbowCooldownTimer = 0f;
             }
         }
         
@@ -1165,7 +1165,7 @@ public class ScreenPresenter : IScreenPresenter
             Name = "Crossbow",
             Description = "Fires bolts at enemies from a distance",
             Price = 75,
-            OnPurchase = () => { state.HasCrossbow = true; },
+            OnPurchase = () => { state.CrossbowState.HasCrossbow = true; },
             Category = ShopCategory.Weapon
         });
     }

@@ -54,15 +54,11 @@ public class GameState
     public string BannerText { get; set; } = "";
     public float BannerTimer { get; set; }
 
-    // Crossbow state
-    public bool HasCrossbow { get; set; }
-    public float CrossbowCooldown { get; set; } = 2.0f;
-    public float CrossbowCooldownTimer { get; set; }
-    public bool CrossbowOnCooldown { get; set; }
-
     public readonly List<GoldItem> GoldItems = [];
     
     public readonly List<FlyingGold> FlyingGold = [];
+
+    public CrossbowState CrossbowState { get; set; } = new CrossbowState();
 
     public HealthPickupState HealthPickupState { get; set; } = new HealthPickupState();
 }

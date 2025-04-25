@@ -27,7 +27,7 @@ public class InstructionsPresenter : IInstructionsPresenter
             "(SPACE) to swing sword"
         };
 
-        if (state.HasCrossbow)
+        if (state.CrossbowState.HasCrossbow)
         {
             instructions.Add("(F) to fire crossbow");
         }
