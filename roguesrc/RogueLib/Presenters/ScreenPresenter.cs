@@ -45,6 +45,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IUpdateEnemiesHandler _updateEnemiesHandler;
     private readonly IMenuInputHandler _menuInputHandler;
     private readonly IEnemyPresenter _enemyPresenter;
+    private readonly IExplosionPresenter _explosionPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -65,7 +66,8 @@ public class ScreenPresenter : IScreenPresenter
         ICooldownIndicatorPresenter cooldownIndicatorPresenter,
         IUpdateEnemiesHandler updateEnemiesHandler,
         IMenuInputHandler menuInputHandler,
-        IEnemyPresenter enemyPresenter)
+        IEnemyPresenter enemyPresenter,
+        IExplosionPresenter explosionPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -86,6 +88,7 @@ public class ScreenPresenter : IScreenPresenter
         _updateEnemiesHandler = updateEnemiesHandler;
         _menuInputHandler = menuInputHandler;
         _enemyPresenter = enemyPresenter;
+        _explosionPresenter = explosionPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -207,7 +210,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawWorld(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
         _debugPanelPresenter.Draw(rayConnection, state);
-        DrawExplosions(state, rayConnection);
+        _explosionPresenter.Draw(rayConnection, state);
         _swordPresenter.Draw(rayConnection, state);
         _flyingGoldPresenter.Draw(rayConnection, state);
         _cooldownIndicatorPresenter.Draw(rayConnection, state);
@@ -218,31 +221,6 @@ public class ScreenPresenter : IScreenPresenter
         _chunkPresenter.Draw(rayConnection, state);
         _cooldownIndicatorPresenter.Draw(rayConnection, state);
         _enemyPresenter.Draw(rayConnection, state);
-    }
-
-    private void DrawExplosions(GameState state, IRayConnection rayConnection)
-    {
-        // Draw explosions (after ground and enemies, but before sword)
-        foreach (var explosion in state.Explosions)
-        {
-            char explosionChar = explosion.Frame switch
-            {
-                0 => '*',      // Small explosion
-                1 => (char)15, // Medium explosion (sun symbol in CP437)
-                _ => (char)42  // Large explosion (asterisk)
-            };
-            
-            // Calculate position with camera offset - updated horizontal spacing
-            int explosionX = 100 + (int)((explosion.X - state.CameraState.X) * 32) + 400;
-            int explosionY = 100 + (int)((explosion.Y - state.CameraState.Y) * 40) + 200;
-            
-            // Only draw if on screen
-            if (explosionX >= 0 && explosionX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
-                explosionY >= 0 && explosionY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
-            {
-                _screenDrawUtil.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, ScreenConstants.ExplosionColor);
-            }
-        }
     }
 
     private void DrawCrossbowBolts(IRayConnection rayConnection, GameState state)

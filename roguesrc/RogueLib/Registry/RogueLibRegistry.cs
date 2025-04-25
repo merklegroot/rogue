@@ -30,5 +30,6 @@ public static class RogueLibRegistry
             .AddScoped<IUpdateEnemiesHandler, UpdateEnemiesHandler>()
             .AddScoped<ICooldownIndicatorPresenter, CooldownIndicatorPresenter>()
             .AddScoped<IMenuInputHandler, MenuInputHandler>()
-            .AddScoped<IEnemyPresenter, EnemyPresenter>();
+            .AddScoped<IEnemyPresenter, EnemyPresenter>()
+            .AddScoped<IExplosionPresenter, ExplosionPresenter>();
 }
