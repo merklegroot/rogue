@@ -27,7 +27,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             return;
 
         var debugLines = CollectDebugLines(state);
-        _panelPresenter.Draw(rayConnection, PanelPosition, PanelWidth, debugLines);
+        _panelPresenter.Draw(rayConnection, PanelPosition, debugLines, PanelWidth);
     }
 
     private List<LineInfo> CollectDebugLines(GameState state)

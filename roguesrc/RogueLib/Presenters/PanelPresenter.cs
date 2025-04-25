@@ -5,7 +5,7 @@ namespace RogueLib.Presenters;
 
 public interface IPanelPresenter
 {
-    void Draw(IRayConnection rayConnection, Coord2dInt position, int width, IEnumerable<LineInfo> lines);
+    void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, int? maxWidth);
 }
 
 public class PanelPresenter : IPanelPresenter
@@ -23,7 +23,7 @@ public class PanelPresenter : IPanelPresenter
         _drawUtil = drawUtil;
     }
 
-    public void Draw(IRayConnection rayConnection, Coord2dInt position, int width, IEnumerable<LineInfo> lines)
+    public void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, int? maxWidth = null)
     {
         if (rayConnection == null || lines == null)
             return;
@@ -31,7 +31,7 @@ public class PanelPresenter : IPanelPresenter
         var lineList = lines.ToList();
         var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2);
         
-        DrawPanelBackground(position, new Coord2dInt(width, panelHeight));
+        DrawPanelBackground(position, new Coord2dInt(maxWidth ?? 300, panelHeight));
         DrawPanelLines(rayConnection, position, lineList);
     }
 
