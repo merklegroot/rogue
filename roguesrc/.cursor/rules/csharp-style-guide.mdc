@@ -1,14 +1,10 @@
----
-description: 
-globs: *.cs
-alwaysApply: false
----
 When writing C# code:
 
 1. Prefer early returns over nested if statements
 2. Return as soon as possible when a condition is met
 3. Use guard clauses at the start of methods
 4. Avoid deep nesting of if statements
+5. Use 'var' when the type is easily inferrable from the right-hand side
 
 Example of good practice:
 ```csharp
@@ -21,7 +17,9 @@ public void ProcessItem(Item item)
         return;
         
     // Main logic here
-    ProcessValidItem(item);
+    var result = ProcessValidItem(item);
+    var processedData = TransformData(result);
+    return processedData;
 }
 ```
 
@@ -34,7 +32,9 @@ public void ProcessItem(Item item)
         if (item.IsValid)
         {
             // Main logic here
-            ProcessValidItem(item);
+            ProcessedItem result = ProcessValidItem(item);
+            TransformedData processedData = TransformData(result);
+            return processedData;
         }
     }
 }
@@ -45,4 +45,15 @@ This rule applies to:
 - Properties
 - Indexers
 - Operators
-- Any code block that can return early 
+- Any code block that can return early
+
+Use 'var' when:
+- The type is obvious from the right-hand side (e.g., `var list = new List<string>()`)
+- The type is clear from the method name (e.g., `var result = GetUserById(id)`)
+- The type is a complex generic (e.g., `var dictionary = new Dictionary<string, List<int>>()`)
+
+Do not use 'var' when:
+- The type is not immediately clear
+- The type is a primitive (e.g., `int count = 0`)
+- The type is important for readability
+- The type is part of a public API 
