@@ -1,5 +1,6 @@
 using Raylib_cs;
 using RogueLib.State;
+using System.Collections.Generic;
 
 namespace RogueLib.Presenters;
 
@@ -17,52 +18,68 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         _drawUtil = drawUtil;
     }
 
+    private class LineInfo
+    {
+        public string Contents { get; set; }
+        public Color Color { get; set; }
+    }
+
     public void Draw(IRayConnection rayConnection, GameState state)
     {
-        // Calculate how many lines we'll need (1 for player + number of alive enemies + 1 for charger if active)
-        int lineCount = 1 + state.Enemies.Count(e => e.IsAlive);
+        // Create a collection of LineInfo objects to store all debug lines
+        var debugLines = new List<LineInfo>();
+
+        // Add player position line
+        debugLines.Add(new LineInfo
+        {
+            Contents = $"Player at ({state.PlayerX}, {state.PlayerY})",
+            Color = Color.Yellow
+        });
+
+        // Add charger position line if active
         if (state.IsChargerActive && state.Charger.IsAlive)
         {
-            lineCount++;
+            debugLines.Add(new LineInfo
+            {
+                Contents = $"Charger at ({state.Charger.X}, {state.Charger.Y})",
+                Color = Color.Orange
+            });
         }
-        
-        int panelHeight = lineCount * 20 + 20; // 20 pixels per line + 10px padding top and bottom
-        int panelWidth = 300; // Increased width to make it more visible
-        
-        // Position the panel lower on the screen
-        int panelX = 10;
-        int panelY = 100;
-        
-        // Draw off-white border
-        Raylib.DrawRectangle(panelX - 2, panelY - 2, panelWidth + 4, panelHeight + 4, new Color(220, 220, 220, 255));
-        
-        // Draw translucent gray background panel
-        Raylib.DrawRectangle(panelX, panelY, panelWidth, panelHeight, new Color(100, 100, 100, 180));
-        
-        int debugY = panelY + 10;
-        
-        // Show player position first
-        string playerText = $"Player at ({state.PlayerX}, {state.PlayerY})";
-        _drawUtil.DrawText(rayConnection, playerText, panelX + 10, debugY, Color.Yellow);
-        debugY += 20;
-        
-        // Show charger position if active
-        if (state.IsChargerActive && state.Charger.IsAlive)
-        {
-            string chargerText = $"Charger at ({state.Charger.X}, {state.Charger.Y})";
-            _drawUtil.DrawText(rayConnection, chargerText, panelX + 10, debugY, Color.Orange);
-            debugY += 20;
-        }
-        
-        // Show enemy positions
+
+        // Add enemy position lines
         foreach (var enemy in state.Enemies)
         {
             if (enemy.IsAlive)
             {
-                string debugText = $"Enemy at ({enemy.X}, {enemy.Y})";
-                _drawUtil.DrawText(rayConnection, debugText, panelX + 10, debugY, Color.White);
-                debugY += 20;
+                debugLines.Add(new LineInfo
+                {
+                    Contents = $"Enemy at ({enemy.X}, {enemy.Y})",
+                    Color = Color.White
+                });
             }
+        }
+
+        // Calculate panel dimensions based on number of lines
+        int lineCount = debugLines.Count;
+        int panelHeight = lineCount * 20 + 20; // 20 pixels per line + 10px padding top and bottom
+        int panelWidth = 300; // Fixed width for the panel
+        
+        // Position the panel
+        int panelX = 10;
+        int panelY = 100;
+        
+        // Draw panel border
+        Raylib.DrawRectangle(panelX - 2, panelY - 2, panelWidth + 4, panelHeight + 4, new Color(220, 220, 220, 255));
+        
+        // Draw panel background
+        Raylib.DrawRectangle(panelX, panelY, panelWidth, panelHeight, new Color(100, 100, 100, 180));
+        
+        // Draw each line of debug information
+        int currentY = panelY + 10;
+        foreach (var line in debugLines)
+        {
+            _drawUtil.DrawText(rayConnection, line.Contents, panelX + 10, currentY, line.Color);
+            currentY += 20;
         }
     }
 } 
