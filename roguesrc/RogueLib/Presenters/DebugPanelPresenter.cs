@@ -12,6 +12,11 @@ public interface IDebugPanelPresenter
 public class DebugPanelPresenter : IDebugPanelPresenter
 {
     private readonly IDrawUtil _drawUtil;
+    private const int LineHeight = 20;
+    private const int PanelPadding = 10;
+    private const int PanelWidth = 300;
+    private const int PanelX = 10;
+    private const int PanelY = 100;
 
     public DebugPanelPresenter(IDrawUtil drawUtil)
     {
@@ -26,60 +31,83 @@ public class DebugPanelPresenter : IDebugPanelPresenter
 
     public void Draw(IRayConnection rayConnection, GameState state)
     {
-        // Create a collection of LineInfo objects to store all debug lines
-        var debugLines = new List<LineInfo>();
+        if (rayConnection == null || state == null)
+            return;
 
-        // Add player position line
-        debugLines.Add(new LineInfo
+        var debugLines = CollectDebugLines(state);
+        DrawDebugPanel(rayConnection, debugLines);
+    }
+
+    private List<LineInfo> CollectDebugLines(GameState state)
+    {
+        var lines = new List<LineInfo>
         {
-            Contents = $"Player at ({state.PlayerX}, {state.PlayerY})",
-            Color = Color.Yellow
-        });
+            new LineInfo
+            {
+                Contents = $"Player at ({state.PlayerX}, {state.PlayerY})",
+                Color = Color.Yellow
+            }
+        };
 
-        // Add charger position line if active
         if (state.IsChargerActive && state.Charger.IsAlive)
         {
-            debugLines.Add(new LineInfo
+            lines.Add(new LineInfo
             {
                 Contents = $"Charger at ({state.Charger.X}, {state.Charger.Y})",
                 Color = Color.Orange
             });
         }
 
-        // Add enemy position lines
         foreach (var enemy in state.Enemies)
         {
-            if (enemy.IsAlive)
+            if (!enemy.IsAlive)
+                continue;
+
+            lines.Add(new LineInfo
             {
-                debugLines.Add(new LineInfo
-                {
-                    Contents = $"Enemy at ({enemy.X}, {enemy.Y})",
-                    Color = Color.White
-                });
-            }
+                Contents = $"Enemy at ({enemy.X}, {enemy.Y})",
+                Color = Color.White
+            });
         }
 
-        // Calculate panel dimensions based on number of lines
-        int lineCount = debugLines.Count;
-        int panelHeight = lineCount * 20 + 20; // 20 pixels per line + 10px padding top and bottom
-        int panelWidth = 300; // Fixed width for the panel
+        return lines;
+    }
+
+    private void DrawDebugPanel(IRayConnection rayConnection, List<LineInfo> debugLines)
+    {
+        var panelHeight = (debugLines.Count * LineHeight) + (PanelPadding * 2);
         
-        // Position the panel
-        int panelX = 10;
-        int panelY = 100;
+        DrawPanelBackground(panelHeight);
+        DrawDebugLines(rayConnection, debugLines);
+    }
+
+    private void DrawPanelBackground(int panelHeight)
+    {
+        Raylib.DrawRectangle(
+            PanelX - 2, 
+            PanelY - 2, 
+            PanelWidth + 4, 
+            panelHeight + 4, 
+            new Color(220, 220, 220, 255)
+        );
         
-        // Draw panel border
-        Raylib.DrawRectangle(panelX - 2, panelY - 2, panelWidth + 4, panelHeight + 4, new Color(220, 220, 220, 255));
+        Raylib.DrawRectangle(
+            PanelX, 
+            PanelY, 
+            PanelWidth, 
+            panelHeight, 
+            new Color(100, 100, 100, 180)
+        );
+    }
+
+    private void DrawDebugLines(IRayConnection rayConnection, List<LineInfo> debugLines)
+    {
+        var currentY = PanelY + PanelPadding;
         
-        // Draw panel background
-        Raylib.DrawRectangle(panelX, panelY, panelWidth, panelHeight, new Color(100, 100, 100, 180));
-        
-        // Draw each line of debug information
-        int currentY = panelY + 10;
         foreach (var line in debugLines)
         {
-            _drawUtil.DrawText(rayConnection, line.Contents, panelX + 10, currentY, line.Color);
-            currentY += 20;
+            _drawUtil.DrawText(rayConnection, line.Contents, PanelX + PanelPadding, currentY, line.Color);
+            currentY += LineHeight;
         }
     }
 } 
