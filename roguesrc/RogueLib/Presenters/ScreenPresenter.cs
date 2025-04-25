@@ -15,29 +15,31 @@ public interface IScreenPresenter
 
 public class ScreenPresenter : IScreenPresenter
 {    
+    private const char GoldChar = '$';
+    private const float GoldFlyDuration = 0.3f;
+    private const float HealthSpawnInterval = 30f;
+    private const int KillsForCharger = 10;
+    private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
+    private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
+    private const float KnockbackDuration = 0.08f;
+    private const float KnockbackDistance = 0.5f;
+    private const float CameraDeadZone = GameConstants.CameraDeadZone;
+    private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
+
     private readonly Random _random = new();
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
     private readonly List<GoldItem> _goldItems = [];
     
-    private const char GoldChar = '$';
-
     private readonly List<FlyingGold> _flyingGold = [];
-    private const float GoldFlyDuration = 0.3f;
 
     private bool _enableCrtEffect = true;
     private float _shaderTime = 0f;
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
-    private const float HealthSpawnInterval = 30f;
     private int _enemiesKilled = 0;
-    private const int KillsForCharger = 10;
     private bool _chargerActive = false;
     private ChargerEnemyState? _charger = null;
-    private const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
-    private const char ChargerChar = (char)2; // ASCII/CP437 smiley face (☻)
-    private const float KnockbackDuration = 0.08f;
-    private const float KnockbackDistance = 0.5f;
     private bool _gameJustStarted = true;
     private readonly IRayLoader _rayLoader;
     private readonly IDrawUtil _screenDrawUtil;    
@@ -51,9 +53,6 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IMenuPresenter _menuPresenter;
     private readonly ICharacterSetPresenter _characterSetPresenter;
     private readonly ISwordPresenter _swordPresenter;
-
-    private const float CameraDeadZone = GameConstants.CameraDeadZone;
-    private const float PlayerMoveSpeed = GameConstants.PlayerMoveSpeed;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
