@@ -68,7 +68,15 @@ public class SwordPresenter : ISwordPresenter
             swordX += scaledWidth;
         }
 
-        
+        if(state.LastDirection == Direction.Up || state.LastDirection == Direction.Down)
+        {
+            swordX += scaledWidth / 2 - ScreenConstants.CharWidth / 2;
+        }
+
+        if(state.LastDirection == Direction.Down)
+        {
+            swordY += scaledHeight - ScreenConstants.CharHeight;
+        }
 
         // Create source and destination rectangles
         Rectangle source = new(0, 0, rayConnection.SwordTexture.Width, rayConnection.SwordTexture.Height);
