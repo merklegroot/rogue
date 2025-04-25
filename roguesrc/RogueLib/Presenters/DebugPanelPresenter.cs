@@ -18,6 +18,10 @@ public class DebugPanelPresenter : IDebugPanelPresenter
     private const int PanelX = 10;
     private const int PanelY = 100;
 
+    // Panel colors
+    private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
+    private static readonly Color PanelBackgroundColor = new(100, 100, 100, 100);  // Semi-transparent gray background
+
     public DebugPanelPresenter(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
@@ -88,7 +92,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             PanelY - 2, 
             PanelWidth + 4, 
             panelHeight + 4, 
-            new Color(220, 220, 220, 255)
+            PanelBorderColor
         );
         
         Raylib.DrawRectangle(
@@ -96,7 +100,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             PanelY, 
             PanelWidth, 
             panelHeight, 
-            new Color(100, 100, 100, 180)
+            PanelBackgroundColor
         );
     }
 
