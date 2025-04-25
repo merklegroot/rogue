@@ -1240,6 +1240,9 @@ public class ScreenPresenter : IScreenPresenter
 
     private void CheckSwordCollisions(GameState state, bool isSwinging)
     {
+        if (!isSwinging)
+            return;
+        
         // Calculate sword position based on player position and direction
         float swordX = state.PlayerX;
         float swordY = state.PlayerY;
