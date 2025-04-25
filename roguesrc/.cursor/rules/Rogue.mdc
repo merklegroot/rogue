@@ -1,0 +1,84 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Rogue Development Rules
+
+## Project Structure
+
+- `RogueLib/` - Core game logic and presentation
+  - `Handlers/` - Game state update handlers
+  - `Presenters/` - UI rendering components
+  - `Registry/` - Dependency injection registration
+  - `State/` - Game state models
+  - `Constants/` - Game configuration constants
+- `Rogue/` - Application entry point and bootstrapping
+
+## Code Organization
+
+### Handlers
+- Each handler should focus on a single responsibility
+- Handlers should be stateless and receive all dependencies through constructor injection
+- Handler names should end with "Handler" (e.g., `UpdateEnemiesHandler`)
+- Handler interfaces should be prefixed with "I" (e.g., `IUpdateEnemiesHandler`)
+
+### Presenters
+- Presenters handle UI rendering and user input
+- Presenters should be stateless and receive all dependencies through constructor injection
+- Presenter names should end with "Presenter" (e.g., `ScreenPresenter`)
+- Presenter interfaces should be prefixed with "I" (e.g., `IScreenPresenter`)
+
+## Dependency Injection
+
+### Registration Convention
+All IoC (Inversion of Control) types defined in the RogueLib project must be registered in `RogueLib/Registry/RogueLibRegistry.cs`. This includes:
+
+- Handlers
+- Presenters
+- Services
+- Other dependencies
+
+This convention helps maintain a single source of truth for dependency registration and makes it easier to track and manage dependencies across the project.
+
+Example:
+```csharp
+// In RogueLibRegistry.cs
+services.AddTransient<IUpdateEnemiesHandler, UpdateEnemiesHandler>();
+```
+
+Do not register RogueLib types in other registry files or directly in Program.cs.
+
+### Lifetime Management
+- Use `AddTransient` for stateless components
+- Use `AddScoped` for components that maintain state during a game session
+- Use `AddSingleton` sparingly and only for truly global state
+
+## State Management
+
+- Game state should be immutable where possible
+- State changes should be explicit and traceable
+- Use events or observers for state change notifications
+- Keep state models simple and focused
+
+## Testing
+
+- Write unit tests for handlers and services
+- Use dependency injection to enable testing
+- Mock external dependencies in tests
+- Keep test files alongside the code they test
+
+## Documentation
+
+- Document public APIs and interfaces
+- Use XML comments for public members
+- Keep documentation up to date with code changes
+- Document architectural decisions and trade-offs
+
+## Code Style
+
+- Follow C# naming conventions
+- Use meaningful variable and method names
+- Keep methods small and focused
+- Use comments to explain why, not what
+- Format code consistently 
