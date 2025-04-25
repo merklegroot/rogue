@@ -12,11 +12,11 @@ public interface IDebugPanelPresenter
 public class DebugPanelPresenter : IDebugPanelPresenter
 {    
     private static readonly Coord2dInt PanelPosition = new(10, 100);
-    private readonly IPanelPresenter _panelPresenter;
+    private readonly IVerticalTextStackPanelPresenter _panelPresenter;
 
     public DebugPanelPresenter(IDrawUtil drawUtil)
     {
-        _panelPresenter = new PanelPresenter(drawUtil);
+        _panelPresenter = new VerticalTextStackPanelPresenter(drawUtil);
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)

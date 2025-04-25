@@ -4,12 +4,12 @@ using RogueLib.Constants;
 
 namespace RogueLib.Presenters;
 
-public interface IPanelPresenter
+public interface IVerticalTextStackPanelPresenter
 {
     void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, string? title = null);
 }
 
-public class PanelPresenter : IPanelPresenter
+public class VerticalTextStackPanelPresenter : IVerticalTextStackPanelPresenter
 {
     private readonly IDrawUtil _drawUtil;
     private const int LineHeight = 30;
@@ -18,13 +18,12 @@ public class PanelPresenter : IPanelPresenter
     private const int MinPanelWidth = 300;
     private int _maxWidthSeen = MinPanelWidth;
 
-    // Panel colors
     private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
     private static readonly Color PanelBackgroundColor = new(100, 100, 100, 100);  // Semi-transparent gray background
     private static readonly Color TitleBackgroundColor = new(70, 70, 70, 100);  // Darker semi-transparent gray for title
     private static readonly Color TitleColor = new(255, 255, 255, 255);  // White title
 
-    public PanelPresenter(IDrawUtil drawUtil)
+    public VerticalTextStackPanelPresenter(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
     }
