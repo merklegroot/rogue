@@ -15,7 +15,7 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
     public void Handle(GameState state)
     {
         // Check total enemy limit first
-        if (state.Enemies.Count(e => e.Alive) >= GameConstants.MaxEnemies)
+        if (state.Enemies.Count(e => e.IsAlive) >= GameConstants.MaxEnemies)
             return;
 
         // Calculate player's chunk coordinates
@@ -42,11 +42,11 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
                     {
                         // Check if position is not occupied by player or other enemies
                         if ((x != state.PlayerX || y != state.PlayerY) &&
-                            !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y))
+                            !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y))
                         {
                             // Check per-chunk limit
                             int enemiesInChunk = state.Enemies.Count(e => 
-                                e.Alive && 
+                                e.IsAlive && 
                                 e.X / GameConstants.ChunkSize == chunkX && 
                                 e.Y / GameConstants.ChunkSize == chunkY);
 
@@ -70,7 +70,7 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
         var (newX, newY) = validPositions[randomIndex];
         
         // Spawn the enemy
-        state.Enemies.Add(new Enemy { X = newX, Y = newY, Alive = true });
+        state.Enemies.Add(new Enemy { X = newX, Y = newY, IsAlive = true });
     }
 
 }

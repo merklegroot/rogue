@@ -4,7 +4,7 @@ public class ChargerEnemyState
 {
     public float X { get; set; }
     public float Y { get; set; }
-    public bool Alive { get; set; } = true;
+    public bool IsAlive { get; set; } = true;
     public float MoveTimer { get; set; } = 0f;
     public int Health { get; set; } = 5; // Health display
     public int HitCount { get; set; } = 0; // Count hits separately

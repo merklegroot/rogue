@@ -284,7 +284,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawChargerHealth(IRayConnection rayConnection, GameState state)
     {
         // Draw charger health if active
-        if (state.IsChargerActive && state.Charger != null && state.Charger.Alive)
+        if (state.IsChargerActive && state.Charger != null && state.Charger.IsAlive)
         {
             string healthText = $"Charger HP: {state.Charger.Health}/{GameConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
             _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
@@ -381,7 +381,7 @@ public class ScreenPresenter : IScreenPresenter
         // Draw enemies - now using camera offset and updated horizontal spacing
         foreach (var enemy in state.Enemies)
         {
-            if (enemy.Alive)
+            if (enemy.IsAlive)
             {
                 int enemyScreenX = 100 + (int)((enemy.X - state.CameraState.X) * 32) + 400;
                 int enemyScreenY = 100 + (int)((enemy.Y - state.CameraState.Y) * 40) + 200;
@@ -396,7 +396,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Draw charger if active - with updated horizontal spacing
-        if (_isChargerActive && _chargerState != null && _chargerState.Alive && 
+        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && 
             Math.Abs(_chargerState.X - state.CameraState.X) < 15 && Math.Abs(_chargerState.Y - state.CameraState.Y) < 10)
         {
             _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_chargerState.X - state.CameraState.X) * 32) + 400, 100 + (int)((_chargerState.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
@@ -663,7 +663,7 @@ public class ScreenPresenter : IScreenPresenter
         // Check for collisions with enemies
         foreach (var enemy in state.Enemies)
         {
-            if (enemy.Alive && !state.IsInvincible)
+            if (enemy.IsAlive && !state.IsInvincible)
             {
                 // Check if player is colliding with this enemy
                 if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
@@ -685,7 +685,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collisions with charger (deals more damage)
-        if (_isChargerActive && _chargerState != null && _chargerState.Alive && !state.IsInvincible)
+        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && !state.IsInvincible)
         {
             // Check if player is colliding with the charger
             if (Math.Abs(state.PlayerX - _chargerState.X) < 0.5f && Math.Abs(state.PlayerY - _chargerState.Y) < 0.5f)
@@ -821,7 +821,7 @@ public class ScreenPresenter : IScreenPresenter
             state.EnemySpawnTimer = 0f;
             
             // Only spawn if we haven't reached the maximum
-            if (state.Enemies.Count(e => e.Alive) < GameConstants.MaxEnemies)
+            if (state.Enemies.Count(e => e.IsAlive) < GameConstants.MaxEnemies)
             {
                 _spawnEnemyHandler.Handle(state);
             }
@@ -830,7 +830,7 @@ public class ScreenPresenter : IScreenPresenter
         // Update existing enemies
         foreach (var enemy in state.Enemies)
         {
-            if (!enemy.Alive) continue;
+            if (!enemy.IsAlive) continue;
             
             enemy.MoveTimer += frameTime;
             if (enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
@@ -891,13 +891,13 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Remove dead enemies
-        state.Enemies.RemoveAll(e => !e.Alive);
+        state.Enemies.RemoveAll(e => !e.IsAlive);
     }
 
     // Also update the charger movement logic
     private void UpdateCharger(GameState state)
     {
-        if (!_isChargerActive || _chargerState == null || !_chargerState.Alive)
+        if (!_isChargerActive || _chargerState == null || !_chargerState.IsAlive)
             return;
         
         float frameTime = Raylib.GetFrameTime();
@@ -988,7 +988,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player, enemies, or other gold
                     if ((x != state.PlayerX || y != state.PlayerY) &&
-                        !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
+                        !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y) &&
                         !state.GoldItems.Any(g => g.X == x && g.Y == y))
                     {
                         validPositions.Add((x, y));
@@ -1024,7 +1024,7 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player, enemies, gold, or other health pickups
                     if ((x != state.PlayerX || y != state.PlayerY) &&
-                        !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
+                        !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y) &&
                         !state.GoldItems.Any(g => g.X == x && g.Y == y) &&
                         !state.HealthPickupState.HealthPickups.Any(h => h.X == x && h.Y == y))
                     {
@@ -1212,13 +1212,13 @@ public class ScreenPresenter : IScreenPresenter
             bool hitEnemy = false;
             foreach (var enemy in state.Enemies)
             {
-                if (!enemy.Alive) continue;
+                if (!enemy.IsAlive) continue;
                 
                 // Check if bolt is within 0.5 tiles of enemy (for hit detection)
                 if (Math.Abs(bolt.X - enemy.X) < 0.5f && Math.Abs(bolt.Y - enemy.Y) < 0.5f)
                 {
                     // Kill the enemy
-                    enemy.Alive = false;
+                    enemy.IsAlive = false;
                     
                     // Create explosion at enemy position
                     state.Explosions.Add(new ExplosionState { 
@@ -1251,7 +1251,7 @@ public class ScreenPresenter : IScreenPresenter
     // Create a completely new method for handling charger damage
     private void HandleChargerDamage(GameState state, bool fromSwinging)
     {
-        if (_isChargerActive && _chargerState != null && _chargerState.Alive && !_chargerState.IsInvincible)
+        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && !_chargerState.IsInvincible)
         {
             // Increment hit counter
             _chargerState.HitCount++;
@@ -1269,7 +1269,7 @@ public class ScreenPresenter : IScreenPresenter
             if (_chargerState.HitCount >= 5)
             {
                 Console.WriteLine("COLLISION FIX: Charger defeated after 5 hits!");
-                _chargerState.Alive = false;
+                _chargerState.IsAlive = false;
                 
                 // Create explosion at charger position
                 state.Explosions.Add(new ExplosionState { 
@@ -1329,7 +1329,7 @@ public class ScreenPresenter : IScreenPresenter
             }
 
             isPositionValid = (Math.Abs(newX - state.PlayerX) > 3 || Math.Abs(newY - state.PlayerY) > 3) &&
-                              !state.Enemies.Any(e => e.Alive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
+                              !state.Enemies.Any(e => e.IsAlive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
 
             if (isPositionValid)
                 break;
@@ -1343,7 +1343,7 @@ public class ScreenPresenter : IScreenPresenter
             X = newX, 
             Y = newY, 
             Health = GameConstants.ChargerHealth,
-            Alive = true 
+            IsAlive = true 
         };
         state.IsChargerActive = true;
         
@@ -1460,13 +1460,13 @@ public class ScreenPresenter : IScreenPresenter
         // Check for collision with regular enemies
         foreach (var enemy in state.Enemies)
         {
-            if (enemy.Alive)
+            if (enemy.IsAlive)
             {
                 // Check if sword is within 0.5 tiles of enemy (for hit detection)
                 if (Math.Abs(swordX - enemy.X) < 0.5f && Math.Abs(swordY - enemy.Y) < 0.5f)
                 {
                     // Kill the enemy
-                    enemy.Alive = false;
+                    enemy.IsAlive = false;
                     
                     // Create explosion at enemy position
                     state.Explosions.Add(new ExplosionState { 
@@ -1497,7 +1497,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collision with charger
-        if (_isChargerActive && _chargerState != null && _chargerState.Alive)
+        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive)
         {
             // Check if sword is within 0.5 tiles of charger
             if (Math.Abs(swordX - _chargerState.X) < 0.5f && Math.Abs(swordY - _chargerState.Y) < 0.5f)

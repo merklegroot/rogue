@@ -20,11 +20,12 @@ public class DebugPanelPresenter : IDebugPanelPresenter
     public void Draw(IRayConnection rayConnection, GameState state)
     {
         // Calculate how many lines we'll need (1 for player + number of alive enemies + 1 for charger if active)
-        int lineCount = 1 + state.Enemies.Count(e => e.Alive);
-        if (state.IsChargerActive && state.Charger.Alive)
+        int lineCount = 1 + state.Enemies.Count(e => e.IsAlive);
+        if (state.IsChargerActive && state.Charger.IsAlive)
         {
             lineCount++;
         }
+        
         int panelHeight = lineCount * 20 + 20; // 20 pixels per line + 10px padding top and bottom
         int panelWidth = 300; // Increased width to make it more visible
         
@@ -46,7 +47,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         debugY += 20;
         
         // Show charger position if active
-        if (state.IsChargerActive && state.Charger.Alive)
+        if (state.IsChargerActive && state.Charger.IsAlive)
         {
             string chargerText = $"Charger at ({state.Charger.X}, {state.Charger.Y})";
             _drawUtil.DrawText(rayConnection, chargerText, panelX + 10, debugY, Color.Orange);
@@ -56,7 +57,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         // Show enemy positions
         foreach (var enemy in state.Enemies)
         {
-            if (enemy.Alive)
+            if (enemy.IsAlive)
             {
                 string debugText = $"Enemy at ({enemy.X}, {enemy.Y})";
                 _drawUtil.DrawText(rayConnection, debugText, panelX + 10, debugY, Color.White);
