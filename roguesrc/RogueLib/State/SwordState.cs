@@ -8,4 +8,5 @@ public class SwordState
     public float SwordCooldown { get; set; } = 1.0f;
     public bool SwordOnCooldown { get; set; } = false;
     public int SwordReach { get; set; } = 1;
+    public Direction SwingDirection { get; set; } = Direction.Right;
 }

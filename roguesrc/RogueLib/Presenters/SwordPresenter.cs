@@ -28,9 +28,9 @@ public class SwordPresenter : ISwordPresenter
         var progress = state.SwordState.SwordSwingTime / GameConstants.SwordSwingDuration;
         if (progress > 1.0f) progress = 1.0f;
 
-        // Calculate rotation based on direction and progress
+        // Calculate rotation based on swing direction and progress
         float rotation = 0f;
-        switch (state.LastDirection)
+        switch (state.SwordState.SwingDirection)
         {
             case Direction.Left:
                 rotation = 270f - (progress - 0.5f) * 180f; // Start at 270°, swing 180°
@@ -58,22 +58,22 @@ public class SwordPresenter : ISwordPresenter
         float swordX = baseX;
         float swordY = baseY;
 
-        if(state.LastDirection == Direction.Left || state.LastDirection == Direction.Right)
+        if(state.SwordState.SwingDirection == Direction.Left || state.SwordState.SwingDirection == Direction.Right)
         {
             swordY += scaledHeight / 2 - ScreenConstants.CharHeight / 2;
         }
 
-        if (state.LastDirection == Direction.Right)
+        if (state.SwordState.SwingDirection == Direction.Right)
         {
             swordX += scaledWidth;
         }
 
-        if(state.LastDirection == Direction.Up || state.LastDirection == Direction.Down)
+        if (state.SwordState.SwingDirection == Direction.Up || state.SwordState.SwingDirection == Direction.Down)
         {
             swordX += scaledWidth / 2 - ScreenConstants.CharWidth / 2;
         }
 
-        if(state.LastDirection == Direction.Down)
+        if (state.SwordState.SwingDirection == Direction.Down)
         {
             swordY += scaledHeight - ScreenConstants.CharHeight;
         }

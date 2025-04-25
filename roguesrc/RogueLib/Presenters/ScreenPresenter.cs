@@ -567,6 +567,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 state.SwordState.IsSwordSwinging = true;
                 state.SwordState.SwordSwingTime = 0;
+                state.SwordState.SwingDirection = state.LastDirection;
                 
                 // Check for sword collisions immediately when swing starts
                 CheckSwordCollisions(state, true);
