@@ -42,6 +42,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IGoldCounterPresenter _goldCounterPresenter;
     private readonly IFlyingGoldPresenter _flyingGoldPresenter;
     private readonly ICooldownIndicatorPresenter _cooldownIndicatorPresenter;
+    private readonly IUpdateEnemiesHandler _updateEnemiesHandler;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -59,7 +60,8 @@ public class ScreenPresenter : IScreenPresenter
         IInstructionsPresenter instructionsPresenter,
         IGoldCounterPresenter goldCounterPresenter,
         IFlyingGoldPresenter flyingGoldPresenter,
-        ICooldownIndicatorPresenter cooldownIndicatorPresenter)
+        ICooldownIndicatorPresenter cooldownIndicatorPresenter,
+        IUpdateEnemiesHandler updateEnemiesHandler)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -77,6 +79,7 @@ public class ScreenPresenter : IScreenPresenter
         _goldCounterPresenter = goldCounterPresenter;
         _flyingGoldPresenter = flyingGoldPresenter;
         _cooldownIndicatorPresenter = cooldownIndicatorPresenter;
+        _updateEnemiesHandler = updateEnemiesHandler;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -555,7 +558,7 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Update enemy movement
-        UpdateEnemies(state);
+        _updateEnemiesHandler.Handle(state);
 
         // Update invincibility timer
         if (state.IsInvincible)
@@ -802,90 +805,6 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void UpdateEnemies(GameState state)
-    {
-        float frameTime = Raylib.GetFrameTime();
-        
-        // Update enemy spawn timer
-        state.EnemySpawnTimer += frameTime;
-        if (state.EnemySpawnTimer >= GameConstants.EnemySpawnDelay)
-        {
-            state.EnemySpawnTimer = 0f;
-            
-            // Only spawn if we haven't reached the maximum
-            if (state.Enemies.Count(e => e.IsAlive) < GameConstants.MaxEnemies)
-            {
-                _spawnEnemyHandler.Handle(state);
-            }
-        }
-        
-        // Update existing enemies
-        foreach (var enemy in state.Enemies)
-        {
-            if (!enemy.IsAlive) continue;
-            
-            enemy.MoveTimer += frameTime;
-            if (enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
-            {
-                enemy.MoveTimer = 0f;
-                
-                // Generate random direction (-1, 0, or 1 for both x and y)
-                float dx = _random.Next(-1, 2) * GameConstants.PlayerMoveSpeed;
-                float dy = _random.Next(-1, 2) * GameConstants.PlayerMoveSpeed;
-                
-                // Try to move horizontally first
-                if (dx != 0)
-                {
-                    // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X + (double)dx), (int)Math.Floor((double)enemy.Y)))
-                    {
-                        enemy.X = (int)(enemy.X + dx);
-                    }
-                    // If horizontal movement is blocked, try vertical
-                    else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X), (int)Math.Floor((double)enemy.Y + (double)dy)))
-                    {
-                        enemy.Y = (int)(enemy.Y + dy);
-                    }
-                    // If both are blocked, try diagonal
-                    else if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X + (double)dx), (int)Math.Floor((double)enemy.Y + (double)dy)))
-                    {
-                        enemy.X = (int)(enemy.X + dx);
-                        enemy.Y = (int)(enemy.Y + dy);
-                    }
-                }
-                // If no horizontal movement, try vertical
-                else if (dy != 0)
-                {
-                    // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X), (int)Math.Floor((double)enemy.Y + (double)dy)))
-                    {
-                        enemy.Y = (int)(enemy.Y + dy);
-                    }
-                }
-                
-                // Check for collision with player
-                if (Math.Abs(enemy.X - state.PlayerX) < 0.5f && Math.Abs(enemy.Y - state.PlayerY) < 0.5f)
-                {
-                    // Only damage player if not invincible
-                    if (!state.IsInvincible)
-                    {
-                        state.CurrentHealth--;
-                        Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
-                        
-                        // Apply knockback
-                        ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
-                        
-                        // Make player briefly invincible
-                        state.IsInvincible = true;
-                        state.InvincibilityTimer = 0f;
-                    }
-                }
-            }
-        }
-        
-        // Remove dead enemies
-        state.Enemies.RemoveAll(e => !e.IsAlive);
-    }
 
     // Also update the charger movement logic
     private void UpdateCharger(GameState state)
