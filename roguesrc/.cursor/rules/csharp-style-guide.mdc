@@ -1,5 +1,10 @@
 # C# Style Guide
 
+alwaysApply: true
+globs: ["**/*.cs"]
+
+This style guide defines the coding standards for C# development in this project.
+
 ## General Principles
 
 - Write code that is easy to read and understand
@@ -8,6 +13,9 @@
 - Keep methods small and focused on a single responsibility
 - Prefer early returns and guard clauses over nested conditions
 - Avoid deep nesting of control structures
+- Types that do work (like presenters, services, etc.) should have interfaces and be used through their interfaces
+  - This promotes loose coupling and testability
+  - Example: `IPanelPresenter` instead of directly using `PanelPresenter`
 
 ## Naming Conventions
 

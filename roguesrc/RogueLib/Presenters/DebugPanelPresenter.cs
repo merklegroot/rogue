@@ -1,4 +1,5 @@
 using Raylib_cs;
+using RogueLib.Models;
 using RogueLib.State;
 using System.Collections.Generic;
 
@@ -11,26 +12,14 @@ public interface IDebugPanelPresenter
 
 public class DebugPanelPresenter : IDebugPanelPresenter
 {
-    private readonly IDrawUtil _drawUtil;
-    private const int LineHeight = 20;
-    private const int PanelPadding = 10;
     private const int PanelWidth = 300;
     private const int PanelX = 10;
     private const int PanelY = 100;
-
-    // Panel colors
-    private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
-    private static readonly Color PanelBackgroundColor = new(100, 100, 100, 100);  // Semi-transparent gray background
+    private readonly IPanelPresenter _panelPresenter;
 
     public DebugPanelPresenter(IDrawUtil drawUtil)
     {
-        _drawUtil = drawUtil;
-    }
-
-    private class LineInfo
-    {
-        public required string Contents { get; set; }
-        public required Color Color { get; set; }
+        _panelPresenter = new PanelPresenter(drawUtil);
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
@@ -39,7 +28,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             return;
 
         var debugLines = CollectDebugLines(state);
-        DrawDebugPanel(rayConnection, debugLines);
+        _panelPresenter.Draw(rayConnection, PanelX, PanelY, PanelWidth, debugLines);
     }
 
     private List<LineInfo> CollectDebugLines(GameState state)
@@ -75,43 +64,5 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         }
 
         return lines;
-    }
-
-    private void DrawDebugPanel(IRayConnection rayConnection, List<LineInfo> debugLines)
-    {
-        var panelHeight = (debugLines.Count * LineHeight) + (PanelPadding * 2);
-        
-        DrawPanelBackground(panelHeight);
-        DrawDebugLines(rayConnection, debugLines);
-    }
-
-    private void DrawPanelBackground(int panelHeight)
-    {
-        Raylib.DrawRectangle(
-            PanelX - 2, 
-            PanelY - 2, 
-            PanelWidth + 4, 
-            panelHeight + 4, 
-            PanelBorderColor
-        );
-        
-        Raylib.DrawRectangle(
-            PanelX, 
-            PanelY, 
-            PanelWidth, 
-            panelHeight, 
-            PanelBackgroundColor
-        );
-    }
-
-    private void DrawDebugLines(IRayConnection rayConnection, List<LineInfo> debugLines)
-    {
-        var currentY = PanelY + PanelPadding;
-        
-        foreach (var line in debugLines)
-        {
-            _drawUtil.DrawText(rayConnection, line.Contents, PanelX + PanelPadding, currentY, line.Color);
-            currentY += LineHeight;
-        }
     }
 } 
