@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 When writing C# code:
 
 1. Prefer early returns over nested if statements
@@ -5,6 +10,7 @@ When writing C# code:
 3. Use guard clauses at the start of methods
 4. Avoid deep nesting of if statements
 5. Use 'var' when the type is easily inferrable from the right-hand side
+6. Boolean variables and properties should be phrased as questions
 
 Example of good practice:
 ```csharp
@@ -57,3 +63,18 @@ Do not use 'var' when:
 - The type is a primitive (e.g., `int count = 0`)
 - The type is important for readability
 - The type is part of a public API 
+
+Boolean naming examples:
+```csharp
+// Good
+bool isEnabled = true;
+bool hasPermission = false;
+bool canExecute = true;
+bool shouldProcess = false;
+
+// Bad
+bool enabled = true;
+bool permission = false;
+bool execute = true;
+bool process = false;
+```
