@@ -15,9 +15,10 @@ public interface IPanelPresenter
 public class PanelPresenter : IPanelPresenter
 {
     private readonly IDrawUtil _drawUtil;
-    private const int LineHeight = 20;
+    private const int LineHeight = 30;
     private const int PanelPadding = 10;
     private const int MinPanelWidth = 300;
+    private int _maxWidthSeen = MinPanelWidth;
 
     // Panel colors
     private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
@@ -44,11 +45,13 @@ public class PanelPresenter : IPanelPresenter
     private int CalculatePanelWidth(IRayConnection rayConnection, List<LineInfo> lines)
     {
         if (!lines.Any())
-            return MinPanelWidth;
+            return _maxWidthSeen;
 
         var maxLineWidth = lines.Max(line => 
             Raylib.MeasureTextEx(rayConnection.MenuFont, line.Contents, ScreenConstants.MenuFontSize, 1).X);
-        return Math.Max((int)maxLineWidth + (PanelPadding * 2), MinPanelWidth);
+        var newWidth = Math.Max((int)maxLineWidth + (PanelPadding * 2), MinPanelWidth);
+        _maxWidthSeen = Math.Max(_maxWidthSeen, newWidth);
+        return _maxWidthSeen;
     }
 
     private void DrawPanelBackground(Coord2dInt position, Coord2dInt size)
