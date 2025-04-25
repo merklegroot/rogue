@@ -13,8 +13,7 @@ public interface IDebugPanelPresenter
 public class DebugPanelPresenter : IDebugPanelPresenter
 {
     private const int PanelWidth = 300;
-    private const int PanelX = 10;
-    private const int PanelY = 100;
+    private static readonly Coord2dInt PanelPosition = new(10, 100);
     private readonly IPanelPresenter _panelPresenter;
 
     public DebugPanelPresenter(IDrawUtil drawUtil)
@@ -28,7 +27,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             return;
 
         var debugLines = CollectDebugLines(state);
-        _panelPresenter.Draw(rayConnection, PanelX, PanelY, PanelWidth, debugLines);
+        _panelPresenter.Draw(rayConnection, PanelPosition, PanelWidth, debugLines);
     }
 
     private List<LineInfo> CollectDebugLines(GameState state)

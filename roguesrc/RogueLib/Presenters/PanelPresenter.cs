@@ -1,12 +1,11 @@
 using Raylib_cs;
 using RogueLib.Models;
-using System.Collections.Generic;
 
 namespace RogueLib.Presenters;
 
 public interface IPanelPresenter
 {
-    void Draw(IRayConnection rayConnection, int x, int y, int width, IEnumerable<LineInfo> lines);
+    void Draw(IRayConnection rayConnection, Coord2dInt position, int width, IEnumerable<LineInfo> lines);
 }
 
 public class PanelPresenter : IPanelPresenter
@@ -24,7 +23,7 @@ public class PanelPresenter : IPanelPresenter
         _drawUtil = drawUtil;
     }
 
-    public void Draw(IRayConnection rayConnection, int x, int y, int width, IEnumerable<LineInfo> lines)
+    public void Draw(IRayConnection rayConnection, Coord2dInt position, int width, IEnumerable<LineInfo> lines)
     {
         if (rayConnection == null || lines == null)
             return;
@@ -32,37 +31,37 @@ public class PanelPresenter : IPanelPresenter
         var lineList = lines.ToList();
         var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2);
         
-        DrawPanelBackground(x, y, width, panelHeight);
-        DrawPanelLines(rayConnection, x, y, width, lineList);
+        DrawPanelBackground(position, new Coord2dInt(width, panelHeight));
+        DrawPanelLines(rayConnection, position, lineList);
     }
 
-    private void DrawPanelBackground(int x, int y, int width, int height)
+    private void DrawPanelBackground(Coord2dInt position, Coord2dInt size)
     {
         Raylib.DrawRectangle(
-            x - 2, 
-            y - 2, 
-            width + 4, 
-            height + 4, 
+            position.X - 2, 
+            position.Y - 2, 
+            size.X + 4, 
+            size.Y + 4, 
             PanelBorderColor
         );
         
         Raylib.DrawRectangle(
-            x, 
-            y, 
-            width, 
-            height, 
+            position.X, 
+            position.Y, 
+            size.X, 
+            size.Y, 
             PanelBackgroundColor
         );
     }
 
-    private void DrawPanelLines(IRayConnection rayConnection, int x, int y, int width, List<LineInfo> lines)
+    private void DrawPanelLines(IRayConnection rayConnection, Coord2dInt position, List<LineInfo> lines)
     {
-        var currentY = y + PanelPadding;
+        var currentY = position.Y + PanelPadding;
         
         foreach (var line in lines)
         {
-            _drawUtil.DrawText(rayConnection, line.Contents, x + PanelPadding, currentY, line.Color);
+            _drawUtil.DrawText(rayConnection, line.Contents, position.X + PanelPadding, currentY, line.Color);
             currentY += LineHeight;
         }
     }
-} 
+}
