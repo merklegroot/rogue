@@ -30,7 +30,7 @@ public class GameAppApp : IGameApp
         {
             while (!_presenter.WindowShouldClose())
             {
-                _presenter.Update();
+                _presenter.Update(_state);
                 _presenter.Draw(rayConnection, _state);
             }
         }

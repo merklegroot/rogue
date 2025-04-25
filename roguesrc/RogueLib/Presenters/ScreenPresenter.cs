@@ -9,7 +9,7 @@ namespace RogueLib.Presenters;
 public interface IScreenPresenter
 {
     void Initialize(IRayConnection rayConnection, GameState state);
-    void Update();
+    void Update(GameState state);
     void Draw(IRayConnection rayConnection, GameState state);
     bool WindowShouldClose();
 }
@@ -17,7 +17,7 @@ public interface IScreenPresenter
 public class ScreenPresenter : IScreenPresenter
 {
     private readonly Random _random = new();
-    private readonly Queue<KeyboardKey> _keyEvents = new();
+
 
     private bool _shouldEnableCrtEffect = true;
     private float _shaderTime = 0f;
@@ -103,13 +103,13 @@ public class ScreenPresenter : IScreenPresenter
         InitializeShop(state);
     }
 
-    public void Update()
+    public void Update(GameState state)
     {
         // Collect all key events that occurred
         int key;
         while ((key = Raylib.GetKeyPressed()) != 0)
         {
-            _keyEvents.Enqueue((KeyboardKey)key);
+            state.KeyEvents.Enqueue((KeyboardKey)key);
         }
     }
 
@@ -183,14 +183,14 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.EndDrawing();
 
         // Clear processed events
-        _keyEvents.Clear();
+        state.KeyEvents.Clear();
     }
 
     private void HandleMenuInput(GameState state)
     {
-        while (_keyEvents.Count > 0)
+        while (state.KeyEvents.Count > 0)
         {
-            var key = _keyEvents.Dequeue();
+            var key = state.KeyEvents.Dequeue();
             if (key == KeyboardKey.C)
             {
                 state.CurrentScreen = GameScreenEnum.CharacterSet;
@@ -217,7 +217,7 @@ public class ScreenPresenter : IScreenPresenter
 
     private void HandleCharacterSetInput(GameState state)
     {
-        if (_keyEvents.Count > 0)
+        if (state.KeyEvents.Count > 0)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
         }
@@ -423,13 +423,13 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
     }
-    
+
     private void HandleAnimationInput(GameState state)
     {
         // Handle ESC key via event queue for menu navigation
-        while (_keyEvents.Count > 0)
+        while (state.KeyEvents.Count > 0)
         {
-            var key = _keyEvents.Dequeue();
+            var key = state.KeyEvents.Dequeue();
             if (key == KeyboardKey.Escape)
             {
                 state.CurrentScreen = GameScreenEnum.Menu;
@@ -1044,9 +1044,9 @@ public class ScreenPresenter : IScreenPresenter
 
     private void HandleShopInput(GameState state)
     {
-        while (_keyEvents.Count > 0)
+        while (state.KeyEvents.Count > 0)
         {
-            var key = _keyEvents.Dequeue();
+            var key = state.KeyEvents.Dequeue();
             
             if (key == KeyboardKey.Escape)
             {

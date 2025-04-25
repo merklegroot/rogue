@@ -1,7 +1,11 @@
+using Raylib_cs;
+
 namespace RogueLib.State;
 
 public class GameState
 {
+    public Queue<KeyboardKey> KeyEvents { get; set; } = new();
+
     public GameScreenEnum CurrentScreen { get; set; } = GameScreenEnum.Menu;
 
     public int PlayerGold { get; set; } = 0;
