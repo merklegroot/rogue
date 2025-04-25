@@ -44,6 +44,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly ICooldownIndicatorPresenter _cooldownIndicatorPresenter;
     private readonly IUpdateEnemiesHandler _updateEnemiesHandler;
     private readonly IMenuInputHandler _menuInputHandler;
+    private readonly IEnemyPresenter _enemyPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -63,7 +64,8 @@ public class ScreenPresenter : IScreenPresenter
         IFlyingGoldPresenter flyingGoldPresenter,
         ICooldownIndicatorPresenter cooldownIndicatorPresenter,
         IUpdateEnemiesHandler updateEnemiesHandler,
-        IMenuInputHandler menuInputHandler)
+        IMenuInputHandler menuInputHandler,
+        IEnemyPresenter enemyPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -83,6 +85,7 @@ public class ScreenPresenter : IScreenPresenter
         _cooldownIndicatorPresenter = cooldownIndicatorPresenter;
         _updateEnemiesHandler = updateEnemiesHandler;
         _menuInputHandler = menuInputHandler;
+        _enemyPresenter = enemyPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -214,6 +217,7 @@ public class ScreenPresenter : IScreenPresenter
         _instructionsPresenter.Draw(rayConnection, state);
         _chunkPresenter.Draw(rayConnection, state);
         _cooldownIndicatorPresenter.Draw(rayConnection, state);
+        _enemyPresenter.Draw(rayConnection, state);
     }
 
     private void DrawExplosions(GameState state, IRayConnection rayConnection)
@@ -272,11 +276,19 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Update camera position to follow player with a dead zone
         UpdateCamera(state);
-        
+        DrawMap(rayConnection, state);
+        _enemyPresenter.Draw(rayConnection, state);
+        DrawCharger(rayConnection, state);        
+        DrawGoldItems(rayConnection, state);
+        DrawHealthPickups(rayConnection, state);
+    }
+
+    private void DrawMap(IRayConnection rayConnection, GameState state)
+    {
         // Calculate map dimensions
         int mapHeight = state.Map.Count;
         int mapWidth = state.Map.Max(line => line.Length);
-        
+
         // Draw the map
         for (int y = 0; y < mapHeight; y++)
         {
@@ -353,32 +365,23 @@ public class ScreenPresenter : IScreenPresenter
                 // Draw the tile
                 _screenDrawUtil.DrawCharacter(rayConnection, tileChar, screenX, screenY, tileColor);
             }
-        }
-        
-        // Draw enemies - now using camera offset and updated horizontal spacing
-        foreach (var enemy in state.Enemies)
+        }        
+    }
+
+    private void DrawHealthPickups(IRayConnection rayConnection, GameState state)
+    {
+        // Draw health pickups - with updated horizontal spacing
+        foreach (var health in state.HealthPickupState.HealthPickups)
         {
-            if (enemy.IsAlive)
+            if (Math.Abs(health.X - state.CameraState.X) < 15 && Math.Abs(health.Y - state.CameraState.Y) < 10)
             {
-                int enemyScreenX = 100 + (int)((enemy.X - state.CameraState.X) * 32) + 400;
-                int enemyScreenY = 100 + (int)((enemy.Y - state.CameraState.Y) * 40) + 200;
-                
-                // Only draw if on screen
-                if (enemyScreenX >= 0 && enemyScreenX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&
-                    enemyScreenY >= 0 && enemyScreenY < ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale)
-                {
-                    _screenDrawUtil.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, ScreenConstants.EnemyColor);
-                }
+                _screenDrawUtil.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - state.CameraState.X) * 32) + 400, 100 + (int)((health.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
             }
         }
-        
-        // Draw charger if active - with updated horizontal spacing
-        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && 
-            Math.Abs(_chargerState.X - state.CameraState.X) < 15 && Math.Abs(_chargerState.Y - state.CameraState.Y) < 10)
-        {
-            _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_chargerState.X - state.CameraState.X) * 32) + 400, 100 + (int)((_chargerState.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
-        }
-        
+    }
+
+    private void DrawGoldItems(IRayConnection rayConnection, GameState state)
+    {
         // Draw gold items - with updated horizontal spacing
         foreach (var gold in state.GoldItems)
         {
@@ -387,14 +390,15 @@ public class ScreenPresenter : IScreenPresenter
                 _screenDrawUtil.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
             }
         }
-        
-        // Draw health pickups - with updated horizontal spacing
-        foreach (var health in state.HealthPickupState.HealthPickups)
+    }
+
+    private void DrawCharger(IRayConnection rayConnection, GameState state)
+    {
+        // Draw charger if active - with updated horizontal spacing
+        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && 
+            Math.Abs(_chargerState.X - state.CameraState.X) < 15 && Math.Abs(_chargerState.Y - state.CameraState.Y) < 10)
         {
-            if (Math.Abs(health.X - state.CameraState.X) < 15 && Math.Abs(health.Y - state.CameraState.Y) < 10)
-            {
-                _screenDrawUtil.DrawCharacter(rayConnection, 3, 100 + (int)((health.X - state.CameraState.X) * 32) + 400, 100 + (int)((health.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.HealthColor); // Heart symbol
-            }
+            _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_chargerState.X - state.CameraState.X) * 32) + 400, 100 + (int)((_chargerState.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
         }
     }
 

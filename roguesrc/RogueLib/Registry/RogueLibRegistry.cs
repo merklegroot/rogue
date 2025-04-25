@@ -29,5 +29,6 @@ public static class RogueLibRegistry
             .AddScoped<IFlyingGoldPresenter, FlyingGoldPresenter>()
             .AddScoped<IUpdateEnemiesHandler, UpdateEnemiesHandler>()
             .AddScoped<ICooldownIndicatorPresenter, CooldownIndicatorPresenter>()
-            .AddScoped<IMenuInputHandler, MenuInputHandler>();
+            .AddScoped<IMenuInputHandler, MenuInputHandler>()
+            .AddScoped<IEnemyPresenter, EnemyPresenter>();
 }
