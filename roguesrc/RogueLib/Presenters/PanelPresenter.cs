@@ -1,15 +1,12 @@
 using Raylib_cs;
 using RogueLib.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 using RogueLib.Constants;
 
 namespace RogueLib.Presenters;
 
 public interface IPanelPresenter
 {
-    void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines);
+    void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, string? title = null);
 }
 
 public class PanelPresenter : IPanelPresenter
@@ -23,33 +20,38 @@ public class PanelPresenter : IPanelPresenter
     // Panel colors
     private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
     private static readonly Color PanelBackgroundColor = new(100, 100, 100, 100);  // Semi-transparent gray background
+    private static readonly Color TitleColor = new(255, 255, 255, 255);  // White title
 
     public PanelPresenter(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
     }
 
-    public void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines)
+    public void Draw(IRayConnection rayConnection, Coord2dInt position, IEnumerable<LineInfo> lines, string? title = null)
     {
         if (rayConnection == null || lines == null)
             return;
 
         var lineList = lines.ToList();
-        var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2);
-        var panelWidth = CalculatePanelWidth(rayConnection, lineList);
+        var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2) + (title != null ? LineHeight : 0);
+        var panelWidth = CalculatePanelWidth(rayConnection, lineList, title);
         
         DrawPanelBackground(position, new Coord2dInt(panelWidth, panelHeight));
-        DrawPanelLines(rayConnection, position, lineList);
+        DrawPanelContent(rayConnection, position, lineList, title);
     }
 
-    private int CalculatePanelWidth(IRayConnection rayConnection, List<LineInfo> lines)
+    private int CalculatePanelWidth(IRayConnection rayConnection, List<LineInfo> lines, string? title)
     {
-        if (!lines.Any())
+        if (!lines.Any() && title == null)
             return _maxWidthSeen;
 
         var maxLineWidth = lines.Max(line => 
             Raylib.MeasureTextEx(rayConnection.MenuFont, line.Contents, ScreenConstants.MenuFontSize, 1).X);
-        var newWidth = Math.Max((int)maxLineWidth + (PanelPadding * 2), MinPanelWidth);
+            
+        var titleWidth = title != null ? 
+            Raylib.MeasureTextEx(rayConnection.MenuFont, title, ScreenConstants.MenuFontSize, 1).X : 0;
+            
+        var newWidth = Math.Max((int)Math.Max(maxLineWidth, titleWidth) + (PanelPadding * 2), MinPanelWidth);
         _maxWidthSeen = Math.Max(_maxWidthSeen, newWidth);
         return _maxWidthSeen;
     }
@@ -73,9 +75,15 @@ public class PanelPresenter : IPanelPresenter
         );
     }
 
-    private void DrawPanelLines(IRayConnection rayConnection, Coord2dInt position, List<LineInfo> lines)
+    private void DrawPanelContent(IRayConnection rayConnection, Coord2dInt position, List<LineInfo> lines, string? title)
     {
         var currentY = position.Y + PanelPadding;
+        
+        if (title != null)
+        {
+            _drawUtil.DrawText(rayConnection, title, position.X + PanelPadding, currentY, TitleColor);
+            currentY += LineHeight;
+        }
         
         foreach (var line in lines)
         {
