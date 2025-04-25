@@ -55,34 +55,34 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 if (dx != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X + (double)dx), (int)Math.Floor((double)enemy.Y)))
+                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y)))
                     {
-                        enemy.X = (int)(enemy.X + dx);
+                        enemy.Position.X = (int)(enemy.Position.X + dx);
                     }
                     // If horizontal movement is blocked, try vertical
-                    else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X), (int)Math.Floor((double)enemy.Y + (double)dy)))
+                    else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
                     {
-                        enemy.Y = (int)(enemy.Y + dy);
+                        enemy.Position.Y = (int)(enemy.Position.Y + dy);
                     }
                     // If both are blocked, try diagonal
-                    else if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X + (double)dx), (int)Math.Floor((double)enemy.Y + (double)dy)))
+                    else if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
                     {
-                        enemy.X = (int)(enemy.X + dx);
-                        enemy.Y = (int)(enemy.Y + dy);
+                        enemy.Position.X = (int)(enemy.Position.X + dx);
+                        enemy.Position.Y = (int)(enemy.Position.Y + dy);
                     }
                 }
                 // If no horizontal movement, try vertical
                 else if (dy != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.X), (int)Math.Floor((double)enemy.Y + (double)dy)))
+                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
                     {
-                        enemy.Y = (int)(enemy.Y + dy);
+                        enemy.Position.Y = (int)(enemy.Position.Y + dy);
                     }
                 }
                 
                 // Check for collision with player
-                if (Math.Abs(enemy.X - state.PlayerPosition.X) < 0.5f && Math.Abs(enemy.Y - state.PlayerPosition.Y) < 0.5f)
+                if (Math.Abs(enemy.Position.X - state.PlayerPosition.X) < 0.5f && Math.Abs(enemy.Position.Y - state.PlayerPosition.Y) < 0.5f)
                 {
                     // Only damage player if not invincible
                     if (!state.IsInvincible)
@@ -91,7 +91,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                         Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
                         
                         // Apply knockback
-                        ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
+                        ApplyKnockback(state, new Vector2(enemy.Position.X, enemy.Position.Y));
                         
                         // Make player briefly invincible
                         state.IsInvincible = true;

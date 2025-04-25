@@ -3,6 +3,7 @@ using Raylib_cs;
 using RogueLib.Constants;
 using RogueLib.State;
 using RogueLib.Handlers;
+using RogueLib.Models;
 
 namespace RogueLib.Presenters;
 
@@ -275,9 +276,9 @@ public class ScreenPresenter : IScreenPresenter
         // Draw gold items - with updated horizontal spacing
         foreach (var gold in state.GoldItems)
         {
-            if (Math.Abs(gold.X - state.CameraState.X) < 15 && Math.Abs(gold.Y - state.CameraState.Y) < 10)
+            if (Math.Abs(gold.Position.X - state.CameraState.X) < 15 && Math.Abs(gold.Position.Y - state.CameraState.Y) < 10)
             {
-                _screenDrawUtil.DrawCharacter(rayConnection, 36, 100 + (int)((gold.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
+                _screenDrawUtil.DrawCharacter(rayConnection, 36, 100 + (int)((gold.Position.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Position.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
             }
         }
     }
@@ -528,8 +529,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 // Spawn gold at the explosion location when the explosion finishes
                 state.GoldItems.Add(new GoldItem { 
-                    X = state.Explosions[i].X, 
-                    Y = state.Explosions[i].Y, 
+                    Position = state.Explosions[i].Position with {},
                     Value = _random.Next(3, 8)  // Enemies drop more valuable gold (3-7)
                 });
                 
@@ -565,12 +565,12 @@ public class ScreenPresenter : IScreenPresenter
             if (!enemy.IsAlive)
                 continue;
 
-            if (Math.Abs(state.PlayerPosition.X - enemy.X) < 0.5f && Math.Abs(state.PlayerPosition.Y - enemy.Y) < 0.5f)
+            if (Math.Abs(state.PlayerPosition.X - enemy.Position.X) < 0.5f && Math.Abs(state.PlayerPosition.Y - enemy.Position.Y) < 0.5f)
             {
                 state.CurrentHealth--;
                 Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
                 
-                ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
+                ApplyKnockback(state, new Vector2(enemy.Position.X, enemy.Position.Y));
                 
                 break;
             }
@@ -644,8 +644,9 @@ public class ScreenPresenter : IScreenPresenter
         // Optional: Add a visual indicator that gold was added
         int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         state.FlyingGold.Add(new FlyingGold { 
-            StartX = screenWidth / 2,
-            StartY = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale / 2,
+            StartPosition = new Coord2dFloat(
+                screenWidth / 2,
+                ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale / 2),
             Value = 100,
             Timer = 0f
         });
@@ -657,13 +658,14 @@ public class ScreenPresenter : IScreenPresenter
         for (int i = state.GoldItems.Count - 1; i >= 0; i--)
         {
             // Check if gold is at the player's position or one square away
-            if (Math.Abs(state.GoldItems[i].X - state.PlayerPosition.X) <= 1 && 
-                Math.Abs(state.GoldItems[i].Y - state.PlayerPosition.Y) <= 1)
+            if (Math.Abs(state.GoldItems[i].Position.X - state.PlayerPosition.X) <= 1 && 
+                Math.Abs(state.GoldItems[i].Position.Y - state.PlayerPosition.Y) <= 1)
             {
                 // Create flying gold animation
                 state.FlyingGold.Add(new FlyingGold { 
-                    StartX = 100 + state.GoldItems[i].X * 40,
-                    StartY = 100 + state.GoldItems[i].Y * 40,
+                    StartPosition = new Coord2dFloat(
+                        100 + state.GoldItems[i].Position.X * 40,
+                        100 + state.GoldItems[i].Position.Y * 40),
                     Value = state.GoldItems[i].Value,
                     Timer = 0f
                 });
@@ -792,8 +794,8 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player, enemies, or other gold
                     if ((x != state.PlayerPosition.X || y != state.PlayerPosition.Y) &&
-                        !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y) &&
-                        !state.GoldItems.Any(g => g.X == x && g.Y == y))
+                        !state.Enemies.Any(e => e.IsAlive && e.Position.X == x && e.Position.Y == y) &&
+                        !state.GoldItems.Any(g => g.Position.X == x && g.Position.Y == y))
                     {
                         validPositions.Add((x, y));
                     }
@@ -810,7 +812,11 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = validPositions[randomIndex];
         
         // Spawn the gold
-        state.GoldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
+        state.GoldItems.Add(new GoldItem
+        {
+            Position = new Coord2dFloat(newX, newY),
+            Value = _random.Next(1, 6)
+        });  // Gold worth 1-5
     }
 
     private void SpawnHealthPickup(GameState state)
@@ -828,8 +834,8 @@ public class ScreenPresenter : IScreenPresenter
                 {
                     // Check if position is not occupied by player, enemies, gold, or other health pickups
                     if ((x != state.PlayerPosition.X || y != state.PlayerPosition.Y) &&
-                        !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y) &&
-                        !state.GoldItems.Any(g => g.X == x && g.Y == y) &&
+                        !state.Enemies.Any(e => e.IsAlive && e.Position.X == x && e.Position.Y == y) &&
+                        !state.GoldItems.Any(g => g.Position.X == x && g.Position.Y == y) &&
                         !state.HealthPickupState.HealthPickups.Any(h => h.X == x && h.Y == y))
                     {
                         validPositions.Add((x, y));
@@ -1019,15 +1025,14 @@ public class ScreenPresenter : IScreenPresenter
                 if (!enemy.IsAlive) continue;
                 
                 // Check if bolt is within 0.5 tiles of enemy (for hit detection)
-                if (Math.Abs(bolt.X - enemy.X) < 0.5f && Math.Abs(bolt.Y - enemy.Y) < 0.5f)
+                if (Math.Abs(bolt.X - enemy.Position.X) < 0.5f && Math.Abs(bolt.Y - enemy.Position.Y) < 0.5f)
                 {
                     // Kill the enemy
                     enemy.IsAlive = false;
                     
                     // Create explosion at enemy position
                     state.Explosions.Add(new ExplosionState { 
-                        X = enemy.X, 
-                        Y = enemy.Y, 
+                        Position = enemy.Position with {},
                         Timer = 0f 
                     });
                     
@@ -1076,18 +1081,16 @@ public class ScreenPresenter : IScreenPresenter
                 _chargerState.IsAlive = false;
                 
                 // Create explosion at charger position
-                state.Explosions.Add(new ExplosionState { 
-                    X = (int)_chargerState.X, 
-                    Y = (int)_chargerState.Y, 
+                state.Explosions.Add(new ExplosionState {
+                    Position = new Coord2dFloat(_chargerState.X, _chargerState.Y),
                     Timer = 0f 
                 });
                 
                 // Spawn more valuable gold for killing the charger
                 for (int i = 0; i < 3; i++)
                 {
-                    state.GoldItems.Add(new GoldItem { 
-                        X = (int)_chargerState.X, 
-                        Y = (int)_chargerState.Y, 
+                    state.GoldItems.Add(new GoldItem {
+                        Position = new Coord2dFloat(_chargerState.X + i, _chargerState.Y),
                         Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
                     });
                 }
@@ -1133,7 +1136,7 @@ public class ScreenPresenter : IScreenPresenter
             }
 
             isPositionValid = (Math.Abs(newX - state.PlayerPosition.X) > 3 || Math.Abs(newY - state.PlayerPosition.Y) > 3) &&
-                              !state.Enemies.Any(e => e.IsAlive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
+                              !state.Enemies.Any(e => e.IsAlive && Math.Abs(e.Position.X - newX) < 0.5f && Math.Abs(e.Position.Y - newY) < 0.5f);
 
             if (isPositionValid)
                 break;
@@ -1270,15 +1273,14 @@ public class ScreenPresenter : IScreenPresenter
             if (enemy.IsAlive)
             {
                 // Check if sword is within 0.5 tiles of enemy (for hit detection)
-                if (Math.Abs(swordX - enemy.X) < 0.5f && Math.Abs(swordY - enemy.Y) < 0.5f)
+                if (Math.Abs(swordX - enemy.Position.X) < 0.5f && Math.Abs(swordY - enemy.Position.Y) < 0.5f)
                 {
                     // Kill the enemy
                     enemy.IsAlive = false;
                     
                     // Create explosion at enemy position
-                    state.Explosions.Add(new ExplosionState { 
-                        X = enemy.X, 
-                        Y = enemy.Y, 
+                    state.Explosions.Add(new ExplosionState {
+                        Position = enemy.Position with {},
                         Timer = 0f 
                     });
                     

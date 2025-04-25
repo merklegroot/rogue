@@ -24,8 +24,8 @@ public class EnemyPresenter : IEnemyPresenter
         {
             if (enemy.IsAlive)
             {
-                int enemyScreenX = 100 + (int)((enemy.X - state.CameraState.X) * 32) + 400;
-                int enemyScreenY = 100 + (int)((enemy.Y - state.CameraState.Y) * 40) + 200;
+                int enemyScreenX = 100 + (int)((enemy.Position.X - state.CameraState.X) * 32) + 400;
+                int enemyScreenY = 100 + (int)((enemy.Position.Y - state.CameraState.Y) * 40) + 200;
                 
                 // Only draw if on screen
                 if (enemyScreenX >= 0 && enemyScreenX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&

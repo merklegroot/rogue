@@ -1,5 +1,6 @@
 using RogueLib.State;
 using RogueLib.Constants;
+using RogueLib.Models;
 
 namespace RogueLib.Handlers;
 
@@ -42,13 +43,13 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
                     {
                         // Check if position is not occupied by player or other enemies
                         if ((x != state.PlayerPosition.X || y != state.PlayerPosition.Y) &&
-                            !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y))
+                            !state.Enemies.Any(e => e.IsAlive && e.Position.X == x && e.Position.Y == y))
                         {
                             // Check per-chunk limit
                             int enemiesInChunk = state.Enemies.Count(e => 
                                 e.IsAlive && 
-                                e.X / GameConstants.ChunkSize == chunkX && 
-                                e.Y / GameConstants.ChunkSize == chunkY);
+                                e.Position.X / GameConstants.ChunkSize == chunkX && 
+                                e.Position.Y / GameConstants.ChunkSize == chunkY);
 
                             // Allow up to 2 enemies per chunk
                             if (enemiesInChunk < 2)
@@ -70,7 +71,6 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
         var (newX, newY) = validPositions[randomIndex];
         
         // Spawn the enemy
-        state.Enemies.Add(new Enemy { X = newX, Y = newY, IsAlive = true });
+        state.Enemies.Add(new Enemy { Position = new Coord2dFloat(newX, newY), IsAlive = true });
     }
-
 }

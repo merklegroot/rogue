@@ -40,8 +40,8 @@ public class FlyingGoldPresenter : IFlyingGoldPresenter
             int endY = 20;  // Same Y as gold counter
             
             // Interpolate between start and end positions
-            int currentX = (int)(gold.StartX + (endX - gold.StartX) * progress);
-            int currentY = (int)(gold.StartY + (endY - gold.StartY) * progress);
+            int currentX = (int)(gold.StartPosition.X + (endX - gold.StartPosition.X) * progress);
+            int currentY = (int)(gold.StartPosition.Y + (endY - gold.StartPosition.Y) * progress);
             
             // Calculate alpha (opacity) based on progress - fade out as it approaches the counter
             byte alpha = (byte)(255 * (1.0f - progress * 0.8f));  // Fade to 20% opacity

@@ -30,8 +30,8 @@ public class ExplosionPresenter : IExplosionPresenter
             };
             
             // Calculate position with camera offset - updated horizontal spacing
-            int explosionX = 100 + (int)((explosion.X - state.CameraState.X) * 32) + 400;
-            int explosionY = 100 + (int)((explosion.Y - state.CameraState.Y) * 40) + 200;
+            int explosionX = 100 + (int)((explosion.Position.X - state.CameraState.X) * 32) + 400;
+            int explosionY = 100 + (int)((explosion.Position.Y - state.CameraState.Y) * 40) + 200;
             
             // Only draw if on screen
             if (explosionX >= 0 && explosionX < ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale &&

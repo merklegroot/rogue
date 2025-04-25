@@ -55,7 +55,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
 
             lines.Add(new LineInfo
             {
-                Contents = $"Enemy at ({enemy.X}, {enemy.Y})",
+                Contents = $"Enemy at ({enemy.Position.X}, {enemy.Position.Y})",
                 Color = Color.White
             });
         }
