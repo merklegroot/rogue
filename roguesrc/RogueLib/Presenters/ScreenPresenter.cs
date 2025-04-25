@@ -672,11 +672,7 @@ public class ScreenPresenter : IScreenPresenter
                     state.CurrentHealth--;
                     Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
                     
-                    // Make player invincible briefly
-                    state.IsInvincible = true;
-                    state.InvincibilityTimer = 0f;
-                    
-                    // Apply knockback in the opposite direction of the enemy
+                    // Apply knockback
                     ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
                     
                     break; // Only take damage from one enemy per frame
@@ -694,11 +690,7 @@ public class ScreenPresenter : IScreenPresenter
                 state.CurrentHealth -= 2;
                 Console.WriteLine($"Player hit by charger! Health: {state.CurrentHealth}");
                 
-                // Make player invincible briefly
-                state.IsInvincible = true;
-                state.InvincibilityTimer = 0f;
-                
-                // Apply stronger knockback from the charger
+                // Apply stronger knockback
                 ApplyKnockback(state, new Vector2(_chargerState.X, _chargerState.Y), 1.0f); // Double knockback distance
             }
         }
@@ -878,6 +870,7 @@ public class ScreenPresenter : IScreenPresenter
                     if (!state.IsInvincible)
                     {
                         state.CurrentHealth--;
+                        Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
                         
                         // Apply knockback
                         ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
