@@ -370,56 +370,6 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawInstructions(IRayConnection rayConnection, GameState state)
-    {
-        // Create a collection of instructions
-        var instructions = new List<string>
-        {
-            "Use (W/A/S/D) to move",
-            "(SPACE) to swing sword"
-        };
-
-        if (state.HasCrossbow)
-        {
-            instructions.Add("(F) to fire crossbow");
-        }
-
-        instructions.Add("(ESC) to return to menu");
-        instructions.Add("(G) for instant gold");
-        instructions.Add("(B) to open the shop");
-        instructions.Add("(C) to spawn charger");
-
-        // Join instructions with commas and "and" before the last one
-        string instructionsText = string.Join(", ", instructions.Take(instructions.Count - 1)) + 
-                                (instructions.Count > 1 ? ", and " : "") + 
-                                instructions.Last();
-
-        // Calculate text width
-        int textWidth = Raylib.MeasureText(instructionsText, ScreenConstants.MenuFontSize);
-        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-        
-        // If text is too wide, split into two lines
-        if (textWidth > screenWidth - 40) // 40 pixels margin
-        {
-            // Split instructions into two roughly equal groups
-            int midPoint = instructions.Count / 2;
-            string firstLine = string.Join(", ", instructions.Take(midPoint)) + ",";
-            string secondLine = string.Join(", ", instructions.Skip(midPoint).Take(instructions.Count - midPoint - 1)) + 
-                              (instructions.Skip(midPoint).Count() > 1 ? ", and " : "") + 
-                              instructions.Last();
-
-            // Draw first line
-            _screenDrawUtil.DrawText(rayConnection, firstLine, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 80, Color.White);
-            // Draw second line below
-            _screenDrawUtil.DrawText(rayConnection, secondLine, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
-        }
-        else
-        {
-            // Draw single line
-            _screenDrawUtil.DrawText(rayConnection, instructionsText, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
-        }
-    }
-
     private void DrawWorld(IRayConnection rayConnection, GameState state)
     {
         // Update camera position to follow player with a dead zone
