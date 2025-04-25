@@ -1,4 +1,5 @@
 using Raylib_cs;
+using RogueLib.Models;
 
 namespace RogueLib.State;
 
@@ -9,11 +10,9 @@ public class GameState
     public GameScreenEnum CurrentScreen { get; set; } = GameScreenEnum.Menu;
 
     public int PlayerGold { get; set; } = 0;
-    
-    public float PlayerX { get; set; } = 10f;
-    public float PlayerY { get; set; } = 5f;
-    public float PreviousX { get; set; } = 10f;
-    public float PreviousY { get; set; } = 5f;
+    public Coord2dFloat PlayerPosition { get; set; } = new(10f, 5f);
+
+    public Coord2dFloat PreviousPlayerPosition { get; set; } = new(10f, 5f);
     public float MovementStartTime { get; set; } = 0f;
     public int CurrentHealth { get; set; } = 7;    
     

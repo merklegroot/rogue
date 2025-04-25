@@ -47,8 +47,8 @@ public class SwordPresenter : ISwordPresenter
         }
 
         // Calculate base position with camera offset
-        float baseX = 100 + (state.PlayerX - state.CameraState.X) * 32 + 400;
-        float baseY = 100 + (state.PlayerY - state.CameraState.Y) * 40 + 200;
+        float baseX = 100 + (state.PlayerPosition.X - state.CameraState.X) * 32 + 400;
+        float baseY = 100 + (state.PlayerPosition.Y - state.CameraState.Y) * 40 + 200;
 
         // Scale the sword to match player character size
         float scaledWidth = ScreenConstants.CharWidth * ScreenConstants.DisplayScale;

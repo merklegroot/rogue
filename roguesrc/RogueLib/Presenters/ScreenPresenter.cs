@@ -358,13 +358,13 @@ public class ScreenPresenter : IScreenPresenter
 
         // Apply velocity to position if the new position is walkable
         bool moved = false;
-        float newX = state.PlayerX + state.VelocityX;
-        float newY = state.PlayerY + state.VelocityY;
+        float newX = state.PlayerPosition.X + state.VelocityX;
+        float newY = state.PlayerPosition.Y + state.VelocityY;
 
-        if (IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(state.PlayerY)))
+        if (IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(state.PlayerPosition.Y)))
         {
-            state.PreviousX = state.PlayerX;
-            state.PlayerX = newX;
+            state.PreviousPlayerPosition.X = state.PlayerPosition.X;
+            state.PlayerPosition.X = newX;
             moved = true;
         }
         else
@@ -373,10 +373,10 @@ public class ScreenPresenter : IScreenPresenter
             state.VelocityX = 0;
         }
 
-        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerX), (int)Math.Floor(newY)))
+        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(newY)))
         {
-            state.PreviousY = state.PlayerY;
-            state.PlayerY = newY;
+            state.PreviousPlayerPosition.Y = state.PlayerPosition.Y;
+            state.PlayerPosition.Y = newY;
             moved = true;
         }
         else
@@ -458,8 +458,8 @@ public class ScreenPresenter : IScreenPresenter
             state.CrossbowState.CrossbowCooldownTimer = 0f;
             
             // Create a new bolt based on player direction
-            float boltX = state.PlayerX;
-            float boltY = state.PlayerY;
+            float boltX = state.PlayerPosition.X;
+            float boltY = state.PlayerPosition.Y;
             Direction boltDirection = state.ActionDirection;
             
             state.CrossbowBolts.Add(new CrossbowBoltState
@@ -490,7 +490,7 @@ public class ScreenPresenter : IScreenPresenter
         if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && !state.IsInvincible)
         {
             // Check if player is colliding with the charger
-            if (Math.Abs(state.PlayerX - _chargerState.X) < 0.5f && Math.Abs(state.PlayerY - _chargerState.Y) < 0.5f)
+            if (Math.Abs(state.PlayerPosition.X - _chargerState.X) < 0.5f && Math.Abs(state.PlayerPosition.Y - _chargerState.Y) < 0.5f)
             {
                 // Player takes more damage from charger (2 instead of 1)
                 state.CurrentHealth -= 2;
@@ -565,7 +565,7 @@ public class ScreenPresenter : IScreenPresenter
             if (!enemy.IsAlive)
                 continue;
 
-            if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
+            if (Math.Abs(state.PlayerPosition.X - enemy.X) < 0.5f && Math.Abs(state.PlayerPosition.Y - enemy.Y) < 0.5f)
             {
                 state.CurrentHealth--;
                 Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
@@ -593,23 +593,23 @@ public class ScreenPresenter : IScreenPresenter
             float frameKnockback = GameConstants.KnockbackDistance * Raylib.GetFrameTime() * (1.0f / GameConstants.KnockbackDuration);
             
             // Calculate target position
-            float targetX = state.PlayerX;
-            float targetY = state.PlayerY;
+            float targetX = state.PlayerPosition.X;
+            float targetY = state.PlayerPosition.Y;
             
             // Determine target position based on knockback direction
             switch (state.KnockbackDirection)
             {
                 case Direction.Left:
-                    targetX = state.PlayerX - frameKnockback;
+                    targetX = state.PlayerPosition.X - frameKnockback;
                     break;
                 case Direction.Right:
-                    targetX = state.PlayerX + frameKnockback;
+                    targetX = state.PlayerPosition.X + frameKnockback;
                     break;
                 case Direction.Up:
-                    targetY = state.PlayerY - frameKnockback;
+                    targetY = state.PlayerPosition.Y - frameKnockback;
                     break;
                 case Direction.Down:
-                    targetY = state.PlayerY + frameKnockback;
+                    targetY = state.PlayerPosition.Y + frameKnockback;
                     break;
             }
             
@@ -618,8 +618,8 @@ public class ScreenPresenter : IScreenPresenter
             int checkY = (int)Math.Floor(targetY);
             if (IsWalkableTile(state.Map, checkX, checkY))
             {
-                state.PlayerX = (int)targetX;
-                state.PlayerY = (int)targetY;
+                state.PlayerPosition.X = (int)targetX;
+                state.PlayerPosition.Y = (int)targetY;
             }
             else
             {
@@ -657,8 +657,8 @@ public class ScreenPresenter : IScreenPresenter
         for (int i = state.GoldItems.Count - 1; i >= 0; i--)
         {
             // Check if gold is at the player's position or one square away
-            if (Math.Abs(state.GoldItems[i].X - state.PlayerX) <= 1 && 
-                Math.Abs(state.GoldItems[i].Y - state.PlayerY) <= 1)
+            if (Math.Abs(state.GoldItems[i].X - state.PlayerPosition.X) <= 1 && 
+                Math.Abs(state.GoldItems[i].Y - state.PlayerPosition.Y) <= 1)
             {
                 // Create flying gold animation
                 state.FlyingGold.Add(new FlyingGold { 
@@ -683,8 +683,8 @@ public class ScreenPresenter : IScreenPresenter
         for (int i = state.HealthPickupState.HealthPickups.Count - 1; i >= 0; i--)
         {
             // Check if health pickup is at the player's position or one square away
-            if (Math.Abs(state.HealthPickupState.HealthPickups[i].X - state.PlayerX) <= 1 && 
-                Math.Abs(state.HealthPickupState.HealthPickups[i].Y - state.PlayerY) <= 1)
+            if (Math.Abs(state.HealthPickupState.HealthPickups[i].X - state.PlayerPosition.X) <= 1 && 
+                Math.Abs(state.HealthPickupState.HealthPickups[i].Y - state.PlayerPosition.Y) <= 1)
             {
                 // Add health to the player
                 state.CurrentHealth = Math.Min(ScreenConstants.MaxHealth, state.CurrentHealth + state.HealthPickupState.HealthPickups[i].HealAmount);
@@ -727,11 +727,11 @@ public class ScreenPresenter : IScreenPresenter
             float dy = 0;
             
             // Charger AI: move directly toward player
-            if (_chargerState.X < state.PlayerX) dx = GameConstants.PlayerMoveSpeed;
-            else if (_chargerState.X > state.PlayerX) dx = -GameConstants.PlayerMoveSpeed;
+            if (_chargerState.X < state.PlayerPosition.X) dx = GameConstants.PlayerMoveSpeed;
+            else if (_chargerState.X > state.PlayerPosition.X) dx = -GameConstants.PlayerMoveSpeed;
             
-            if (_chargerState.Y < state.PlayerY) dy = GameConstants.PlayerMoveSpeed;
-            else if (_chargerState.Y > state.PlayerY) dy = -GameConstants.PlayerMoveSpeed;
+            if (_chargerState.Y < state.PlayerPosition.Y) dy = GameConstants.PlayerMoveSpeed;
+            else if (_chargerState.Y > state.PlayerPosition.Y) dy = -GameConstants.PlayerMoveSpeed;
             
             // Try to move horizontally first
             if (dx != 0)
@@ -758,7 +758,7 @@ public class ScreenPresenter : IScreenPresenter
             }
             
             // Check for collision with player
-            if (Math.Abs(_chargerState.X - state.PlayerX) < 0.5f && Math.Abs(_chargerState.Y - state.PlayerY) < 0.5f)
+            if (Math.Abs(_chargerState.X - state.PlayerPosition.X) < 0.5f && Math.Abs(_chargerState.Y - state.PlayerPosition.Y) < 0.5f)
             {
                 // Only damage player if not invincible
                 if (!state.IsInvincible)
@@ -791,7 +791,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (line[x] == '.')  // Only consider floor tiles
                 {
                     // Check if position is not occupied by player, enemies, or other gold
-                    if ((x != state.PlayerX || y != state.PlayerY) &&
+                    if ((x != state.PlayerPosition.X || y != state.PlayerPosition.Y) &&
                         !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y) &&
                         !state.GoldItems.Any(g => g.X == x && g.Y == y))
                     {
@@ -827,7 +827,7 @@ public class ScreenPresenter : IScreenPresenter
                 if (line[x] == '.')  // Only consider floor tiles
                 {
                     // Check if position is not occupied by player, enemies, gold, or other health pickups
-                    if ((x != state.PlayerX || y != state.PlayerY) &&
+                    if ((x != state.PlayerPosition.X || y != state.PlayerPosition.Y) &&
                         !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y) &&
                         !state.GoldItems.Any(g => g.X == x && g.Y == y) &&
                         !state.HealthPickupState.HealthPickups.Any(h => h.X == x && h.Y == y))
@@ -1132,7 +1132,7 @@ public class ScreenPresenter : IScreenPresenter
                     break;
             }
 
-            isPositionValid = (Math.Abs(newX - state.PlayerX) > 3 || Math.Abs(newY - state.PlayerY) > 3) &&
+            isPositionValid = (Math.Abs(newX - state.PlayerPosition.X) > 3 || Math.Abs(newY - state.PlayerPosition.Y) > 3) &&
                               !state.Enemies.Any(e => e.IsAlive && Math.Abs(e.X - newX) < 0.5f && Math.Abs(e.Y - newY) < 0.5f);
 
             if (isPositionValid)
@@ -1163,8 +1163,8 @@ public class ScreenPresenter : IScreenPresenter
     private void ApplyKnockback(GameState state, Vector2 sourcePosition, float multiplier = 1.0f)
     {
         // Determine knockback direction (away from the source)
-        float dx = state.PlayerX - sourcePosition.X;
-        float dy = state.PlayerY - sourcePosition.Y;
+        float dx = state.PlayerPosition.X - sourcePosition.X;
+        float dy = state.PlayerPosition.Y - sourcePosition.Y;
         
         // If player is exactly on the enemy, use the player's facing direction
         if (Math.Abs(dx) < 0.1f && Math.Abs(dy) < 0.1f)
@@ -1217,8 +1217,8 @@ public class ScreenPresenter : IScreenPresenter
     private void UpdateCamera(GameState state)
     {
         // Calculate how far the player is from the camera center
-        float deltaX = state.PlayerX - state.CameraState.X;
-        float deltaY = state.PlayerY - state.CameraState.Y;
+        float deltaX = state.PlayerPosition.X - state.CameraState.X;
+        float deltaY = state.PlayerPosition.Y - state.CameraState.Y;
         
         // If player is outside the dead zone, move the camera
         if (Math.Abs(deltaX) > GameConstants.CameraDeadZone)
@@ -1244,8 +1244,8 @@ public class ScreenPresenter : IScreenPresenter
             return;
         
         // Calculate sword position based on player position and direction
-        float swordX = state.PlayerX;
-        float swordY = state.PlayerY;
+        float swordX = state.PlayerPosition.X;
+        float swordY = state.PlayerPosition.Y;
         
         // Adjust position based on direction and sword reach
         switch (state.ActionDirection)
@@ -1326,7 +1326,7 @@ public class ScreenPresenter : IScreenPresenter
     private void EnsurePlayerOnWalkableTile(GameState state)
     {
         // If player is already on a walkable tile, do nothing
-        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerX), (int)Math.Floor(state.PlayerY)))
+        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(state.PlayerPosition.Y)))
         {
             return;
         }
@@ -1345,14 +1345,14 @@ public class ScreenPresenter : IScreenPresenter
                     if (Math.Abs(offsetX) != radius && Math.Abs(offsetY) != radius)
                         continue;
                     
-                    var testX = (int)Math.Floor(state.PlayerX + offsetX);
-                    var testY = (int)Math.Floor(state.PlayerY + offsetY);
+                    var testX = (int)Math.Floor(state.PlayerPosition.X + offsetX);
+                    var testY = (int)Math.Floor(state.PlayerPosition.Y + offsetY);
                     
                     if (IsWalkableTile(state.Map, testX, testY))
                     {
                         // Found a walkable tile, move player there
-                        state.PlayerX = testX + 0.5f; // Center the player in the tile
-                        state.PlayerY = testY + 0.5f;
+                        state.PlayerPosition.X = testX + 0.5f; // Center the player in the tile
+                        state.PlayerPosition.Y = testY + 0.5f;
                         return;
                     }
                 }
@@ -1363,8 +1363,8 @@ public class ScreenPresenter : IScreenPresenter
         // This is a fallback that should rarely be needed
         int roomWidth = 7;
         int roomHeight = 5;
-        int roomX = (int)Math.Floor(state.PlayerX) - roomWidth / 2;
-        int roomY = (int)Math.Floor(state.PlayerY) - roomHeight / 2;
+        int roomX = (int)Math.Floor(state.PlayerPosition.X) - roomWidth / 2;
+        int roomY = (int)Math.Floor(state.PlayerPosition.Y) - roomHeight / 2;
         
         // Create a simple room
         for (int y = 0; y < roomHeight; y++)
@@ -1408,8 +1408,8 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Place player in the center of the new room
-        state.PlayerX = roomX + roomWidth / 2 + 0.5f;
-        state.PlayerY = roomY + roomHeight / 2 + 0.5f;
+        state.PlayerPosition.X = roomX + roomWidth / 2 + 0.5f;
+        state.PlayerPosition.Y = roomY + roomHeight / 2 + 0.5f;
     }
 
     // Add this method to initialize the player position on a floor tile
@@ -1440,11 +1440,11 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = floorTiles[randomIndex];
         
         // Set player position (centered in the tile)
-        state.PlayerX = newX + 0.5f;
-        state.PlayerY = newY + 0.5f;
+        state.PlayerPosition.X = newX + 0.5f;
+        state.PlayerPosition.Y = newY + 0.5f;
         
         // Immediately center camera on player for initial spawn
-        state.CameraState.X = state.PlayerX;
-        state.CameraState.Y = state.PlayerY;
+        state.CameraState.X = state.PlayerPosition.X;
+        state.CameraState.Y = state.PlayerPosition.Y;
     }
 }

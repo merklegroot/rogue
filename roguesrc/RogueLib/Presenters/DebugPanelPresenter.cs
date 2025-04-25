@@ -34,7 +34,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         {
             new LineInfo
             {
-                Contents = $"Player at ({state.PlayerX:F2}, {state.PlayerY:F2})",
+                Contents = $"Player at ({state.PlayerPosition.X:F2}, {state.PlayerPosition.Y:F2})",
                 Color = Color.Yellow
             }
         };

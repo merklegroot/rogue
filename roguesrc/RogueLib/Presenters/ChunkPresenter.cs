@@ -21,8 +21,8 @@ public class ChunkPresenter : IChunkPresenter
     public void Draw(IRayConnection rayConnection, GameState state)
     {
         // Calculate the chunk that the player is in
-        int playerChunkX = (int)(state.PlayerX / GameConstants.ChunkSize);
-        int playerChunkY = (int)(state.PlayerY / GameConstants.ChunkSize);
+        int playerChunkX = (int)(state.PlayerPosition.X / GameConstants.ChunkSize);
+        int playerChunkY = (int)(state.PlayerPosition.Y / GameConstants.ChunkSize);
 
         // Draw boundaries for the current chunk and adjacent chunks
         for (int y = playerChunkY - 1; y <= playerChunkY + 1; y++)

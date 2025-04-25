@@ -31,8 +31,8 @@ public class CooldownIndicatorPresenter : ICooldownIndicatorPresenter
             int barHeight = 5;
             
             // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center above player
-            int barY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200 - 15;  // Above player
+            int barX = 100 + (int)((state.PlayerPosition.X - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center above player
+            int barY = 100 + (int)((state.PlayerPosition.Y - state.CameraState.Y) * 40) + 200 - 15;  // Above player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
@@ -52,8 +52,8 @@ public class CooldownIndicatorPresenter : ICooldownIndicatorPresenter
             int barHeight = 5;
             
             // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center below player
-            int barY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200 + 45;  // Below player
+            int barX = 100 + (int)((state.PlayerPosition.X - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center below player
+            int barY = 100 + (int)((state.PlayerPosition.Y - state.CameraState.Y) * 40) + 200 + 45;  // Below player
             
             // Background (empty) bar
             Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));

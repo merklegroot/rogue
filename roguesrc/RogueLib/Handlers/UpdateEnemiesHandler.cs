@@ -82,7 +82,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 }
                 
                 // Check for collision with player
-                if (Math.Abs(enemy.X - state.PlayerX) < 0.5f && Math.Abs(enemy.Y - state.PlayerY) < 0.5f)
+                if (Math.Abs(enemy.X - state.PlayerPosition.X) < 0.5f && Math.Abs(enemy.Y - state.PlayerPosition.Y) < 0.5f)
                 {
                     // Only damage player if not invincible
                     if (!state.IsInvincible)
@@ -108,8 +108,8 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
     private void ApplyKnockback(GameState state, Vector2 sourcePosition, float multiplier = 1.0f)
     {
         // Determine knockback direction (away from the source)
-        float dx = state.PlayerX - sourcePosition.X;
-        float dy = state.PlayerY - sourcePosition.Y;
+        float dx = state.PlayerPosition.X - sourcePosition.X;
+        float dy = state.PlayerPosition.Y - sourcePosition.Y;
         
         // If player is exactly on the enemy, use the player's facing direction
         if (Math.Abs(dx) < 0.1f && Math.Abs(dy) < 0.1f)

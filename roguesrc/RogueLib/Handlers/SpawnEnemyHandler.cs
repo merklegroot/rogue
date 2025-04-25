@@ -19,8 +19,8 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
             return;
 
         // Calculate player's chunk coordinates
-        int playerChunkX = (int)state.PlayerX / GameConstants.ChunkSize;
-        int playerChunkY = (int)state.PlayerY / GameConstants.ChunkSize;
+        int playerChunkX = (int)state.PlayerPosition.X / GameConstants.ChunkSize;
+        int playerChunkY = (int)state.PlayerPosition.Y / GameConstants.ChunkSize;
 
         // Create a list of all valid spawn positions (floor tiles only)
         var validPositions = new List<(int x, int y)>();
@@ -41,7 +41,7 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
                     if (Math.Abs(chunkX - playerChunkX) <= 1 && Math.Abs(chunkY - playerChunkY) <= 1)
                     {
                         // Check if position is not occupied by player or other enemies
-                        if ((x != state.PlayerX || y != state.PlayerY) &&
+                        if ((x != state.PlayerPosition.X || y != state.PlayerPosition.Y) &&
                             !state.Enemies.Any(e => e.IsAlive && e.X == x && e.Y == y))
                         {
                             // Check per-chunk limit

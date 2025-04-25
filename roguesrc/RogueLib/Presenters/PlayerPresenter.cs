@@ -21,8 +21,8 @@ public class PlayerPresenter : IPlayerPresenter
     public void Draw(IRayConnection rayConnection, GameState state)
     {
         // Calculate screen positions
-        int playerScreenX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
-        int playerScreenY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
+        int playerScreenX = 100 + (int)((state.PlayerPosition.X - state.CameraState.X) * 32) + 400;
+        int playerScreenY = 100 + (int)((state.PlayerPosition.Y - state.CameraState.Y) * 40) + 200;
 
         // Calculate wobble effect
         state.WobbleTimer += Raylib.GetFrameTime();
@@ -39,16 +39,16 @@ public class PlayerPresenter : IPlayerPresenter
     private void DrawNewPositionGhost(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
     {
         // Draw ghost at new position
-        int ghostScreenX3 = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY3 = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200;
+        int ghostScreenX3 = 100 + (int)((state.PlayerPosition.X - state.CameraState.X) * 32) + 400;
+        int ghostScreenY3 = 100 + (int)((state.PlayerPosition.Y - state.CameraState.Y) * 40) + 200;
         _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
     }
 
     private void DrawOldPositionGhost(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
     {
         // Draw ghost at previous position (gray translucent)
-        int ghostScreenX = 100 + (int)((state.PreviousX - state.CameraState.X) * 32) + 400;
-        int ghostScreenY = 100 + (int)((state.PreviousY - state.CameraState.Y) * 40) + 200;
+        int ghostScreenX = 100 + (int)((state.PreviousPlayerPosition.X - state.CameraState.X) * 32) + 400;
+        int ghostScreenY = 100 + (int)((state.PreviousPlayerPosition.Y - state.CameraState.Y) * 40) + 200;
         _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
     }
 
@@ -66,8 +66,8 @@ public class PlayerPresenter : IPlayerPresenter
 
         // Easement
         var effectiveMoveProgress = Math.Min(moveProgress, 1.0f);
-        float ghostX = state.PreviousX + (state.PlayerX - state.PreviousX) * effectiveMoveProgress;
-        float ghostY = state.PreviousY + (state.PlayerY - state.PreviousY) * effectiveMoveProgress;
+        float ghostX = state.PreviousPlayerPosition.X + (state.PlayerPosition.X - state.PreviousPlayerPosition.X) * effectiveMoveProgress;
+        float ghostY = state.PreviousPlayerPosition.Y + (state.PlayerPosition.Y - state.PreviousPlayerPosition.Y) * effectiveMoveProgress;
         int ghostScreenX2 = 100 + (int)((ghostX - state.CameraState.X) * 32) + 400;
         int ghostScreenY2 = 100 + (int)((ghostY - state.CameraState.Y) * 40) + 200;
         _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX2, ghostScreenY2, playerColor, false, wobbleScale);

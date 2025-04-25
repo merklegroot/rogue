@@ -1,3 +1,4 @@
+using RogueLib.Models;
 using RogueLib.Presenters;
 using RogueLib.State;
 
@@ -18,7 +19,10 @@ public class GameAppApp : IGameApp
     {
         _presenter = presenter;
         _rayConnectionFactory = rayConnectionFactory;
-        _state = new GameState { PlayerX = 40, PlayerY = 10 };
+        _state = new GameState
+        {
+            PlayerPosition = new Coord2dFloat(40, 10)
+        };
     }
 
     public void Run()

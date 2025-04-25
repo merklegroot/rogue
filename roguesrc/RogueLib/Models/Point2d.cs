@@ -18,3 +18,10 @@ public record Coord2dInt : Coord2d<int>
     {
     }
 }
+
+public record Coord2dFloat : Coord2d<float>
+{
+    public Coord2dFloat(float x, float y) : base(x, y)
+    {
+    }
+}
