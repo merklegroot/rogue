@@ -1,16 +1,98 @@
----
-description: 
-globs: 
-alwaysApply: false
----
-When writing C# code:
+# C# Style Guide
 
-1. Prefer early returns over nested if statements
-2. Return as soon as possible when a condition is met
-3. Use guard clauses at the start of methods
-4. Avoid deep nesting of if statements
-5. Use 'var' when the type is easily inferrable from the right-hand side
-6. Boolean variables and properties should be phrased as questions
+## General Principles
+
+- Write code that is easy to read and understand
+- Favor simplicity over cleverness
+- Use meaningful names that clearly express intent
+- Keep methods small and focused on a single responsibility
+- Prefer early returns and guard clauses over nested conditions
+- Avoid deep nesting of control structures
+
+## Naming Conventions
+
+- Use `PascalCase` for:
+  - Class names
+  - Method names
+  - Public properties
+  - Public fields
+  - Interface names (prefixed with 'I')
+  - Enum types and values
+  - Constants
+
+- Use `camelCase` for:
+  - Local variables
+  - Private fields
+  - Method parameters
+  - Private properties
+
+- Use `_camelCase` for private fields (prefix with underscore)
+
+- Boolean variables should start with:
+  - `is` (e.g., `isEnabled`)
+  - `has` (e.g., `hasPermission`)
+  - `should` (e.g., `shouldUpdate`)
+  - `can` (e.g., `canExecute`)
+
+- Variables representing total counts should start with `total` (e.g., `totalItems`, `totalLines`)
+
+## Control Flow
+
+- Prefer early returns over nested if statements
+- Use guard clauses to handle edge cases at the start of methods
+- Avoid `else` statements - they often indicate a missed opportunity for early returns
+- Use `if` statements judiciously - consider alternatives like:
+  - Pattern matching
+  - Null-coalescing operators
+  - Conditional expressions
+- Use `switch` statements sparingly - prefer pattern matching or switch expressions
+- Switch expressions are preferred over switch statements when possible
+- Ternary operators are acceptable for simple conditions
+
+## Comments and Documentation
+
+- Keep using statements minimal - only include what's actually used
+- Use comments sparingly - code should be self-documenting
+- When comments are needed for clarity:
+  - Place them above the code they explain
+  - Avoid inline comments (comments to the right of code)
+  - Focus on explaining "why" rather than "what"
+- XML documentation comments are optional but encouraged for public APIs
+
+## Code Organization
+
+- Group related code together
+- Keep methods small and focused
+- Extract complex logic into well-named methods
+- Use constants for magic numbers and strings
+- Prefer composition over inheritance
+- Keep classes focused on a single responsibility
+
+## Formatting
+
+- Use 4 spaces for indentation
+- Use braces for all control structures, even single-line ones
+- Place opening braces on the same line as the declaration
+- Use a single space after keywords
+- Use a single space before and after operators
+- Use blank lines to separate logical sections of code
+- Keep lines under 120 characters when possible
+
+## Error Handling
+
+- Use exceptions for exceptional circumstances
+- Prefer specific exceptions over general ones
+- Include meaningful error messages
+- Handle exceptions at the appropriate level
+- Clean up resources in finally blocks or using statements
+
+## Performance
+
+- Avoid premature optimization
+- Profile before optimizing
+- Use appropriate data structures
+- Consider memory allocation patterns
+- Be mindful of LINQ performance implications
 
 Example of good practice:
 ```csharp
@@ -27,6 +109,16 @@ public void ProcessItem(Item item)
     var processedData = TransformData(result);
     return processedData;
 }
+
+// Good total count examples
+int totalItems = items.Count;
+int totalEnemies = enemyList.Count;
+int totalHealth = CalculateTotalHealth();
+
+// Bad total count examples
+int itemsCount = items.Count;
+int enemyCount = enemyList.Count;
+int healthTotal = CalculateTotalHealth();
 ```
 
 Instead of:
@@ -52,6 +144,7 @@ This rule applies to:
 - Indexers
 - Operators
 - Any code block that can return early
+- Variables representing counts or totals
 
 Use 'var' when:
 - The type is obvious from the right-hand side (e.g., `var list = new List<string>()`)
