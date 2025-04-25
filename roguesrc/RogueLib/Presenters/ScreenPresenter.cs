@@ -29,18 +29,14 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Random _random = new();
     private readonly Queue<KeyboardKey> _keyEvents = new();
 
-    private readonly List<GoldItem> _goldItems = [];
-    
-    private readonly List<FlyingGold> _flyingGold = [];
-
-    private bool _enableCrtEffect = true;
+    private bool _shouldEnableCrtEffect = true;
     private float _shaderTime = 0f;
     private readonly List<HealthPickup> _healthPickups = [];
     private float _timeSinceLastHealthSpawn = 0f;
     private int _enemiesKilled = 0;
-    private bool _chargerActive = false;
-    private ChargerEnemyState? _charger = null;
-    private bool _gameJustStarted = true;
+    private bool _isChargerActive = false;
+    private ChargerEnemyState? _chargerState = null;
+    private bool _didGameJustStart = true;
     private readonly IRayLoader _rayLoader;
     private readonly IDrawUtil _screenDrawUtil;    
     private readonly IHealthBarPresenter _healthBarPresenter;
@@ -158,7 +154,7 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.ClearBackground(Color.Black);
         
         
-        if (_enableCrtEffect)
+        if (_shouldEnableCrtEffect)
         {
             Raylib.BeginShaderMode(rayConnection.CrtShader);
             Raylib.DrawTextureRec(
@@ -209,7 +205,7 @@ public class ScreenPresenter : IScreenPresenter
             // Toggle CRT effect with T key
             if (key == KeyboardKey.T)
             {
-                _enableCrtEffect = !_enableCrtEffect;
+                _shouldEnableCrtEffect = !_shouldEnableCrtEffect;
                 break;
             }
         }
@@ -269,7 +265,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawFlyingGold(IRayConnection rayConnection, GameState state)
     {
         // Draw flying gold (after everything else so it appears on top)
-        foreach (var gold in _flyingGold)
+        foreach (var gold in state.FlyingGold)
         {
             // Calculate progress (0.0 to 1.0)
             float progress = gold.Timer / GoldFlyDuration;
@@ -526,14 +522,14 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Draw charger if active - with updated horizontal spacing
-        if (_chargerActive && _charger != null && _charger.Alive && 
-            Math.Abs(_charger.X - state.CameraState.X) < 15 && Math.Abs(_charger.Y - state.CameraState.Y) < 10)
+        if (_isChargerActive && _chargerState != null && _chargerState.Alive && 
+            Math.Abs(_chargerState.X - state.CameraState.X) < 15 && Math.Abs(_chargerState.Y - state.CameraState.Y) < 10)
         {
-            _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_charger.X - state.CameraState.X) * 32) + 400, 100 + (int)((_charger.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
+            _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_chargerState.X - state.CameraState.X) * 32) + 400, 100 + (int)((_chargerState.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
         }
         
         // Draw gold items - with updated horizontal spacing
-        foreach (var gold in _goldItems)
+        foreach (var gold in state.GoldItems)
         {
             if (Math.Abs(gold.X - state.CameraState.X) < 15 && Math.Abs(gold.Y - state.CameraState.Y) < 10)
             {
@@ -578,7 +574,7 @@ public class ScreenPresenter : IScreenPresenter
                 
                 // Optional: Add a visual indicator that gold was added
                 int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-                _flyingGold.Add(new FlyingGold { 
+                state.FlyingGold.Add(new FlyingGold { 
                     StartX = screenWidth / 2,
                     StartY = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale / 2,
                     Value = 100,
@@ -705,7 +701,7 @@ public class ScreenPresenter : IScreenPresenter
             if (state.Explosions[i].Timer >= GameConstants.ExplosionDuration)
             {
                 // Spawn gold at the explosion location when the explosion finishes
-                _goldItems.Add(new GoldItem { 
+                state.GoldItems.Add(new GoldItem { 
                     X = state.Explosions[i].X, 
                     Y = state.Explosions[i].Y, 
                     Value = _random.Next(3, 8)  // Enemies drop more valuable gold (3-7)
@@ -717,16 +713,16 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Update flying gold animations
-        for (int i = _flyingGold.Count - 1; i >= 0; i--)
+        for (int i = state.FlyingGold.Count - 1; i >= 0; i--)
         {
-            _flyingGold[i].Timer += Raylib.GetFrameTime();
-            if (_flyingGold[i].Timer >= GoldFlyDuration)
+            state.FlyingGold[i].Timer += Raylib.GetFrameTime();
+            if (state.FlyingGold[i].Timer >= GoldFlyDuration)
             {
                 // Add the gold value to player's total when animation completes
-                state.PlayerGold += _flyingGold[i].Value;
+                state.PlayerGold += state.FlyingGold[i].Value;
                 
                 // Remove the flying gold
-                _flyingGold.RemoveAt(i);
+                state.FlyingGold.RemoveAt(i);
             }
         }
 
@@ -742,9 +738,9 @@ public class ScreenPresenter : IScreenPresenter
         CollectHealth(state);
 
         // Ensure player is on a walkable tile when game starts
-        if (_gameJustStarted)
+        if (_didGameJustStart)
         {
-            _gameJustStarted = false;
+            _didGameJustStart = false;
             EnsurePlayerOnWalkableTile(state);
         }
 
@@ -814,10 +810,10 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collisions with charger (deals more damage)
-        if (_chargerActive && _charger != null && _charger.Alive && !state.IsInvincible)
+        if (_isChargerActive && _chargerState != null && _chargerState.Alive && !state.IsInvincible)
         {
             // Check if player is colliding with the charger
-            if (Math.Abs(state.PlayerX - _charger.X) < 0.5f && Math.Abs(state.PlayerY - _charger.Y) < 0.5f)
+            if (Math.Abs(state.PlayerX - _chargerState.X) < 0.5f && Math.Abs(state.PlayerY - _chargerState.Y) < 0.5f)
             {
                 // Player takes more damage from charger (2 instead of 1)
                 state.CurrentHealth -= 2;
@@ -828,7 +824,7 @@ public class ScreenPresenter : IScreenPresenter
                 state.InvincibilityTimer = 0f;
                 
                 // Apply stronger knockback from the charger
-                ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.0f); // Double knockback distance
+                ApplyKnockback(state, new Vector2(_chargerState.X, _chargerState.Y), 1.0f); // Double knockback distance
             }
         }
 
@@ -895,22 +891,22 @@ public class ScreenPresenter : IScreenPresenter
     private void CollectGold(GameState state)
     {
         // Find any gold within one square of the player's position
-        for (int i = _goldItems.Count - 1; i >= 0; i--)
+        for (int i = state.GoldItems.Count - 1; i >= 0; i--)
         {
             // Check if gold is at the player's position or one square away
-            if (Math.Abs(_goldItems[i].X - state.PlayerX) <= 1 && 
-                Math.Abs(_goldItems[i].Y - state.PlayerY) <= 1)
+            if (Math.Abs(state.GoldItems[i].X - state.PlayerX) <= 1 && 
+                Math.Abs(state.GoldItems[i].Y - state.PlayerY) <= 1)
             {
                 // Create flying gold animation
-                _flyingGold.Add(new FlyingGold { 
-                    StartX = 100 + _goldItems[i].X * 40,
-                    StartY = 100 + _goldItems[i].Y * 40,
-                    Value = _goldItems[i].Value,
+                state.FlyingGold.Add(new FlyingGold { 
+                    StartX = 100 + state.GoldItems[i].X * 40,
+                    StartY = 100 + state.GoldItems[i].Y * 40,
+                    Value = state.GoldItems[i].Value,
                     Timer = 0f
                 });
                 
                 // Remove the collected gold from the map
-                _goldItems.RemoveAt(i);
+                state.GoldItems.RemoveAt(i);
                 
                 // Only collect one gold piece per move (in case multiple end up in same spot)
                 break;
@@ -1026,64 +1022,64 @@ public class ScreenPresenter : IScreenPresenter
     // Also update the charger movement logic
     private void UpdateCharger(GameState state)
     {
-        if (!_chargerActive || _charger == null || !_charger.Alive)
+        if (!_isChargerActive || _chargerState == null || !_chargerState.Alive)
             return;
         
         float frameTime = Raylib.GetFrameTime();
         
         // Update charger invincibility
-        if (_charger.IsInvincible)
+        if (_chargerState.IsInvincible)
         {
-            _charger.InvincibilityTimer += frameTime;
-            if (_charger.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
+            _chargerState.InvincibilityTimer += frameTime;
+            if (_chargerState.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
             {
-                _charger.IsInvincible = false;
+                _chargerState.IsInvincible = false;
             }
         }
         
         // Update charger movement
-        _charger.MoveTimer += frameTime;
-        if (_charger.MoveTimer >= ChargerSpeed) // Charger moves faster than regular enemies
+        _chargerState.MoveTimer += frameTime;
+        if (_chargerState.MoveTimer >= ChargerSpeed) // Charger moves faster than regular enemies
         {
-            _charger.MoveTimer = 0f;
+            _chargerState.MoveTimer = 0f;
             
             // Calculate direction to player
             float dx = 0;
             float dy = 0;
             
             // Charger AI: move directly toward player
-            if (_charger.X < state.PlayerX) dx = PlayerMoveSpeed;
-            else if (_charger.X > state.PlayerX) dx = -PlayerMoveSpeed;
+            if (_chargerState.X < state.PlayerX) dx = PlayerMoveSpeed;
+            else if (_chargerState.X > state.PlayerX) dx = -PlayerMoveSpeed;
             
-            if (_charger.Y < state.PlayerY) dy = PlayerMoveSpeed;
-            else if (_charger.Y > state.PlayerY) dy = -PlayerMoveSpeed;
+            if (_chargerState.Y < state.PlayerY) dy = PlayerMoveSpeed;
+            else if (_chargerState.Y > state.PlayerY) dy = -PlayerMoveSpeed;
             
             // Try to move horizontally first
             if (dx != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_charger.X + (double)dx), (int)Math.Floor((double)_charger.Y)))
+                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X + (double)dx), (int)Math.Floor((double)_chargerState.Y)))
                 {
-                    _charger.X += dx;
+                    _chargerState.X += dx;
                 }
                 // If horizontal movement is blocked, try vertical
-                else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)_charger.X), (int)Math.Floor((double)_charger.Y + (double)dy)))
+                else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
                 {
-                    _charger.Y += dy;
+                    _chargerState.Y += dy;
                 }
             }
             // If no horizontal movement, try vertical
             else if (dy != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_charger.X), (int)Math.Floor((double)_charger.Y + (double)dy)))
+                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
                 {
-                    _charger.Y += dy;
+                    _chargerState.Y += dy;
                 }
             }
             
             // Check for collision with player
-            if (Math.Abs(_charger.X - state.PlayerX) < 0.5f && Math.Abs(_charger.Y - state.PlayerY) < 0.5f)
+            if (Math.Abs(_chargerState.X - state.PlayerX) < 0.5f && Math.Abs(_chargerState.Y - state.PlayerY) < 0.5f)
             {
                 // Only damage player if not invincible
                 if (!state.IsInvincible)
@@ -1092,7 +1088,7 @@ public class ScreenPresenter : IScreenPresenter
                     state.CurrentHealth -= 2;
                     
                     // Apply stronger knockback
-                    ApplyKnockback(state, new Vector2(_charger.X, _charger.Y), 1.5f);
+                    ApplyKnockback(state, new Vector2(_chargerState.X, _chargerState.Y), 1.5f);
                     
                     // Make player briefly invincible
                     state.IsInvincible = true;
@@ -1118,7 +1114,7 @@ public class ScreenPresenter : IScreenPresenter
                     // Check if position is not occupied by player, enemies, or other gold
                     if ((x != state.PlayerX || y != state.PlayerY) &&
                         !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
-                        !_goldItems.Any(g => g.X == x && g.Y == y))
+                        !state.GoldItems.Any(g => g.X == x && g.Y == y))
                     {
                         validPositions.Add((x, y));
                     }
@@ -1135,7 +1131,7 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = validPositions[randomIndex];
         
         // Spawn the gold
-        _goldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
+        state.GoldItems.Add(new GoldItem { X = newX, Y = newY, Value = _random.Next(1, 6) });  // Gold worth 1-5
     }
 
     private void SpawnHealthPickup(GameState state)
@@ -1154,7 +1150,7 @@ public class ScreenPresenter : IScreenPresenter
                     // Check if position is not occupied by player, enemies, gold, or other health pickups
                     if ((x != state.PlayerX || y != state.PlayerY) &&
                         !state.Enemies.Any(e => e.Alive && e.X == x && e.Y == y) &&
-                        !_goldItems.Any(g => g.X == x && g.Y == y) &&
+                        !state.GoldItems.Any(g => g.X == x && g.Y == y) &&
                         !_healthPickups.Any(h => h.X == x && h.Y == y))
                     {
                         validPositions.Add((x, y));
@@ -1390,44 +1386,44 @@ public class ScreenPresenter : IScreenPresenter
     // Create a completely new method for handling charger damage
     private void HandleChargerDamage(GameState state, bool fromSwinging)
     {
-        if (_chargerActive && _charger != null && _charger.Alive && !_charger.IsInvincible)
+        if (_isChargerActive && _chargerState != null && _chargerState.Alive && !_chargerState.IsInvincible)
         {
             // Increment hit counter
-            _charger.HitCount++;
+            _chargerState.HitCount++;
             
             // Update displayed health
-            _charger.Health = GameConstants.ChargerHealth - _charger.HitCount;
+            _chargerState.Health = GameConstants.ChargerHealth - _chargerState.HitCount;
             
-            Console.WriteLine($"COLLISION FIX: Charger hit {_charger.HitCount} times. Health display: {_charger.Health}");
+            Console.WriteLine($"COLLISION FIX: Charger hit {_chargerState.HitCount} times. Health display: {_chargerState.Health}");
             
             // Make charger briefly invincible to prevent multiple hits
-            _charger.IsInvincible = true;
-            _charger.InvincibilityTimer = 0f;
+            _chargerState.IsInvincible = true;
+            _chargerState.InvincibilityTimer = 0f;
             
             // Only kill if hit exactly 5 times
-            if (_charger.HitCount >= 5)
+            if (_chargerState.HitCount >= 5)
             {
                 Console.WriteLine("COLLISION FIX: Charger defeated after 5 hits!");
-                _charger.Alive = false;
+                _chargerState.Alive = false;
                 
                 // Create explosion at charger position
                 state.Explosions.Add(new ExplosionState { 
-                    X = (int)_charger.X, 
-                    Y = (int)_charger.Y, 
+                    X = (int)_chargerState.X, 
+                    Y = (int)_chargerState.Y, 
                     Timer = 0f 
                 });
                 
                 // Spawn more valuable gold for killing the charger
                 for (int i = 0; i < 3; i++)
                 {
-                    _goldItems.Add(new GoldItem { 
-                        X = (int)_charger.X, 
-                        Y = (int)_charger.Y, 
+                    state.GoldItems.Add(new GoldItem { 
+                        X = (int)_chargerState.X, 
+                        Y = (int)_chargerState.Y, 
                         Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
                     });
                 }
                 
-                _chargerActive = false;
+                _isChargerActive = false;
             }
         }
     }
@@ -1618,7 +1614,7 @@ public class ScreenPresenter : IScreenPresenter
                     _enemiesKilled++;
                     
                     // Check if we should spawn a charger
-                    if (_enemiesKilled >= KillsForCharger && !_chargerActive)
+                    if (_enemiesKilled >= KillsForCharger && !_isChargerActive)
                     {
                         SpawnCharger(state);
                     }
@@ -1636,10 +1632,10 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collision with charger
-        if (_chargerActive && _charger != null && _charger.Alive)
+        if (_isChargerActive && _chargerState != null && _chargerState.Alive)
         {
             // Check if sword is within 0.5 tiles of charger
-            if (Math.Abs(swordX - _charger.X) < 0.5f && Math.Abs(swordY - _charger.Y) < 0.5f)
+            if (Math.Abs(swordX - _chargerState.X) < 0.5f && Math.Abs(swordY - _chargerState.Y) < 0.5f)
             {
                 // Handle charger damage
                 HandleChargerDamage(state, isSwinging);

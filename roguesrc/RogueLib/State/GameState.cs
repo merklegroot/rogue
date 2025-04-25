@@ -59,4 +59,8 @@ public class GameState
     public float CrossbowCooldown { get; set; } = 2.0f;
     public float CrossbowCooldownTimer { get; set; }
     public bool CrossbowOnCooldown { get; set; }
+
+    public readonly List<GoldItem> GoldItems = [];
+    
+    public readonly List<FlyingGold> FlyingGold = [];
 }
