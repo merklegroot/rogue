@@ -47,7 +47,7 @@ public class GameState
     public List<string> Map { get; set; } = [];
 
     public bool IsChargerActive { get; set; }
-    public ChargerEnemyState? Charger { get; set; }
+    public ChargerEnemyState Charger { get; set; } = new ChargerEnemyState();
     
     // Banner state
     public bool IsBannerVisible { get; set; }

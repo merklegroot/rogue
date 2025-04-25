@@ -226,7 +226,7 @@ public class ScreenPresenter : IScreenPresenter
         _goldCounterPresenter.Draw(rayConnection, state);
         DrawWorld(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
-        _debugPanelPresenter.Draw(rayConnection, state, state.IsChargerActive, state.Charger);
+        _debugPanelPresenter.Draw(rayConnection, state);
         DrawExplosions(state, rayConnection);
         _swordPresenter.Draw(rayConnection, state);
         _flyingGoldPresenter.Draw(rayConnection, state);
