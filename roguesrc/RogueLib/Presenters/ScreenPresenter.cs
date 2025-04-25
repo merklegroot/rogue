@@ -41,6 +41,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IInstructionsPresenter _instructionsPresenter;
     private readonly IGoldCounterPresenter _goldCounterPresenter;
     private readonly IFlyingGoldPresenter _flyingGoldPresenter;
+    private readonly ICooldownIndicatorPresenter _cooldownIndicatorPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -57,7 +58,8 @@ public class ScreenPresenter : IScreenPresenter
         ISwordPresenter swordPresenter,
         IInstructionsPresenter instructionsPresenter,
         IGoldCounterPresenter goldCounterPresenter,
-        IFlyingGoldPresenter flyingGoldPresenter)
+        IFlyingGoldPresenter flyingGoldPresenter,
+        ICooldownIndicatorPresenter cooldownIndicatorPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -74,6 +76,7 @@ public class ScreenPresenter : IScreenPresenter
         _instructionsPresenter = instructionsPresenter;
         _goldCounterPresenter = goldCounterPresenter;
         _flyingGoldPresenter = flyingGoldPresenter;
+        _cooldownIndicatorPresenter = cooldownIndicatorPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -227,12 +230,13 @@ public class ScreenPresenter : IScreenPresenter
         DrawExplosions(state, rayConnection);
         _swordPresenter.Draw(rayConnection, state);
         _flyingGoldPresenter.Draw(rayConnection, state);
-        DrawCooldownIndicators(rayConnection, state);
+        _cooldownIndicatorPresenter.Draw(rayConnection, state);
         DrawCrossbowBolts(rayConnection, state);
         DrawChargerHealth(rayConnection, state);
         _bannerPresenter.Draw(rayConnection, state);
         _instructionsPresenter.Draw(rayConnection, state);
         _chunkPresenter.Draw(rayConnection, state);
+        _cooldownIndicatorPresenter.Draw(rayConnection, state);
     }
 
     private void DrawExplosions(GameState state, IRayConnection rayConnection)
@@ -257,51 +261,6 @@ public class ScreenPresenter : IScreenPresenter
             {
                 _screenDrawUtil.DrawCharacter(rayConnection, explosionChar, explosionX, explosionY, ScreenConstants.ExplosionColor);
             }
-        }
-    }
-
-    private void DrawCooldownIndicators(IRayConnection rayConnection, GameState state)
-    {
-        // Draw sword cooldown indicator
-        if (state.SwordState.SwordOnCooldown)
-        {
-            // Calculate cooldown progress (0.0 to 1.0)
-            float progress = state.SwordState.SwordCooldownTimer / state.SwordState.SwordCooldown;
-            
-            // Draw a small cooldown bar above the player
-            int barWidth = 30;
-            int barHeight = 5;
-            
-            // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center above player
-            int barY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200 - 15;  // Above player
-            
-            // Background (empty) bar
-            Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
-            
-            // Foreground (filled) bar - grows as cooldown progresses
-            Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(200, 200, 200, 200));
-        }
-        
-        // Draw crossbow cooldown indicator if player has crossbow
-        if (state.CrossbowState.HasCrossbow && state.CrossbowState.CrossbowOnCooldown)
-        {
-            // Calculate cooldown progress (0.0 to 1.0)
-            float progress = state.CrossbowState.CrossbowCooldownTimer / state.CrossbowState.CrossbowCooldown;
-            
-            // Draw a small cooldown bar below the player
-            int barWidth = 30;
-            int barHeight = 5;
-            
-            // Calculate position with camera offset - updated horizontal spacing
-            int barX = 100 + (int)((state.PlayerX - state.CameraState.X) * 32) + 400 - barWidth / 2 + 20;  // Center below player
-            int barY = 100 + (int)((state.PlayerY - state.CameraState.Y) * 40) + 200 + 45;  // Below player
-            
-            // Background (empty) bar
-            Raylib.DrawRectangle(barX, barY, barWidth, barHeight, new Color(50, 50, 50, 200));
-            
-            // Foreground (filled) bar - grows as cooldown progresses
-            Raylib.DrawRectangle(barX, barY, (int)(barWidth * progress), barHeight, new Color(150, 150, 200, 200));
         }
     }
 

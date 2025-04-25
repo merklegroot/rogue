@@ -26,5 +26,6 @@ public static class RogueLibRegistry
             .AddScoped<ISwordPresenter, SwordPresenter>()
             .AddScoped<IInstructionsPresenter, InstructionsPresenter>()
             .AddScoped<IGoldCounterPresenter, GoldCounterPresenter>()
-            .AddScoped<IFlyingGoldPresenter, FlyingGoldPresenter>();
+            .AddScoped<IFlyingGoldPresenter, FlyingGoldPresenter>()
+            .AddScoped<ICooldownIndicatorPresenter, CooldownIndicatorPresenter>();
 }
