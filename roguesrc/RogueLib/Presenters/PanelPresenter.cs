@@ -1,5 +1,9 @@
 using Raylib_cs;
 using RogueLib.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using RogueLib.Constants;
 
 namespace RogueLib.Presenters;
 
@@ -13,7 +17,7 @@ public class PanelPresenter : IPanelPresenter
     private readonly IDrawUtil _drawUtil;
     private const int LineHeight = 20;
     private const int PanelPadding = 10;
-    private const int PanelWidth = 300;
+    private const int MinPanelWidth = 300;
 
     // Panel colors
     private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
@@ -31,9 +35,20 @@ public class PanelPresenter : IPanelPresenter
 
         var lineList = lines.ToList();
         var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2);
+        var panelWidth = CalculatePanelWidth(rayConnection, lineList);
         
-        DrawPanelBackground(position, new Coord2dInt(PanelWidth, panelHeight));
+        DrawPanelBackground(position, new Coord2dInt(panelWidth, panelHeight));
         DrawPanelLines(rayConnection, position, lineList);
+    }
+
+    private int CalculatePanelWidth(IRayConnection rayConnection, List<LineInfo> lines)
+    {
+        if (!lines.Any())
+            return MinPanelWidth;
+
+        var maxLineWidth = lines.Max(line => 
+            Raylib.MeasureTextEx(rayConnection.MenuFont, line.Contents, ScreenConstants.MenuFontSize, 1).X);
+        return Math.Max((int)maxLineWidth + (PanelPadding * 2), MinPanelWidth);
     }
 
     private void DrawPanelBackground(Coord2dInt position, Coord2dInt size)
