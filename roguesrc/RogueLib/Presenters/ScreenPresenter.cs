@@ -420,18 +420,9 @@ public class ScreenPresenter : IScreenPresenter
 
         // Update enemy movement
         _updateEnemiesHandler.Handle(state);
+        UpdateCharger(state);
 
-        // Update invincibility timer
-        if (state.IsInvincible)
-        {
-            state.InvincibilityTimer += Raylib.GetFrameTime();
-            if (state.InvincibilityTimer >= GameConstants.InvincibilityDuration)
-            {
-                state.IsInvincible = false;
-                state.InvincibilityTimer = 0f;
-            }
-        }
-
+        AdvanceInvisibility(state);
         AdvanceExplosions(state);
         AdvanceFlyingGold(state);
 
@@ -444,7 +435,7 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for health pickup collection
-        CollectHealth(state);
+        CollectHealthPickup(state);
 
         // Ensure player is on a walkable tile when game starts
         if (_didGameJustStart)
@@ -515,6 +506,19 @@ public class ScreenPresenter : IScreenPresenter
         _swordPresenter.Update(state);
     }
 
+    private void AdvanceInvisibility(GameState state)
+    {
+        if (!state.IsInvincible)
+            return;
+        
+        state.InvincibilityTimer += Raylib.GetFrameTime();
+        if (state.InvincibilityTimer >= GameConstants.InvincibilityDuration)
+        {
+            state.IsInvincible = false;
+            state.InvincibilityTimer = 0f;
+        }
+    }
+
     private void AdvanceExplosions(GameState state)
     {
         for (int i = state.Explosions.Count - 1; i >= 0; i--)
@@ -537,7 +541,6 @@ public class ScreenPresenter : IScreenPresenter
 
     private void AdvanceFlyingGold(GameState state)
     {
-                // Update flying gold animations
         for (int i = state.FlyingGold.Count - 1; i >= 0; i--)
         {
             state.FlyingGold[i].Timer += Raylib.GetFrameTime();
@@ -557,24 +560,21 @@ public class ScreenPresenter : IScreenPresenter
         if (state.IsInvincible)
             return;
 
-        // Check for collisions with enemies
         foreach (var enemy in state.Enemies)
         {
-            if (enemy.IsAlive)
+            if (!enemy.IsAlive)
+                continue;
+
+            if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
             {
-                // Check if player is colliding with this enemy
-                if (Math.Abs(state.PlayerX - enemy.X) < 0.5f && Math.Abs(state.PlayerY - enemy.Y) < 0.5f)
-                {
-                    // Player takes damage
-                    state.CurrentHealth--;
-                    Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
-                    
-                    // Apply knockback
-                    ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
-                    
-                    break; // Only take damage from one enemy per frame
-                }
+                state.CurrentHealth--;
+                Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
+                
+                ApplyKnockback(state, new Vector2(enemy.X, enemy.Y));
+                
+                break;
             }
+        
         }
     }
 
@@ -650,6 +650,7 @@ public class ScreenPresenter : IScreenPresenter
             Timer = 0f
         });
     }
+
     private void CollectGold(GameState state)
     {
         // Find any gold within one square of the player's position
@@ -676,7 +677,7 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void CollectHealth(GameState state)
+    private void CollectHealthPickup(GameState state)
     {
         // Find any health pickup within one square of the player's position
         for (int i = state.HealthPickupState.HealthPickups.Count - 1; i >= 0; i--)
@@ -696,7 +697,6 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
     }
-
 
     // Also update the charger movement logic
     private void UpdateCharger(GameState state)
