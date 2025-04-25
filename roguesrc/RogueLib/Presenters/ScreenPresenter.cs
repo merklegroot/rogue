@@ -50,6 +50,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly ICharacterSetPresenter _characterSetPresenter;
     private readonly ISwordPresenter _swordPresenter;
     private readonly IInstructionsPresenter _instructionsPresenter;
+    private readonly IGoldCounterPresenter _goldCounterPresenter;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -64,7 +65,8 @@ public class ScreenPresenter : IScreenPresenter
         IMenuPresenter menuPresenter,
         ICharacterSetPresenter characterSetPresenter,
         ISwordPresenter swordPresenter,
-        IInstructionsPresenter instructionsPresenter)
+        IInstructionsPresenter instructionsPresenter,
+        IGoldCounterPresenter goldCounterPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -79,6 +81,7 @@ public class ScreenPresenter : IScreenPresenter
         _characterSetPresenter = characterSetPresenter;
         _swordPresenter = swordPresenter;
         _instructionsPresenter = instructionsPresenter;
+        _goldCounterPresenter = goldCounterPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -225,7 +228,7 @@ public class ScreenPresenter : IScreenPresenter
     private void DrawAnimation(IRayConnection rayConnection, GameState state)
     {
         _healthBarPresenter.Draw(rayConnection, state);
-        DrawGoldCounter(rayConnection, state);
+        _goldCounterPresenter.Draw(rayConnection, state);
         DrawWorld(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
         _debugPanelPresenter.Draw(rayConnection, state, state.IsChargerActive, state.Charger);
@@ -1122,16 +1125,6 @@ public class ScreenPresenter : IScreenPresenter
         
         // Spawn the health pickup
         _healthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
-    }
-
-    private void DrawGoldCounter(IRayConnection rayConnection, GameState state)
-    {
-        // Draw gold counter at the top-right of the screen
-        int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-        string goldText = $"Gold: {state.PlayerGold}";
-        int goldTextWidth = Raylib.MeasureText(goldText, ScreenConstants.MenuFontSize);
-        
-        _screenDrawUtil.DrawText(rayConnection, goldText, screenWidth - goldTextWidth - 20, 20, ScreenConstants.GoldColor);
     }
 
     public bool WindowShouldClose()
