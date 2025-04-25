@@ -14,12 +14,14 @@ public class PanelPresenter : IPanelPresenter
     private readonly IDrawUtil _drawUtil;
     private const int LineHeight = 30;
     private const int PanelPadding = 10;
+    private const int HorizontalPadding = 20;
     private const int MinPanelWidth = 300;
     private int _maxWidthSeen = MinPanelWidth;
 
     // Panel colors
     private static readonly Color PanelBorderColor = new(220, 220, 220, 200);  // Semi-transparent white border
     private static readonly Color PanelBackgroundColor = new(100, 100, 100, 100);  // Semi-transparent gray background
+    private static readonly Color TitleBackgroundColor = new(70, 70, 70, 100);  // Darker semi-transparent gray for title
     private static readonly Color TitleColor = new(255, 255, 255, 255);  // White title
 
     public PanelPresenter(IDrawUtil drawUtil)
@@ -33,7 +35,8 @@ public class PanelPresenter : IPanelPresenter
             return;
 
         var lineList = lines.ToList();
-        var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2) + (title != null ? LineHeight : 0);
+        var titleHeight = title != null ? LineHeight + PanelPadding + (LineHeight / 2) : 0;
+        var panelHeight = (lineList.Count * LineHeight) + (PanelPadding * 2) + titleHeight;
         var panelWidth = CalculatePanelWidth(rayConnection, lineList, title);
         
         DrawPanelBackground(position, new Coord2dInt(panelWidth, panelHeight));
@@ -51,7 +54,7 @@ public class PanelPresenter : IPanelPresenter
         var titleWidth = title != null ? 
             Raylib.MeasureTextEx(rayConnection.MenuFont, title, ScreenConstants.MenuFontSize, 1).X : 0;
             
-        var newWidth = Math.Max((int)Math.Max(maxLineWidth, titleWidth) + (PanelPadding * 2), MinPanelWidth);
+        var newWidth = Math.Max((int)Math.Max(maxLineWidth, titleWidth) + (HorizontalPadding * 2), MinPanelWidth);
         _maxWidthSeen = Math.Max(_maxWidthSeen, newWidth);
         return _maxWidthSeen;
     }
@@ -81,13 +84,22 @@ public class PanelPresenter : IPanelPresenter
         
         if (title != null)
         {
-            _drawUtil.DrawText(rayConnection, title, position.X + PanelPadding, currentY, TitleColor);
-            currentY += LineHeight;
+            // Draw title background
+            Raylib.DrawRectangle(
+                position.X,
+                currentY - PanelPadding,
+                _maxWidthSeen,
+                LineHeight + PanelPadding + (LineHeight / 2),
+                TitleBackgroundColor
+            );
+            
+            _drawUtil.DrawText(rayConnection, title, position.X + HorizontalPadding, currentY, TitleColor);
+            currentY += LineHeight + PanelPadding + (LineHeight / 2);
         }
         
         foreach (var line in lines)
         {
-            _drawUtil.DrawText(rayConnection, line.Contents, position.X + PanelPadding, currentY, line.Color);
+            _drawUtil.DrawText(rayConnection, line.Contents, position.X + HorizontalPadding, currentY, line.Color);
             currentY += LineHeight;
         }
     }
