@@ -19,7 +19,7 @@ public class GameState
     
     public SwordState SwordState { get; set; } = new SwordState();
 
-    public Direction LastDirection { get; set; } = Direction.Right;
+    public Direction ActionDirection { get; set; } = Direction.Right;
 
     public Direction KnockbackDirection { get; set; } = Direction.Right;
     public bool IsKnockedBack { get; set; } = false;

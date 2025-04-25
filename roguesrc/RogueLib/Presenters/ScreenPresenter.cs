@@ -567,7 +567,7 @@ public class ScreenPresenter : IScreenPresenter
             {
                 state.SwordState.IsSwordSwinging = true;
                 state.SwordState.SwordSwingTime = 0;
-                state.SwordState.SwingDirection = state.LastDirection;
+                state.SwordState.SwingDirection = state.ActionDirection;
                 
                 // Check for sword collisions immediately when swing starts
                 CheckSwordCollisions(state, true);
@@ -655,11 +655,11 @@ public class ScreenPresenter : IScreenPresenter
         // Update direction based on velocity
         if (Math.Abs(state.VelocityX) > Math.Abs(state.VelocityY))
         {
-            state.LastDirection = state.VelocityX > 0 ? Direction.Right : Direction.Left;
+            state.ActionDirection = state.VelocityX > 0 ? Direction.Right : Direction.Left;
         }
         else if (state.VelocityY != 0)
         {
-            state.LastDirection = state.VelocityY > 0 ? Direction.Down : Direction.Up;
+            state.ActionDirection = state.VelocityY > 0 ? Direction.Down : Direction.Up;
         }
 
         // Reset timer if moved
@@ -765,7 +765,7 @@ public class ScreenPresenter : IScreenPresenter
             // Create a new bolt based on player direction
             float boltX = state.PlayerX;
             float boltY = state.PlayerY;
-            Direction boltDirection = state.LastDirection;
+            Direction boltDirection = state.ActionDirection;
             
             state.CrossbowBolts.Add(new CrossbowBoltState
             {
@@ -1505,7 +1505,7 @@ public class ScreenPresenter : IScreenPresenter
         // If player is exactly on the enemy, use the player's facing direction
         if (Math.Abs(dx) < 0.1f && Math.Abs(dy) < 0.1f)
         {
-            state.KnockbackDirection = state.LastDirection switch
+            state.KnockbackDirection = state.ActionDirection switch
             {
                 Direction.Left => Direction.Right,
                 Direction.Right => Direction.Left,
@@ -1581,7 +1581,7 @@ public class ScreenPresenter : IScreenPresenter
         float swordY = state.PlayerY;
         
         // Adjust position based on direction and sword reach
-        switch (state.LastDirection)
+        switch (state.ActionDirection)
         {
             case Direction.Left:
                 swordX -= state.SwordState.SwordReach;
