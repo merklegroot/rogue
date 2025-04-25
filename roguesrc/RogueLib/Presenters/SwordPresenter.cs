@@ -58,19 +58,17 @@ public class SwordPresenter : ISwordPresenter
         float swordX = baseX;
         float swordY = baseY;
 
-        switch (state.LastDirection)
+        if(state.LastDirection == Direction.Left || state.LastDirection == Direction.Right)
         {
-            case Direction.Left:
-            case Direction.Right:
-                // Center vertically for horizontal swings
-                swordY -= scaledHeight / 2;
-                break;
-            case Direction.Up:
-            case Direction.Down:
-                // Center horizontally for vertical swings
-                swordX -= scaledWidth / 2;
-                break;
+            swordY += scaledHeight / 2 - ScreenConstants.CharHeight / 2;
         }
+
+        if (state.LastDirection == Direction.Right)
+        {
+            swordX += scaledWidth;
+        }
+
+        
 
         // Create source and destination rectangles
         Rectangle source = new(0, 0, rayConnection.SwordTexture.Width, rayConnection.SwordTexture.Height);
