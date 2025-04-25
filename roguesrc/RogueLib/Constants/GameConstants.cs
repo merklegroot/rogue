@@ -2,7 +2,7 @@ namespace RogueLib.Constants;
 
 public static class GameConstants
 {
-    public const float SwordSwingDuration = 1.6f;
+    public const float SwordSwingDuration = 0.4f;
     public const float SwordCooldown = 0.5f;
     public const float EnemyMoveDelay = 0.5f;
     public const float EnemySpawnDelay = 1.0f;  // Back to original: spawn every 1.0 seconds
