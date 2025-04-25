@@ -25,8 +25,8 @@ public class DebugPanelPresenter : IDebugPanelPresenter
 
     private class LineInfo
     {
-        public string Contents { get; set; }
-        public Color Color { get; set; }
+        public required string Contents { get; set; }
+        public required Color Color { get; set; }
     }
 
     public void Draw(IRayConnection rayConnection, GameState state)
