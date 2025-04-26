@@ -39,6 +39,11 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             },
             new LineInfo
             {
+                Contents = $"Enemy Movement: {(state.IsEnemyMovementEnabled ? "Enabled" : "Disabled")}",
+                Color = state.IsEnemyMovementEnabled ? Color.Green : Color.Red
+            },
+            new LineInfo
+            {
                 Contents = $"Player at ({state.PlayerPosition.X:F2}, {state.PlayerPosition.Y:F2})",
                 Color = Color.Yellow
             }
