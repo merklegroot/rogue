@@ -31,25 +31,7 @@ public class PlayerPresenter : IPlayerPresenter
         float wobbleScale = 1.0f + (float)(modifiedSine / 1.5f) * GameConstants.WobbleAmount;
 
 
-        DrawOldPositionGhost(rayConnection, state, playerScreenX, playerScreenY, wobbleScale);
         DrawInTransitPlayer(rayConnection, state, playerScreenX, playerScreenY, wobbleScale);
-        DrawNewPositionGhost(rayConnection, state, playerScreenX, playerScreenY, wobbleScale);
-    }
-
-    private void DrawNewPositionGhost(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
-    {
-        // Draw ghost at new position
-        int ghostScreenX3 = 100 + (int)((state.PlayerPosition.X - state.CameraState.X) * 32) + 400;
-        int ghostScreenY3 = 100 + (int)((state.PlayerPosition.Y - state.CameraState.Y) * 40) + 200;
-        _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX3, ghostScreenY3, ScreenConstants.NewPositionGhostColor, false, wobbleScale);
-    }
-
-    private void DrawOldPositionGhost(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
-    {
-        // Draw ghost at previous position (gray translucent)
-        int ghostScreenX = 100 + (int)((state.PreviousPlayerPosition.X - state.CameraState.X) * 32) + 400;
-        int ghostScreenY = 100 + (int)((state.PreviousPlayerPosition.Y - state.CameraState.Y) * 40) + 200;
-        _drawUtil.DrawCharacter(rayConnection, 1, ghostScreenX, ghostScreenY, ScreenConstants.OldPositionGhostColor, false, wobbleScale);
     }
 
     private void DrawInTransitPlayer(IRayConnection rayConnection, GameState state, int playerScreenX, int playerScreenY, float wobbleScale)
