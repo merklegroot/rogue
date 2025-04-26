@@ -41,12 +41,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             {
                 Contents = $"Enemy Movement: {(state.IsEnemyMovementEnabled ? "Enabled" : "Disabled")}",
                 Color = state.IsEnemyMovementEnabled ? Color.Green : Color.Red
-            },
-            new LineInfo
-            {
-                Contents = $"Player at ({state.PlayerPosition.X:F2}, {state.PlayerPosition.Y:F2})",
-                Color = Color.Yellow
-            },
+            },            
             new LineInfo
             {
                 Contents = $"Action Direction: {state.ActionDirection}",
@@ -58,10 +53,16 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         {
             lines.Add(new LineInfo
             {
-                Contents = $"Charger at ({state.Charger.X}, {state.Charger.Y})",
+                Contents = $"Charger at ({state.Charger.X:F2}, {state.Charger.Y:F2})",
                 Color = Color.Orange
             });
         }
+
+        lines.Add(new LineInfo
+            {
+                Contents = $"Player at ({state.PlayerPosition.X:F2}, {state.PlayerPosition.Y:F2})",
+                Color = Color.Yellow
+            });
 
         foreach (var enemy in state.Enemies)
         {
@@ -70,7 +71,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
 
             lines.Add(new LineInfo
             {
-                Contents = $"Enemy at ({enemy.Position.X}, {enemy.Position.Y})",
+                Contents = $"Enemy at ({enemy.Position.X:F2}, {enemy.Position.Y:F2})",
                 Color = Color.White
             });
         }
