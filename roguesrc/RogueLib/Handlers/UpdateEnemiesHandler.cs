@@ -29,7 +29,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
             return;
 
         float frameTime = Raylib.GetFrameTime();
-        float moveAmount = GameConstants.EnemyMoveSpeed * frameTime;
+        float moveAmount = EnemyConstants.EnemyMoveSpeed * frameTime;
 
         foreach (var enemy in state.Enemies)
         {
@@ -39,7 +39,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 enemy.MoveTimer += frameTime;
 
                 // If not currently moving and timer expired, choose new direction
-                if (!enemy.IsMoving && enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
+                if (!enemy.IsMoving && enemy.MoveTimer >= EnemyConstants.EnemyMoveFrequency)
                 {
                     enemy.MoveTimer = 0f;
                     ChooseNewDirection(state, enemy);

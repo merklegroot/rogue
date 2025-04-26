@@ -16,7 +16,7 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
     public void Handle(GameState state)
     {
         // Check total enemy limit first
-        if (state.Enemies.Count(e => e.IsAlive) >= GameConstants.MaxEnemies)
+        if (state.Enemies.Count(e => e.IsAlive) >= EnemyConstants.MaxEnemies)
             return;
 
         // Calculate player's chunk coordinates

@@ -257,7 +257,7 @@ public class ScreenPresenter : IScreenPresenter
         // Draw charger health if active
         if (state.IsChargerActive && state.Charger != null && state.Charger.IsAlive)
         {
-            string healthText = $"Charger HP: {state.Charger.Health}/{GameConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
+            string healthText = $"Charger HP: {state.Charger.Health}/{ChargerConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
             _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
         }
     }
@@ -784,7 +784,7 @@ public class ScreenPresenter : IScreenPresenter
         
         // Update charger movement
         _chargerState.MoveTimer += frameTime;
-        if (_chargerState.MoveTimer >= GameConstants.ChargerSpeed) // Charger moves faster than regular enemies
+        if (_chargerState.MoveTimer >= ChargerConstants.ChargerSpeed) // Charger moves faster than regular enemies
         {
             _chargerState.MoveTimer = 0f;
             
@@ -1130,7 +1130,7 @@ public class ScreenPresenter : IScreenPresenter
             _chargerState.HitCount++;
             
             // Update displayed health
-            _chargerState.Health = GameConstants.ChargerHealth - _chargerState.HitCount;
+            _chargerState.Health = ChargerConstants.ChargerHealth - _chargerState.HitCount;
             
             Console.WriteLine($"COLLISION FIX: Charger hit {_chargerState.HitCount} times. Health display: {_chargerState.Health}");
             
@@ -1213,7 +1213,7 @@ public class ScreenPresenter : IScreenPresenter
         state.Charger = new ChargerEnemyState { 
             X = newX, 
             Y = newY, 
-            Health = GameConstants.ChargerHealth,
+            Health = ChargerConstants.ChargerHealth,
             IsAlive = true 
         };
         state.IsChargerActive = true;

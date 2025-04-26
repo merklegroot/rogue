@@ -25,7 +25,7 @@ public class SwordPresenter : ISwordPresenter
         if (!state.SwordState.IsSwordSwinging) return;
 
         // Calculate animation progress (0.0 to 1.0)
-        var progress = state.SwordState.SwordSwingTime / GameConstants.SwordSwingDuration;
+        var progress = state.SwordState.SwordSwingTime / SwordConstants.SwordSwingDuration;
         if (progress > 1.0f) progress = 1.0f;
 
         // Calculate rotation based on swing direction and progress
@@ -99,7 +99,7 @@ public class SwordPresenter : ISwordPresenter
         if (state.SwordState.IsSwordSwinging)
         {
             state.SwordState.SwordSwingTime += Raylib.GetFrameTime();
-            if (state.SwordState.SwordSwingTime >= GameConstants.SwordSwingDuration)
+            if (state.SwordState.SwordSwingTime >= SwordConstants.SwordSwingDuration)
             {
                 state.SwordState.IsSwordSwinging = false;
                 state.SwordState.SwordOnCooldown = true;  // Start cooldown when swing finishes

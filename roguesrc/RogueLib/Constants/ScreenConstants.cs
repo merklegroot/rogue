@@ -2,6 +2,9 @@ using Raylib_cs;
 
 namespace RogueLib.Constants;
 
+/// <summary>
+/// Constants that affect how things are displayed
+/// </summary>
 public static class ScreenConstants
 {
     public const int MenuFontSize = 32;
