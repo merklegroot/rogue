@@ -22,6 +22,7 @@ public class MenuPresenter : IMenuPresenter
     private const int BorderThickness = 2;
     private readonly IDrawUtil _drawUtil;
     private List<(Rectangle bounds, Action<GameState> action, string text)> _menuItems = new();
+    private int _hoveredItemIndex = -1;
 
     public MenuPresenter(IDrawUtil drawUtil)
     {
@@ -32,6 +33,7 @@ public class MenuPresenter : IMenuPresenter
     {
         // Clear previous menu items
         _menuItems.Clear();
+        _hoveredItemIndex = -1;
 
         // Calculate screen dimensions
         var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
@@ -61,45 +63,52 @@ public class MenuPresenter : IMenuPresenter
         var maxWidth = menuTexts.Max(text => Raylib.MeasureTextEx(rayConnection.MenuFont, text, ScreenConstants.MenuFontSize, 1).X);
         var menuItemWidth = (int)maxWidth + (BorderPadding * 2);
         
+        // Check for hover
+        var mousePosition = Raylib.GetMousePosition();
+        
         // Draw menu options with colored hotkeys and store their clickable areas
         var adventureText = "Start (A)dventure";
         var adventureSize = Raylib.MeasureTextEx(rayConnection.MenuFont, adventureText, ScreenConstants.MenuFontSize, 1);
         var adventureX = centerX - menuItemWidth / 2;
+        var adventureBounds = new Rectangle(adventureX, menuStartY - BorderPadding, menuItemWidth, adventureSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, adventureText, 
-            adventureX + BorderPadding, menuStartY);
+            adventureX + BorderPadding, menuStartY, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, adventureBounds) });
         Raylib.DrawRectangleLines((int)adventureX, (int)(menuStartY - BorderPadding), 
             menuItemWidth, (int)(adventureSize.Y + (BorderPadding * 2)), Color.Gold);
-        _menuItems.Add((new Rectangle(adventureX, menuStartY - BorderPadding, menuItemWidth, adventureSize.Y + (BorderPadding * 2)), 
+        _menuItems.Add((adventureBounds, 
             state => state.CurrentScreen = GameScreenEnum.Adventure, adventureText));
 
         var characterText = "View (C)haracter Set";
         var characterSize = Raylib.MeasureTextEx(rayConnection.MenuFont, characterText, ScreenConstants.MenuFontSize, 1);
         var characterX = centerX - menuItemWidth / 2;
+        var characterBounds = new Rectangle(characterX, menuStartY + MenuSpacing - BorderPadding, menuItemWidth, characterSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, characterText, 
-            characterX + BorderPadding, menuStartY + MenuSpacing);
+            characterX + BorderPadding, menuStartY + MenuSpacing, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, characterBounds) });
         Raylib.DrawRectangleLines((int)characterX, (int)(menuStartY + MenuSpacing - BorderPadding), 
             menuItemWidth, (int)(characterSize.Y + (BorderPadding * 2)), Color.Gold);
-        _menuItems.Add((new Rectangle(characterX, menuStartY + MenuSpacing - BorderPadding, menuItemWidth, characterSize.Y + (BorderPadding * 2)), 
+        _menuItems.Add((characterBounds, 
             state => state.CurrentScreen = GameScreenEnum.CharacterSet, characterText));
 
         var crtText = "(T)oggle CRT Effect";
         var crtSize = Raylib.MeasureTextEx(rayConnection.MenuFont, crtText, ScreenConstants.MenuFontSize, 1);
         var crtX = centerX - menuItemWidth / 2;
+        var crtBounds = new Rectangle(crtX, menuStartY + MenuSpacing * 2 - BorderPadding, menuItemWidth, crtSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, crtText, 
-            crtX + BorderPadding, menuStartY + MenuSpacing * 2);
+            crtX + BorderPadding, menuStartY + MenuSpacing * 2, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, crtBounds) });
         Raylib.DrawRectangleLines((int)crtX, (int)(menuStartY + MenuSpacing * 2 - BorderPadding), 
             menuItemWidth, (int)(crtSize.Y + (BorderPadding * 2)), Color.Gold);
-        _menuItems.Add((new Rectangle(crtX, menuStartY + MenuSpacing * 2 - BorderPadding, menuItemWidth, crtSize.Y + (BorderPadding * 2)), 
+        _menuItems.Add((crtBounds, 
             state => state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect, crtText));
 
         var exitText = "e(X)it Game";
         var exitSize = Raylib.MeasureTextEx(rayConnection.MenuFont, exitText, ScreenConstants.MenuFontSize, 1);
         var exitX = centerX - menuItemWidth / 2;
+        var exitBounds = new Rectangle(exitX, menuStartY + MenuSpacing * 3 - BorderPadding, menuItemWidth, exitSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, exitText, 
-            exitX + BorderPadding, menuStartY + MenuSpacing * 3);
+            exitX + BorderPadding, menuStartY + MenuSpacing * 3, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, exitBounds) });
         Raylib.DrawRectangleLines((int)exitX, (int)(menuStartY + MenuSpacing * 3 - BorderPadding), 
             menuItemWidth, (int)(exitSize.Y + (BorderPadding * 2)), Color.Gold);
-        _menuItems.Add((new Rectangle(exitX, menuStartY + MenuSpacing * 3 - BorderPadding, menuItemWidth, exitSize.Y + (BorderPadding * 2)), 
+        _menuItems.Add((exitBounds, 
             state => Raylib.CloseWindow(), exitText));
         
         // Draw version number
