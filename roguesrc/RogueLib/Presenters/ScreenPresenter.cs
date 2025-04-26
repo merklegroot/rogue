@@ -297,43 +297,41 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void HandleAdventureInput(GameState state)
+    private void HandleNextInput(GameState state)
     {
-        // Handle ESC key via event queue for menu navigation
-        while (state.KeyEvents.Count > 0)
+        var key = state.KeyEvents.Dequeue();
+
+        if (key == KeyboardKey.Escape)
         {
-            var key = state.KeyEvents.Dequeue();
-            if (key == KeyboardKey.Escape)
-            {
-                state.CurrentScreen = GameScreenEnum.Menu;
-                return;
-            }
-            if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
-            {
-                state.SwordState.IsSwordSwinging = true;
-                state.SwordState.SwordSwingTime = 0;
-                state.SwordState.SwingDirection = state.ActionDirection;
-                
-                // Check for sword collisions immediately when swing starts
-                CheckSwordCollisions(state, true);
-            }
-
-            // Add debug option to get free gold with G key
-            if (key == KeyboardKey.G)
-            {
-                GenerateFreeGold(state);
-            }
-
-            // Add debug option to spawn charger with C key
-            if (key == KeyboardKey.C)
-            {
-                SpawnCharger(state);
-            }
+            state.CurrentScreen = GameScreenEnum.Menu;
+            return;
         }
 
+        if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
+        {
+            state.SwordState.IsSwordSwinging = true;
+            state.SwordState.SwordSwingTime = 0;
+            state.SwordState.SwingDirection = state.ActionDirection;
+            
+            // Check for sword collisions immediately when swing starts
+            CheckSwordCollisions(state, true);
+        }
+
+        if (key == KeyboardKey.G)
+        {
+            GenerateFreeGold(state);
+        }
+
+        if (key == KeyboardKey.C)
+        {
+            SpawnCharger(state);
+        }
+    }
+
+    private void HandleMovementInput(GameState state)
+    {
         // Handle movement with direct key state checks
         // This allows for continuous movement when keys are held down
-
         float moveAmount = GameConstants.PlayerMoveSpeed * Raylib.GetFrameTime();
 
         // Check for diagonal movement first
@@ -411,6 +409,17 @@ public class ScreenPresenter : IScreenPresenter
             // Check for sword collisions during movement
             CheckSwordCollisions(state, false);
         }
+    }
+
+    private void HandleAdventureInput(GameState state)
+    {
+        // Handle ESC key via event queue for menu navigation
+        while (state.KeyEvents.Count > 0)
+        {
+            HandleNextInput(state);
+        }
+
+        HandleMovementInput(state);
 
         // Update sword cooldown
         if (state.SwordState.SwordOnCooldown)
