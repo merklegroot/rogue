@@ -21,7 +21,6 @@ public class ScreenPresenter : IScreenPresenter
     private readonly Random _random = new();
 
 
-    private bool _shouldEnableCrtEffect = true;
     private float _shaderTime = 0f;
 
     private int _enemiesKilled = 0;
@@ -180,8 +179,7 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
         
-        
-        if (_shouldEnableCrtEffect)
+        if (state.ShouldEnableCrtEffect)
         {
             Raylib.BeginShaderMode(rayConnection.CrtShader);
             Raylib.DrawTextureRec(
