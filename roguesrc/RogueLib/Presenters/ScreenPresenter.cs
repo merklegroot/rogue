@@ -345,9 +345,11 @@ public class ScreenPresenter : IScreenPresenter
         // Round player position to nearest integer with R key
         if (key == KeyboardKey.R)
         {
-            // Round player position
-            state.PlayerPosition.X = (float)Math.Round(state.PlayerPosition.X);
-            state.PlayerPosition.Y = (float)Math.Round(state.PlayerPosition.Y);
+            state.PlayerPosition = state.PlayerPosition with {
+                X = (float)Math.Round(state.PlayerPosition.X),
+                Y = (float)Math.Round(state.PlayerPosition.Y)
+            };
+
             Console.WriteLine($"Player position rounded to ({state.PlayerPosition.X}, {state.PlayerPosition.Y})");
 
             // Round all enemy positions
@@ -355,8 +357,11 @@ public class ScreenPresenter : IScreenPresenter
             {
                 if (enemy.IsAlive)
                 {
-                    enemy.Position.X = (float)Math.Round(enemy.Position.X);
-                    enemy.Position.Y = (float)Math.Round(enemy.Position.Y);
+                    enemy.Position = enemy.Position with {
+                        X = (float)Math.Round(enemy.Position.X),
+                        Y = (float)Math.Round(enemy.Position.Y)
+                    };
+
                     Console.WriteLine($"Enemy position rounded to ({enemy.Position.X}, {enemy.Position.Y})");
                 }
             }
@@ -401,8 +406,11 @@ public class ScreenPresenter : IScreenPresenter
 
         if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(state.PlayerPosition.Y)))
         {
-            state.PreviousPlayerPosition.X = state.PlayerPosition.X;
-            state.PlayerPosition.X = newX;
+            state.PreviousPlayerPosition = state.PlayerPosition;
+            state.PlayerPosition = state.PlayerPosition with {
+                X = newX
+            };
+
             moved = true;
         }
         else
@@ -413,8 +421,14 @@ public class ScreenPresenter : IScreenPresenter
 
         if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(newY)))
         {
-            state.PreviousPlayerPosition.Y = state.PlayerPosition.Y;
-            state.PlayerPosition.Y = newY;
+            state.PreviousPlayerPosition = state.PreviousPlayerPosition with {
+                Y = state.PlayerPosition.Y
+            };
+
+            state.PlayerPosition = state.PlayerPosition with {
+                Y = newY
+            };
+
             moved = true;
         }
         else
@@ -666,8 +680,10 @@ public class ScreenPresenter : IScreenPresenter
             int checkY = (int)Math.Floor(targetY);
             if (_mapUtil.IsWalkableTile(state.Map, checkX, checkY))
             {
-                state.PlayerPosition.X = (int)targetX;
-                state.PlayerPosition.Y = (int)targetY;
+                state.PlayerPosition = new Coord2dFloat(
+                    (int)targetX,
+                    (int)targetY
+                );
             }
             else
             {
@@ -1433,9 +1449,11 @@ public class ScreenPresenter : IScreenPresenter
                     
                     if (_mapUtil.IsWalkableTile(state.Map, testX, testY))
                     {
-                        // Found a walkable tile, move player there
-                        state.PlayerPosition.X = testX + 0.5f; // Center the player in the tile
-                        state.PlayerPosition.Y = testY + 0.5f;
+                        state.PlayerPosition = new(
+                            testX + 0.5f,
+                            testY + 0.5f
+                        );
+
                         return;
                     }
                 }
@@ -1491,8 +1509,10 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Place player in the center of the new room
-        state.PlayerPosition.X = roomX + roomWidth / 2 + 0.5f;
-        state.PlayerPosition.Y = roomY + roomHeight / 2 + 0.5f;
+        state.PlayerPosition = new Coord2dFloat(
+            roomX + roomWidth / 2 + 0.5f,
+            roomY + roomHeight / 2 + 0.5f
+        );
     }
 
     // Add this method to initialize the player position on a floor tile
@@ -1523,9 +1543,8 @@ public class ScreenPresenter : IScreenPresenter
         var (newX, newY) = floorTiles[randomIndex];
         
         // Set player position (centered in the tile)
-        state.PlayerPosition.X = newX + 0.5f;
-        state.PlayerPosition.Y = newY + 0.5f;
-        
+        state.PlayerPosition = new Coord2dFloat(newX + 0.5f, newY + 0.5f);
+
         // Immediately center camera on player for initial spawn
         state.CameraState.X = state.PlayerPosition.X;
         state.CameraState.Y = state.PlayerPosition.Y;
@@ -1555,8 +1574,12 @@ public class ScreenPresenter : IScreenPresenter
                     if (_mapUtil.IsWalkableTile(state.Map, testX, testY))
                     {
                         // Found a walkable tile, move player there
-                        state.PlayerPosition.X = testX + 0.5f; // Center the player in the tile
-                        state.PlayerPosition.Y = testY + 0.5f;
+                        // Center the player in the tile
+                        state.PlayerPosition = new Coord2dFloat(
+                            testX + 0.5f,
+                            testY + 0.5f
+                        );
+
                         return;
                     }
                 }
@@ -1612,7 +1635,9 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Place player in the center of the new room
-        state.PlayerPosition.X = roomX + roomWidth / 2 + 0.5f;
-        state.PlayerPosition.Y = roomY + roomHeight / 2 + 0.5f;
+        state.PlayerPosition = new Coord2dFloat(
+            roomX + roomWidth / 2 + 0.5f,
+            roomY + roomHeight / 2 + 0.5f
+        );
     }
 }

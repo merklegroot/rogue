@@ -3,7 +3,7 @@ using Raylib_cs;
 using RogueLib.State;
 using RogueLib.Constants;
 using RogueLib.Utils;
-
+using RogueLib.Models;
 namespace RogueLib.Handlers;
 
 public interface IUpdateEnemiesHandler
@@ -25,110 +25,121 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
 
     public void Handle(GameState state)
     {
-        var frameTime = Raylib.GetFrameTime();
-        
-        HandleSpawning(state, frameTime);
-        HandleMovementForAllEnemies(state, frameTime);
-
-        state.Enemies.RemoveAll(e => !e.IsAlive);
-    }
-
-    private void HandleSpawning(GameState state, float frameTime)
-    {
-        if (!state.IsAutomaticSpawningEnabled)
-            return;
-
-        // Update enemy spawn timer
-        state.EnemySpawnTimer += frameTime;
-        if (state.EnemySpawnTimer >= GameConstants.EnemySpawnDelay)
-        {
-            state.EnemySpawnTimer = 0f;
-            
-            // Only spawn if we haven't reached the maximum
-            if (state.Enemies.Count(e => e.IsAlive) < GameConstants.MaxEnemies)
-            {
-                _spawnEnemyHandler.Handle(state);
-            }
-        }
-    }
-
-    private void HandleMovementForAllEnemies(GameState state, float frameTime)
-    {
         if (!state.IsEnemyMovementEnabled)
             return;
-                
+
+        float frameTime = Raylib.GetFrameTime();
+        float moveAmount = GameConstants.EnemyMoveSpeed * frameTime;
+
         foreach (var enemy in state.Enemies)
         {
-            HandleEnemyMovement(state, frameTime, enemy);
+            if (enemy.IsAlive)
+            {
+                // Update movement timer
+                enemy.MoveTimer += frameTime;
+
+                // If not currently moving and timer expired, choose new direction
+                if (!enemy.IsMoving && enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
+                {
+                    enemy.MoveTimer = 0f;
+                    ChooseNewDirection(state, enemy);
+                }
+
+                // If moving, continue movement
+                if (enemy.IsMoving)
+                {
+                    // Calculate movement step
+                    float stepX = enemy.TargetPosition.X - enemy.Position.X;
+                    float stepY = enemy.TargetPosition.Y - enemy.Position.Y;
+                    float distance = (float)Math.Sqrt(stepX * stepX + stepY * stepY);
+
+                    // Normalize movement if not zero
+                    if (distance > 0)
+                    {
+                        stepX = (stepX / distance) * moveAmount;
+                        stepY = (stepY / distance) * moveAmount;
+                    }
+
+                    // Calculate new position
+                    float newX = enemy.Position.X + stepX;
+                    float newY = enemy.Position.Y + stepY;
+
+                    // Check if we've reached the target or hit an obstacle
+                    bool reachedTarget = Math.Abs(newX - enemy.TargetPosition.X) < 0.1f && 
+                                       Math.Abs(newY - enemy.TargetPosition.Y) < 0.1f;
+                    
+                    bool hitObstacle = !_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(newY));
+
+                    if (reachedTarget || hitObstacle)
+                    {
+                        // Stop movement
+                        enemy.IsMoving = false;
+                        if (reachedTarget)
+                        {
+                            enemy.Position = new Coord2dFloat(
+                                enemy.TargetPosition.X,
+                                enemy.TargetPosition.Y
+                            );
+                        }
+                    }
+                    else
+                    {
+                        // Continue movement
+                        enemy.Position = new Coord2dFloat(newX, newY);
+                    }
+                }
+
+                // Check for collision with player
+                if (Math.Abs(enemy.Position.X - state.PlayerPosition.X) < 0.5f && 
+                    Math.Abs(enemy.Position.Y - state.PlayerPosition.Y) < 0.5f)
+                {
+                    // Only damage player if not invincible
+                    if (!state.IsInvincible)
+                    {
+                        state.CurrentHealth--;
+                        Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
+                        
+                        // Apply knockback
+                        ApplyKnockback(state, new Vector2(enemy.Position.X, enemy.Position.Y));
+                    }
+                }
+            }
         }
     }
 
-    private void HandleEnemyMovement(GameState state, float frameTime, Enemy enemy)
+    private void ChooseNewDirection(GameState state, Enemy enemy)
     {
-        if (!enemy.IsAlive)
-            return;
-        
-        enemy.MoveTimer += frameTime;
+        // List of possible directions (including diagonals)
+        var directions = new List<(int dx, int dy)>
+        {
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1),           (0, 1),
+            (1, -1),  (1, 0),  (1, 1)
+        };
 
-        if (enemy.MoveTimer < GameConstants.EnemyMoveDelay)
-            return;
+        // Shuffle directions
+        directions = directions.OrderBy(x => _random.Next()).ToList();
 
-        enemy.MoveTimer = 0f;
-        
-        // Generate random direction (-1, 0, or 1 for both x and y)
-        float dx = _random.Next(-1, 2) * GameConstants.PlayerMoveSpeed;
-        float dy = _random.Next(-1, 2) * GameConstants.PlayerMoveSpeed;
-        
-        // Try to move horizontally first
-        if (dx != 0)
+        // Try each direction until we find a valid one
+        foreach (var (dx, dy) in directions)
         {
-            // Check if the new position is walkable
-            if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y)))
+            var newX = (int)Math.Floor(enemy.Position.X) + dx;
+            var newY = (int)Math.Floor(enemy.Position.Y) + dy;
+
+            if (_mapUtil.IsWalkableTile(state.Map, newX, newY))
             {
-                enemy.Position.X = (int)(enemy.Position.X + dx);
-            }
-            // If horizontal movement is blocked, try vertical
-            else if (dy != 0 && _mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
-            {
-                enemy.Position.Y = (int)(enemy.Position.Y + dy);
-            }
-            // If both are blocked, try diagonal
-            else if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
-            {
-                enemy.Position.X = (int)(enemy.Position.X + dx);
-                enemy.Position.Y = (int)(enemy.Position.Y + dy);
+                // Set target position (center of the tile)
+                enemy.TargetPosition = new Coord2dFloat(newX + 0.5f, newY + 0.5f);
+                enemy.IsMoving = true;
+                return;
             }
         }
-        // If no horizontal movement, try vertical
-        else if (dy != 0)
-        {
-            // Check if the new position is walkable
-            if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
-            {
-                enemy.Position.Y = (int)(enemy.Position.Y + dy);
-            }
-        }
-        
-        // Check for collision with player
-        if (Math.Abs(enemy.Position.X - state.PlayerPosition.X) < 0.5f && Math.Abs(enemy.Position.Y - state.PlayerPosition.Y) < 0.5f)
-        {
-            // Only damage player if not invincible
-            if (!state.IsInvincible)
-            {
-                state.CurrentHealth--;
-                Console.WriteLine($"Player hit by enemy! Health: {state.CurrentHealth}");
-                
-                // Apply knockback
-                ApplyKnockback(state, new Vector2(enemy.Position.X, enemy.Position.Y));
-                
-                // Make player briefly invincible
-                state.IsInvincible = true;
-                state.InvincibilityTimer = 0f;
-            }
-        }
+
+        // If no valid direction found, stay in place
+        enemy.IsMoving = false;
     }
 
-    private void ApplyKnockback(GameState state, Vector2 sourcePosition, float multiplier = 1.0f)
+    private void ApplyKnockback(GameState state, Vector2 sourcePosition)
     {
         // Determine knockback direction (away from the source)
         float dx = state.PlayerPosition.X - sourcePosition.X;
