@@ -12,6 +12,8 @@ public interface IInstructionsPresenter
 public class InstructionsPresenter : IInstructionsPresenter
 {
     private readonly IDrawUtil _drawUtil;
+    private const int Margin = 20;
+    private const int LineHeight = 20;
 
     public InstructionsPresenter(IDrawUtil drawUtil)
     {
@@ -40,34 +42,53 @@ public class InstructionsPresenter : IInstructionsPresenter
         instructions.Add("(M) to toggle enemy movement");
         instructions.Add("(R) to round positions to nearest integer");
 
-        // Join instructions with commas and "and" before the last one
-        string instructionsText = string.Join(", ", instructions.Take(instructions.Count - 1)) + 
-                                (instructions.Count > 1 ? ", and " : "") + 
-                                instructions.Last();
-
-        // Calculate text width
-        int textWidth = Raylib.MeasureText(instructionsText, ScreenConstants.MenuFontSize);
+        // Calculate screen dimensions
         int screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
-        
-        // If text is too wide, split into two lines
-        if (textWidth > screenWidth - 40) // 40 pixels margin
-        {
-            // Split instructions into two roughly equal groups
-            int midPoint = instructions.Count / 2;
-            string firstLine = string.Join(", ", instructions.Take(midPoint)) + ",";
-            string secondLine = string.Join(", ", instructions.Skip(midPoint).Take(instructions.Count - midPoint - 1)) + 
-                              (instructions.Skip(midPoint).Count() > 1 ? ", and " : "") + 
-                              instructions.Last();
+        int screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
 
-            // Draw first line
-            _drawUtil.DrawText(rayConnection, firstLine, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 80, Color.White);
-            // Draw second line below
-            _drawUtil.DrawText(rayConnection, secondLine, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
-        }
-        else
+        // Build lines gradually
+        var lines = new List<string>();
+        var currentLine = new List<string>();
+        int currentWidth = 0;
+
+        foreach (var instruction in instructions)
         {
-            // Draw single line
-            _drawUtil.DrawText(rayConnection, instructionsText, 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 60, Color.White);
+            // Try adding the instruction to the current line
+            string testLine = string.Join(", ", currentLine.Concat(new[] { instruction }));
+            int testWidth = Raylib.MeasureText(testLine, ScreenConstants.MenuFontSize);
+
+            if (testWidth > screenWidth - (Margin * 2))
+            {
+                // Current line is full, add it to lines and start a new one
+                if (currentLine.Count > 0)
+                {
+                    lines.Add(string.Join(", ", currentLine));
+                }
+                currentLine = new List<string> { instruction };
+                currentWidth = Raylib.MeasureText(instruction, ScreenConstants.MenuFontSize);
+            }
+            else
+            {
+                // Add to current line
+                currentLine.Add(instruction);
+                currentWidth = testWidth;
+            }
+        }
+
+        // Add the last line if it has content
+        if (currentLine.Count > 0)
+        {
+            lines.Add(string.Join(", ", currentLine));
+        }
+
+        // Draw lines from bottom up
+        int totalHeight = lines.Count * LineHeight;
+        int startY = screenHeight - totalHeight - 20;
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            int y = startY + (i * LineHeight);
+            _drawUtil.DrawText(rayConnection, lines[i], Margin, y, Color.White);
         }
     }
 } 
