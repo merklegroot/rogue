@@ -306,7 +306,7 @@ public class ScreenPresenter : IScreenPresenter
             state.CurrentScreen = GameScreenEnum.Menu;
             return;
         }
-
+        
         if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
         {
             state.SwordState.IsSwordSwinging = true;
@@ -317,14 +317,23 @@ public class ScreenPresenter : IScreenPresenter
             CheckSwordCollisions(state, true);
         }
 
+        // Add debug option to get free gold with G key
         if (key == KeyboardKey.G)
         {
             GenerateFreeGold(state);
         }
 
+        // Add debug option to spawn charger with C key
         if (key == KeyboardKey.C)
         {
             SpawnCharger(state);
+        }
+
+        // Add debug option to toggle automatic spawning with Z key
+        if (key == KeyboardKey.Z)
+        {
+            state.IsAutomaticSpawningEnabled = !state.IsAutomaticSpawningEnabled;
+            Console.WriteLine($"Automatic spawning {(state.IsAutomaticSpawningEnabled ? "enabled" : "disabled")}");
         }
     }
 
@@ -432,8 +441,39 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
 
-        // Update enemy movement
-        _updateEnemiesHandler.Handle(state);
+        // Update enemy movement and spawning
+        if (state.IsAutomaticSpawningEnabled)
+        {
+            _updateEnemiesHandler.Handle(state);
+        }
+        else
+        {
+            // Still update existing enemies even if spawning is disabled
+            foreach (var enemy in state.Enemies)
+            {
+                if (enemy.IsAlive)
+                {
+                    enemy.MoveTimer += Raylib.GetFrameTime();
+                    if (enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
+                    {
+                        enemy.MoveTimer = 0f;
+                        // Basic enemy movement logic
+                        float dx = state.PlayerPosition.X - enemy.Position.X;
+                        float dy = state.PlayerPosition.Y - enemy.Position.Y;
+                        
+                        if (Math.Abs(dx) > Math.Abs(dy))
+                        {
+                            enemy.Position.X += Math.Sign(dx);
+                        }
+                        else
+                        {
+                            enemy.Position.Y += Math.Sign(dy);
+                        }
+                    }
+                }
+            }
+        }
+
         UpdateCharger(state);
 
         AdvanceInvisibility(state);

@@ -36,6 +36,7 @@ public class InstructionsPresenter : IInstructionsPresenter
         instructions.Add("(G) for instant gold");
         instructions.Add("(B) to open the shop");
         instructions.Add("(C) to spawn charger");
+        instructions.Add("(Z) to toggle enemy spawning");
 
         // Join instructions with commas and "and" before the last one
         string instructionsText = string.Join(", ", instructions.Take(instructions.Count - 1)) + 

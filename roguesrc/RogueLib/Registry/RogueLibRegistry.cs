@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RogueLib.Presenters;
 using RogueLib.Handlers;
 using RogueLib.Utils;
+
 namespace RogueLib.Registry;
 
 public static class RogueLibRegistry
