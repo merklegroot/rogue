@@ -80,6 +80,13 @@ public class DrawUtil : IDrawUtil
     {
         options ??= new ColoredHotkeyOptions();
 
+        // Draw background if hovered
+        if (options.IsHovered && options.HoverBounds.HasValue)
+        {
+            var bounds = options.HoverBounds.Value;
+            Raylib.DrawRectangle((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height, new Color(200, 200, 200, 100));
+        }
+
         int startParenIndex = text.IndexOf('(');
         int endParenIndex = text.IndexOf(')');
 

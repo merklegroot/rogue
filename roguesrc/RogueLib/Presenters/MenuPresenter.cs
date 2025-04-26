@@ -72,7 +72,10 @@ public class MenuPresenter : IMenuPresenter
         var adventureX = centerX - menuItemWidth / 2;
         var adventureBounds = new Rectangle(adventureX, menuStartY - BorderPadding, menuItemWidth, adventureSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, adventureText, 
-            adventureX + BorderPadding, menuStartY, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, adventureBounds) });
+            adventureX + BorderPadding, menuStartY, new ColoredHotkeyOptions { 
+                IsHovered = Raylib.CheckCollisionPointRec(mousePosition, adventureBounds),
+                HoverBounds = adventureBounds
+            });
         Raylib.DrawRectangleLines((int)adventureX, (int)(menuStartY - BorderPadding), 
             menuItemWidth, (int)(adventureSize.Y + (BorderPadding * 2)), Color.Gold);
         _menuItems.Add((adventureBounds, 
@@ -83,7 +86,10 @@ public class MenuPresenter : IMenuPresenter
         var characterX = centerX - menuItemWidth / 2;
         var characterBounds = new Rectangle(characterX, menuStartY + MenuSpacing - BorderPadding, menuItemWidth, characterSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, characterText, 
-            characterX + BorderPadding, menuStartY + MenuSpacing, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, characterBounds) });
+            characterX + BorderPadding, menuStartY + MenuSpacing, new ColoredHotkeyOptions { 
+                IsHovered = Raylib.CheckCollisionPointRec(mousePosition, characterBounds),
+                HoverBounds = characterBounds
+            });
         Raylib.DrawRectangleLines((int)characterX, (int)(menuStartY + MenuSpacing - BorderPadding), 
             menuItemWidth, (int)(characterSize.Y + (BorderPadding * 2)), Color.Gold);
         _menuItems.Add((characterBounds, 
@@ -94,7 +100,10 @@ public class MenuPresenter : IMenuPresenter
         var crtX = centerX - menuItemWidth / 2;
         var crtBounds = new Rectangle(crtX, menuStartY + MenuSpacing * 2 - BorderPadding, menuItemWidth, crtSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, crtText, 
-            crtX + BorderPadding, menuStartY + MenuSpacing * 2, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, crtBounds) });
+            crtX + BorderPadding, menuStartY + MenuSpacing * 2, new ColoredHotkeyOptions { 
+                IsHovered = Raylib.CheckCollisionPointRec(mousePosition, crtBounds),
+                HoverBounds = crtBounds
+            });
         Raylib.DrawRectangleLines((int)crtX, (int)(menuStartY + MenuSpacing * 2 - BorderPadding), 
             menuItemWidth, (int)(crtSize.Y + (BorderPadding * 2)), Color.Gold);
         _menuItems.Add((crtBounds, 
@@ -105,7 +114,10 @@ public class MenuPresenter : IMenuPresenter
         var exitX = centerX - menuItemWidth / 2;
         var exitBounds = new Rectangle(exitX, menuStartY + MenuSpacing * 3 - BorderPadding, menuItemWidth, exitSize.Y + (BorderPadding * 2));
         _drawUtil.DrawColoredHotkeyText(rayConnection, exitText, 
-            exitX + BorderPadding, menuStartY + MenuSpacing * 3, new ColoredHotkeyOptions { IsHovered = Raylib.CheckCollisionPointRec(mousePosition, exitBounds) });
+            exitX + BorderPadding, menuStartY + MenuSpacing * 3, new ColoredHotkeyOptions { 
+                IsHovered = Raylib.CheckCollisionPointRec(mousePosition, exitBounds),
+                HoverBounds = exitBounds
+            });
         Raylib.DrawRectangleLines((int)exitX, (int)(menuStartY + MenuSpacing * 3 - BorderPadding), 
             menuItemWidth, (int)(exitSize.Y + (BorderPadding * 2)), Color.Gold);
         _menuItems.Add((exitBounds, 
