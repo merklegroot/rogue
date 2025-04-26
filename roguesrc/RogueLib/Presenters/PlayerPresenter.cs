@@ -13,6 +13,7 @@ public interface IPlayerPresenter
 public class PlayerPresenter : IPlayerPresenter
 {
     private readonly IDrawUtil _drawUtil;
+    private const float FaceMovementAmount = 4.0f;  // Amount to move the face texture in pixels
 
     public PlayerPresenter(IDrawUtil drawUtil)
     {
@@ -56,8 +57,28 @@ public class PlayerPresenter : IPlayerPresenter
             currentPlayerColor
         );
 
-        // Draw the neutral texture on top
+        // Calculate offset for neutral texture based on ActionDirection
+        float offsetX = 0;
+        float offsetY = 0;
+        switch (state.ActionDirection)
+        {
+            case Direction.Left:
+                offsetX = -FaceMovementAmount;
+                break;
+            case Direction.Right:
+                offsetX = FaceMovementAmount;
+                break;
+            case Direction.Up:
+                offsetY = -FaceMovementAmount;
+                break;
+            case Direction.Down:
+                offsetY = FaceMovementAmount;
+                break;
+        }
+
+        // Draw the neutral texture on top with offset
         source = new(0, 0, rayConnection.SmileyNeutralTexture.Width, rayConnection.SmileyNeutralTexture.Height);
+        dest = new(playerScreenX + offsetX, adjustedY + offsetY, scaledWidth, scaledHeight);
         Raylib.DrawTexturePro(
             rayConnection.SmileyNeutralTexture,
             source,
