@@ -4,6 +4,7 @@ using RogueLib.Constants;
 using RogueLib.State;
 using RogueLib.Handlers;
 using RogueLib.Models;
+using RogueLib.Utils;
 
 namespace RogueLib.Presenters;
 
@@ -48,6 +49,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IEnemyPresenter _enemyPresenter;
     private readonly IExplosionPresenter _explosionPresenter;
     private readonly IMapPresenter _mapPresenter;
+    private readonly IMapUtil _mapUtil;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -70,7 +72,8 @@ public class ScreenPresenter : IScreenPresenter
         IMenuInputHandler menuInputHandler,
         IEnemyPresenter enemyPresenter,
         IExplosionPresenter explosionPresenter,
-        IMapPresenter mapPresenter)
+        IMapPresenter mapPresenter,
+        IMapUtil mapUtil)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -93,6 +96,7 @@ public class ScreenPresenter : IScreenPresenter
         _enemyPresenter = enemyPresenter;
         _explosionPresenter = explosionPresenter;
         _mapPresenter = mapPresenter;
+        _mapUtil = mapUtil;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -362,7 +366,7 @@ public class ScreenPresenter : IScreenPresenter
         float newX = state.PlayerPosition.X + state.VelocityX;
         float newY = state.PlayerPosition.Y + state.VelocityY;
 
-        if (IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(state.PlayerPosition.Y)))
+        if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(newX), (int)Math.Floor(state.PlayerPosition.Y)))
         {
             state.PreviousPlayerPosition.X = state.PlayerPosition.X;
             state.PlayerPosition.X = newX;
@@ -374,7 +378,7 @@ public class ScreenPresenter : IScreenPresenter
             state.VelocityX = 0;
         }
 
-        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(newY)))
+        if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(newY)))
         {
             state.PreviousPlayerPosition.Y = state.PlayerPosition.Y;
             state.PlayerPosition.Y = newY;
@@ -616,7 +620,7 @@ public class ScreenPresenter : IScreenPresenter
             // Only move if the target position is walkable
             int checkX = (int)Math.Floor(targetX);
             int checkY = (int)Math.Floor(targetY);
-            if (IsWalkableTile(state.Map, checkX, checkY))
+            if (_mapUtil.IsWalkableTile(state.Map, checkX, checkY))
             {
                 state.PlayerPosition.X = (int)targetX;
                 state.PlayerPosition.Y = (int)targetY;
@@ -739,12 +743,12 @@ public class ScreenPresenter : IScreenPresenter
             if (dx != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X + (double)dx), (int)Math.Floor((double)_chargerState.Y)))
+                if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X + (double)dx), (int)Math.Floor((double)_chargerState.Y)))
                 {
                     _chargerState.X += dx;
                 }
                 // If horizontal movement is blocked, try vertical
-                else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
+                else if (dy != 0 && _mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
                 {
                     _chargerState.Y += dy;
                 }
@@ -753,7 +757,7 @@ public class ScreenPresenter : IScreenPresenter
             else if (dy != 0)
             {
                 // Check if the new position is walkable
-                if (IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
+                if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
                 {
                     _chargerState.Y += dy;
                 }
@@ -1197,25 +1201,6 @@ public class ScreenPresenter : IScreenPresenter
         state.KnockbackTimer = 0f;
     }
 
-    // Add a helper method to check if a tile is walkable
-    private bool IsWalkableTile(List<string> map, int x, int y)
-    {
-        // Check if position is within map bounds
-        if (y < 0 || y >= map.Count)
-            return false; // Out of bounds vertically
-        
-        // Check if x is within the bounds of the current line
-        if (x < 0 || x >= map[y].Length)
-            return false; // Out of bounds horizontally
-        
-        // Check if the tile is a wall or other non-walkable object
-        char mapChar = map[y][x];
-
-        var walkableTiles = new List<char> { '.', 'X', '╬' };
-
-        return walkableTiles.Contains(mapChar);
-    }
-
     // Add a new method to update the camera position
     private void UpdateCamera(GameState state)
     {
@@ -1328,7 +1313,7 @@ public class ScreenPresenter : IScreenPresenter
     private void EnsurePlayerOnWalkableTile(GameState state)
     {
         // If player is already on a walkable tile, do nothing
-        if (IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(state.PlayerPosition.Y)))
+        if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(state.PlayerPosition.Y)))
         {
             return;
         }
@@ -1350,7 +1335,7 @@ public class ScreenPresenter : IScreenPresenter
                     var testX = (int)Math.Floor(state.PlayerPosition.X + offsetX);
                     var testY = (int)Math.Floor(state.PlayerPosition.Y + offsetY);
                     
-                    if (IsWalkableTile(state.Map, testX, testY))
+                    if (_mapUtil.IsWalkableTile(state.Map, testX, testY))
                     {
                         // Found a walkable tile, move player there
                         state.PlayerPosition.X = testX + 0.5f; // Center the player in the tile
@@ -1448,5 +1433,90 @@ public class ScreenPresenter : IScreenPresenter
         // Immediately center camera on player for initial spawn
         state.CameraState.X = state.PlayerPosition.X;
         state.CameraState.Y = state.PlayerPosition.Y;
+
+        if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(state.PlayerPosition.Y)))
+        {
+            return;
+        }
+        
+        // Search for a walkable tile in an expanding spiral pattern
+        var maxSearchRadius = 20;  // Maximum search distance
+        
+        for (var radius = 1; radius <= maxSearchRadius; radius++)
+        {
+            // Check in a square pattern around the player
+            for (var offsetX = -radius; offsetX <= radius; offsetX++)
+            {
+                for (var offsetY = -radius; offsetY <= radius; offsetY++)
+                {
+                    // Skip if not on the perimeter of the square
+                    if (Math.Abs(offsetX) != radius && Math.Abs(offsetY) != radius)
+                        continue;
+                    
+                    var testX = (int)Math.Floor(state.PlayerPosition.X + offsetX);
+                    var testY = (int)Math.Floor(state.PlayerPosition.Y + offsetY);
+                    
+                    if (_mapUtil.IsWalkableTile(state.Map, testX, testY))
+                    {
+                        // Found a walkable tile, move player there
+                        state.PlayerPosition.X = testX + 0.5f; // Center the player in the tile
+                        state.PlayerPosition.Y = testY + 0.5f;
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // If no walkable tile found, force create a room at player position
+        // This is a fallback that should rarely be needed
+        int roomWidth = 7;
+        int roomHeight = 5;
+        int roomX = (int)Math.Floor(state.PlayerPosition.X) - roomWidth / 2;
+        int roomY = (int)Math.Floor(state.PlayerPosition.Y) - roomHeight / 2;
+        
+        // Create a simple room
+        for (int y = 0; y < roomHeight; y++)
+        {
+            while (state.Map.Count <= roomY + y)
+            {
+                state.Map.Add(new string(' ', roomX + roomWidth));
+            }
+            
+            string line = state.Map[roomY + y];
+            while (line.Length <= roomX + roomWidth)
+            {
+                line += ' ';
+            }
+            
+            char[] lineChars = line.ToCharArray();
+            
+            for (int x = 0; x < roomWidth; x++)
+            {
+                if (y == 0 || y == roomHeight - 1)
+                {
+                    // Top and bottom walls
+                    lineChars[roomX + x] = (y == 0 && x == 0) ? '╔' :
+                                          (y == 0 && x == roomWidth - 1) ? '╗' :
+                                          (y == roomHeight - 1 && x == 0) ? '╚' :
+                                          (y == roomHeight - 1 && x == roomWidth - 1) ? '╝' : '═';
+                }
+                else if (x == 0 || x == roomWidth - 1)
+                {
+                    // Side walls
+                    lineChars[roomX + x] = '║';
+                }
+                else
+                {
+                    // Floor
+                    lineChars[roomX + x] = '.';
+                }
+            }
+            
+            state.Map[roomY + y] = new string(lineChars);
+        }
+        
+        // Place player in the center of the new room
+        state.PlayerPosition.X = roomX + roomWidth / 2 + 0.5f;
+        state.PlayerPosition.Y = roomY + roomHeight / 2 + 0.5f;
     }
 }

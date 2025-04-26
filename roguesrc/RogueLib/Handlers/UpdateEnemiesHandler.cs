@@ -2,6 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using RogueLib.State;
 using RogueLib.Constants;
+using RogueLib.Utils;
 
 namespace RogueLib.Handlers;
 
@@ -14,10 +15,12 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
 {
     private readonly Random _random = new();
     private readonly ISpawnEnemyHandler _spawnEnemyHandler;
+    private readonly IMapUtil _mapUtil;
 
-    public UpdateEnemiesHandler(ISpawnEnemyHandler spawnEnemyHandler)
+    public UpdateEnemiesHandler(ISpawnEnemyHandler spawnEnemyHandler, IMapUtil mapUtil)
     {
         _spawnEnemyHandler = spawnEnemyHandler;
+        _mapUtil = mapUtil;
     }
 
     public void Handle(GameState state)
@@ -55,17 +58,17 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 if (dx != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y)))
+                    if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y)))
                     {
                         enemy.Position.X = (int)(enemy.Position.X + dx);
                     }
                     // If horizontal movement is blocked, try vertical
-                    else if (dy != 0 && IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
+                    else if (dy != 0 && _mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
                     {
                         enemy.Position.Y = (int)(enemy.Position.Y + dy);
                     }
                     // If both are blocked, try diagonal
-                    else if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
+                    else if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X + (double)dx), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
                     {
                         enemy.Position.X = (int)(enemy.Position.X + dx);
                         enemy.Position.Y = (int)(enemy.Position.Y + dy);
@@ -75,7 +78,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 else if (dy != 0)
                 {
                     // Check if the new position is walkable
-                    if (IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
+                    if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)enemy.Position.X), (int)Math.Floor((double)enemy.Position.Y + (double)dy)))
                     {
                         enemy.Position.Y = (int)(enemy.Position.Y + dy);
                     }
@@ -137,23 +140,5 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         // Start knockback effect
         state.IsKnockedBack = true;
         state.KnockbackTimer = 0f;
-    }
-
-    private bool IsWalkableTile(List<string> map, int x, int y)
-    {
-        // Check if position is within map bounds
-        if (y < 0 || y >= map.Count)
-            return false; // Out of bounds vertically
-        
-        // Check if x is within the bounds of the current line
-        if (x < 0 || x >= map[y].Length)
-            return false; // Out of bounds horizontally
-        
-        // Check if the tile is a wall or other non-walkable object
-        char mapChar = map[y][x];
-
-        var walkableTiles = new List<char> { '.', 'X', '╬' };
-
-        return walkableTiles.Contains(mapChar);
     }
 } 

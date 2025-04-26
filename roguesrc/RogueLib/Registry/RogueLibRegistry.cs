@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RogueLib.Presenters;
 using RogueLib.Handlers;
+using RogueLib.Utils;
 namespace RogueLib.Registry;
 
 public static class RogueLibRegistry
@@ -32,5 +33,6 @@ public static class RogueLibRegistry
             .AddScoped<IMenuInputHandler, MenuInputHandler>()
             .AddScoped<IEnemyPresenter, EnemyPresenter>()
             .AddScoped<IExplosionPresenter, ExplosionPresenter>()
-            .AddScoped<IMapPresenter, MapPresenter>();
+            .AddScoped<IMapPresenter, MapPresenter>()
+            .AddScoped<IMapUtil, MapUtil>();
 }
