@@ -1301,35 +1301,61 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (enemy.IsAlive)
             {
-                // Check if sword is within 0.5 tiles of enemy (for hit detection)
-                if (Math.Abs(swordX - enemy.Position.X) < 0.5f && Math.Abs(swordY - enemy.Position.Y) < 0.5f)
+                // Calculate distance from player to enemy
+                float dx = Math.Abs(state.PlayerPosition.X - enemy.Position.X);
+                float dy = Math.Abs(state.PlayerPosition.Y - enemy.Position.Y);
+                float distance = Math.Max(dx, dy); // Use max for grid-based distance
+
+                // Check if enemy is within sword range (between 0 and sword reach)
+                if (distance <= state.SwordState.SwordReach)
                 {
-                    // Kill the enemy
-                    enemy.IsAlive = false;
-                    
-                    // Create explosion at enemy position
-                    state.Explosions.Add(new ExplosionState {
-                        Position = enemy.Position with {},
-                        Timer = 0f 
-                    });
-                    
-                    // Increment kill counter
-                    _enemiesKilled++;
-                    
-                    // Check if we should spawn a charger
-                    if (_enemiesKilled >= GameConstants.KillsForCharger && !_isChargerActive)
+                    // Check if enemy is in the correct direction
+                    bool isInDirection = false;
+                    switch (state.ActionDirection)
                     {
-                        SpawnCharger(state);
+                        case Direction.Left:
+                            isInDirection = enemy.Position.X < state.PlayerPosition.X;
+                            break;
+                        case Direction.Right:
+                            isInDirection = enemy.Position.X > state.PlayerPosition.X;
+                            break;
+                        case Direction.Up:
+                            isInDirection = enemy.Position.Y < state.PlayerPosition.Y;
+                            break;
+                        case Direction.Down:
+                            isInDirection = enemy.Position.Y > state.PlayerPosition.Y;
+                            break;
                     }
-                    
-                    // If this was a swing hit, start cooldown
-                    if (isSwinging)
+
+                    if (isInDirection)
                     {
-                        state.SwordState.SwordOnCooldown = true;
-                        state.SwordState.SwordCooldownTimer = 0f;
+                        // Kill the enemy
+                        enemy.IsAlive = false;
+                        
+                        // Create explosion at enemy position
+                        state.Explosions.Add(new ExplosionState { 
+                            Position = enemy.Position with {},
+                            Timer = 0f 
+                        });
+                        
+                        // Increment kill counter
+                        _enemiesKilled++;
+                        
+                        // Check if we should spawn a charger
+                        if (_enemiesKilled >= GameConstants.KillsForCharger && !_isChargerActive)
+                        {
+                            SpawnCharger(state);
+                        }
+                        
+                        // If this was a swing hit, start cooldown
+                        if (isSwinging)
+                        {
+                            state.SwordState.SwordOnCooldown = true;
+                            state.SwordState.SwordCooldownTimer = 0f;
+                        }
+                        
+                        break; // Only hit one enemy per swing/movement
                     }
-                    
-                    break; // Only hit one enemy per swing/movement
                 }
             }
         }
@@ -1337,17 +1363,43 @@ public class ScreenPresenter : IScreenPresenter
         // Check for collision with charger
         if (_isChargerActive && _chargerState != null && _chargerState.IsAlive)
         {
-            // Check if sword is within 0.5 tiles of charger
-            if (Math.Abs(swordX - _chargerState.X) < 0.5f && Math.Abs(swordY - _chargerState.Y) < 0.5f)
+            // Calculate distance from player to charger
+            float dx = Math.Abs(state.PlayerPosition.X - _chargerState.X);
+            float dy = Math.Abs(state.PlayerPosition.Y - _chargerState.Y);
+            float distance = Math.Max(dx, dy); // Use max for grid-based distance
+
+            // Check if charger is within sword range (between 0 and sword reach)
+            if (distance <= state.SwordState.SwordReach)
             {
-                // Handle charger damage
-                HandleChargerDamage(state, isSwinging);
-                
-                // If this was a swing hit, start cooldown
-                if (isSwinging)
+                // Check if charger is in the correct direction
+                bool isInDirection = false;
+                switch (state.ActionDirection)
                 {
-                    state.SwordState.SwordOnCooldown = true;
-                    state.SwordState.SwordCooldownTimer = 0f;
+                    case Direction.Left:
+                        isInDirection = _chargerState.X < state.PlayerPosition.X;
+                        break;
+                    case Direction.Right:
+                        isInDirection = _chargerState.X > state.PlayerPosition.X;
+                        break;
+                    case Direction.Up:
+                        isInDirection = _chargerState.Y < state.PlayerPosition.Y;
+                        break;
+                    case Direction.Down:
+                        isInDirection = _chargerState.Y > state.PlayerPosition.Y;
+                        break;
+                }
+
+                if (isInDirection)
+                {
+                    // Handle charger damage
+                    HandleChargerDamage(state, isSwinging);
+                    
+                    // If this was a swing hit, start cooldown
+                    if (isSwinging)
+                    {
+                        state.SwordState.SwordOnCooldown = true;
+                        state.SwordState.SwordCooldownTimer = 0f;
+                    }
                 }
             }
         }
