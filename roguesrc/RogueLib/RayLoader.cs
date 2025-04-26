@@ -9,6 +9,9 @@ public interface IRayLoader
     Shader LoadCrtShader();
     Texture2D LoadSkullImage();
     Texture2D LoadSwordImage();
+    Texture2D LoadSmileyImage();
+    Texture2D LoadSmileyBorderImage();
+    Texture2D LoadSmileyNeutralImage();
     List<string> LoadMap();
 }
 
@@ -40,6 +43,15 @@ public class RayLoader : IRayLoader
 
     public Texture2D LoadSwordImage() =>
         LoadTextureFromEmbeddedResource("sword.png");
+
+    public Texture2D LoadSmileyImage() =>
+        LoadTextureFromEmbeddedResource("smiley.png");
+
+    public Texture2D LoadSmileyBorderImage() =>
+        LoadTextureFromEmbeddedResource("smiley-border.png");
+
+    public Texture2D LoadSmileyNeutralImage() =>
+        LoadTextureFromEmbeddedResource("smiley-neutral.png");
 
     public Shader LoadCrtShader() =>
         LoadShaderFromEmbeddedResource("crt.fs");
