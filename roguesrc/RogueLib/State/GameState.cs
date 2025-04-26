@@ -39,7 +39,7 @@ public class GameState
     
     public bool IsInvincible { get; set; } = false;
     public float InvincibilityTimer { get; set; } = 0f;
-    public bool IsAutomaticSpawningEnabled { get; set; } = true;  // Default to true
+    public bool IsEnemySpawnEnabled { get; set; } = true;  // Default to true
     public bool IsEnemyMovementEnabled { get; set; } = true;  // Default to true
     public List<ExplosionState> Explosions { get; } = [];
 

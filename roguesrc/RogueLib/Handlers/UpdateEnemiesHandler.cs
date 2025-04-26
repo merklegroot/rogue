@@ -14,12 +14,10 @@ public interface IUpdateEnemiesHandler
 public class UpdateEnemiesHandler : IUpdateEnemiesHandler
 {
     private readonly Random _random = new();
-    private readonly ISpawnEnemyHandler _spawnEnemyHandler;
     private readonly IMapUtil _mapUtil;
 
-    public UpdateEnemiesHandler(ISpawnEnemyHandler spawnEnemyHandler, IMapUtil mapUtil)
+    public UpdateEnemiesHandler(IMapUtil mapUtil)
     {
-        _spawnEnemyHandler = spawnEnemyHandler;
         _mapUtil = mapUtil;
     }
 

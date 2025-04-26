@@ -331,8 +331,8 @@ public class ScreenPresenter : IScreenPresenter
         // Add debug option to toggle automatic spawning with Z key
         if (key == KeyboardKey.Z)
         {
-            state.IsAutomaticSpawningEnabled = !state.IsAutomaticSpawningEnabled;
-            Console.WriteLine($"Automatic spawning {(state.IsAutomaticSpawningEnabled ? "enabled" : "disabled")}");
+            state.IsEnemySpawnEnabled = !state.IsEnemySpawnEnabled;
+            Console.WriteLine($"Automatic spawning {(state.IsEnemySpawnEnabled ? "enabled" : "disabled")}");
         }
 
         // Add debug option to toggle enemy movement with M key
@@ -482,6 +482,7 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         _updateEnemiesHandler.Handle(state);
+        _spawnEnemyHandler.Handle(state);
 
         UpdateCharger(state);
 

@@ -1,6 +1,7 @@
 using RogueLib.State;
 using RogueLib.Constants;
 using RogueLib.Models;
+using Raylib_cs;
 
 namespace RogueLib.Handlers;
 
@@ -15,6 +16,19 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
 
     public void Handle(GameState state)
     {
+        if (!state.IsEnemySpawnEnabled)
+            return;
+            
+        // Update spawn timer
+        state.EnemySpawnTimer += Raylib.GetFrameTime();
+
+        // Only spawn if timer has reached the delay
+        if (state.EnemySpawnTimer < EnemyConstants.EnemySpawnDelay)
+            return;
+
+        // Reset timer
+        state.EnemySpawnTimer = 0f;
+
         // Check total enemy limit first
         if (state.Enemies.Count(e => e.IsAlive) >= EnemyConstants.MaxEnemies)
             return;

@@ -34,8 +34,8 @@ public class DebugPanelPresenter : IDebugPanelPresenter
         {
             new LineInfo
             {
-                Contents = $"Enemy Spawning: {(state.IsAutomaticSpawningEnabled ? "Enabled" : "Disabled")}",
-                Color = state.IsAutomaticSpawningEnabled ? Color.Green : Color.Red
+                Contents = $"Enemy Spawning: {(state.IsEnemySpawnEnabled ? "Enabled" : "Disabled")}",
+                Color = state.IsEnemySpawnEnabled ? Color.Green : Color.Red
             },
             new LineInfo
             {
