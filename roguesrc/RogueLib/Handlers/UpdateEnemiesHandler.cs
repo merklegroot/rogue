@@ -23,10 +23,11 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         _mapUtil = mapUtil;
     }
 
-    public void Handle(GameState state)
+    private void HandleSpawning(GameState state, float frameTime)
     {
-        float frameTime = Raylib.GetFrameTime();
-        
+        if (!state.IsEnemyMovementEnabled)
+            return;
+
         // Update enemy spawn timer
         state.EnemySpawnTimer += frameTime;
         if (state.EnemySpawnTimer >= GameConstants.EnemySpawnDelay)
@@ -39,8 +40,13 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 _spawnEnemyHandler.Handle(state);
             }
         }
-        
-        // Update existing enemies
+    }
+
+    private void HandleMovement(GameState state, float frameTime)
+    {
+        if (!state.IsEnemyMovementEnabled)
+            return;
+                // Update existing enemies
         foreach (var enemy in state.Enemies)
         {
             if (!enemy.IsAlive) continue;
@@ -103,7 +109,15 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
                 }
             }
         }
+    }
+    
+
+    public void Handle(GameState state)
+    {
+        float frameTime = Raylib.GetFrameTime();
         
+        HandleSpawning(state, frameTime);
+        HandleMovement(state, frameTime);
         // Remove dead enemies
         state.Enemies.RemoveAll(e => !e.IsAlive);
     }

@@ -233,7 +233,6 @@ public class ScreenPresenter : IScreenPresenter
         _instructionsPresenter.Draw(rayConnection, state);
         _chunkPresenter.Draw(rayConnection, state);
         _cooldownIndicatorPresenter.Draw(rayConnection, state);
-        _enemyPresenter.Draw(rayConnection, state);
     }
 
     private void DrawCrossbowBolts(IRayConnection rayConnection, GameState state)
@@ -334,6 +333,13 @@ public class ScreenPresenter : IScreenPresenter
         {
             state.IsAutomaticSpawningEnabled = !state.IsAutomaticSpawningEnabled;
             Console.WriteLine($"Automatic spawning {(state.IsAutomaticSpawningEnabled ? "enabled" : "disabled")}");
+        }
+
+        // Add debug option to toggle enemy movement with M key
+        if (key == KeyboardKey.M)
+        {
+            state.IsEnemyMovementEnabled = !state.IsEnemyMovementEnabled;
+            Console.WriteLine($"Enemy movement {(state.IsEnemyMovementEnabled ? "enabled" : "disabled")}");
         }
     }
 
@@ -441,38 +447,7 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
 
-        // Update enemy movement and spawning
-        if (state.IsAutomaticSpawningEnabled)
-        {
-            _updateEnemiesHandler.Handle(state);
-        }
-        else
-        {
-            // Still update existing enemies even if spawning is disabled
-            foreach (var enemy in state.Enemies)
-            {
-                if (enemy.IsAlive)
-                {
-                    enemy.MoveTimer += Raylib.GetFrameTime();
-                    if (enemy.MoveTimer >= GameConstants.EnemyMoveDelay)
-                    {
-                        enemy.MoveTimer = 0f;
-                        // Basic enemy movement logic
-                        float dx = state.PlayerPosition.X - enemy.Position.X;
-                        float dy = state.PlayerPosition.Y - enemy.Position.Y;
-                        
-                        if (Math.Abs(dx) > Math.Abs(dy))
-                        {
-                            enemy.Position.X += Math.Sign(dx);
-                        }
-                        else
-                        {
-                            enemy.Position.Y += Math.Sign(dy);
-                        }
-                    }
-                }
-            }
-        }
+        _updateEnemiesHandler.Handle(state);
 
         UpdateCharger(state);
 
