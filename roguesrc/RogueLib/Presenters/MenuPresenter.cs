@@ -19,7 +19,7 @@ public class MenuPresenter : IMenuPresenter
     private const int VersionYOffset = 40;
     private const int DecorativeElementYOffset = 10;
     private readonly IDrawUtil _drawUtil;
-    private List<(Rectangle bounds, Action<GameState> action)> _menuItems = new();
+    private List<(Rectangle bounds, Action<GameState> action, string text)> _menuItems = new();
 
     public MenuPresenter(IDrawUtil drawUtil)
     {
@@ -60,28 +60,28 @@ public class MenuPresenter : IMenuPresenter
         _drawUtil.DrawColoredHotkeyText(rayConnection, adventureText, 
             centerX - 120, menuStartY);
         _menuItems.Add((new Rectangle(centerX - 120, menuStartY, adventureSize.X, adventureSize.Y), 
-            state => state.CurrentScreen = GameScreenEnum.Adventure));
+            state => state.CurrentScreen = GameScreenEnum.Adventure, adventureText));
 
         var characterText = "View (C)haracter Set";
         var characterSize = Raylib.MeasureTextEx(rayConnection.MenuFont, characterText, ScreenConstants.MenuFontSize, 1);
         _drawUtil.DrawColoredHotkeyText(rayConnection, characterText, 
             centerX - 120, menuStartY + MenuSpacing);
         _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing, characterSize.X, characterSize.Y), 
-            state => state.CurrentScreen = GameScreenEnum.CharacterSet));
+            state => state.CurrentScreen = GameScreenEnum.CharacterSet, characterText));
 
         var crtText = "(T)oggle CRT Effect";
         var crtSize = Raylib.MeasureTextEx(rayConnection.MenuFont, crtText, ScreenConstants.MenuFontSize, 1);
         _drawUtil.DrawColoredHotkeyText(rayConnection, crtText, 
             centerX - 120, menuStartY + MenuSpacing * 2);
         _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing * 2, crtSize.X, crtSize.Y), 
-            state => state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect));
+            state => state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect, crtText));
 
         var exitText = "e(X)it Game";
         var exitSize = Raylib.MeasureTextEx(rayConnection.MenuFont, exitText, ScreenConstants.MenuFontSize, 1);
         _drawUtil.DrawColoredHotkeyText(rayConnection, exitText, 
             centerX - 120, menuStartY + MenuSpacing * 3);
         _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing * 3, exitSize.X, exitSize.Y), 
-            state => Raylib.CloseWindow()));
+            state => Raylib.CloseWindow(), exitText));
         
         // Draw version number
         var version = "v0.1 Alpha";
@@ -95,7 +95,7 @@ public class MenuPresenter : IMenuPresenter
 
     public void HandleMouseClick(Vector2 mousePosition, GameState state)
     {
-        foreach (var (bounds, action) in _menuItems)
+        foreach (var (bounds, action, _) in _menuItems)
         {
             if (Raylib.CheckCollisionPointRec(mousePosition, bounds))
             {
