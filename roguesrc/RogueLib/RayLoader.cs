@@ -12,6 +12,7 @@ public interface IRayLoader
     Texture2D LoadSmileyImage();
     Texture2D LoadSmileyBorderImage();
     Texture2D LoadSmileyNeutralImage();
+    Texture2D LoadSmileyDeterminedImage();
     List<string> LoadMap();
 }
 
@@ -52,6 +53,9 @@ public class RayLoader : IRayLoader
 
     public Texture2D LoadSmileyNeutralImage() =>
         LoadTextureFromEmbeddedResource("smiley-neutral.png");
+
+    public Texture2D LoadSmileyDeterminedImage() =>
+        LoadTextureFromEmbeddedResource("smiley-determined.png");
 
     public Shader LoadCrtShader() =>
         LoadShaderFromEmbeddedResource("crt.fs");

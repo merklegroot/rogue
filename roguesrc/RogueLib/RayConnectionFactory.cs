@@ -14,6 +14,7 @@ public interface IRayConnection : IDisposable
     Texture2D SmileyTexture { get; init; }
     Texture2D SmileyBorderTexture { get; init; }
     Texture2D SmileyNeutralTexture { get; init; }
+    Texture2D SmileyDeterminedTexture { get; init; }
     int TimeLoc { get; init; }    
 }
 
@@ -33,6 +34,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
         public Texture2D SmileyTexture { get; init; }
         public Texture2D SmileyBorderTexture { get; init; }
         public Texture2D SmileyNeutralTexture { get; init; }
+        public Texture2D SmileyDeterminedTexture { get; init; }
         public Shader CrtShader { get; init; }
         public RenderTexture2D GameTexture { get; init; }
         public int ResolutionLoc { get; init; }
@@ -54,6 +56,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
             SmileyTexture = rayLoader.LoadSmileyImage();
             SmileyBorderTexture = rayLoader.LoadSmileyBorderImage();
             SmileyNeutralTexture = rayLoader.LoadSmileyNeutralImage();
+            SmileyDeterminedTexture = rayLoader.LoadSmileyDeterminedImage();
 
             // Create a render texture the size of the window
             int width = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;

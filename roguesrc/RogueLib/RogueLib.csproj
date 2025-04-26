@@ -18,6 +18,7 @@
       <EmbeddedResource Include="images/smiley.png" />
       <EmbeddedResource Include="images/smiley-neutral.png" />
       <EmbeddedResource Include="images/smiley-border.png" />
+      <EmbeddedResource Include="images/smiley-determined.png" />
       <EmbeddedResource Include="images/sword.png" />
       <EmbeddedResource Include="resources/crt.fs" />
       <EmbeddedResource Include="resources/map.txt" />
