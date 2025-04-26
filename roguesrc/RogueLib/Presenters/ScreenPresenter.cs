@@ -341,6 +341,26 @@ public class ScreenPresenter : IScreenPresenter
             state.IsEnemyMovementEnabled = !state.IsEnemyMovementEnabled;
             Console.WriteLine($"Enemy movement {(state.IsEnemyMovementEnabled ? "enabled" : "disabled")}");
         }
+
+        // Round player position to nearest integer with R key
+        if (key == KeyboardKey.R)
+        {
+            // Round player position
+            state.PlayerPosition.X = (float)Math.Round(state.PlayerPosition.X);
+            state.PlayerPosition.Y = (float)Math.Round(state.PlayerPosition.Y);
+            Console.WriteLine($"Player position rounded to ({state.PlayerPosition.X}, {state.PlayerPosition.Y})");
+
+            // Round all enemy positions
+            foreach (var enemy in state.Enemies)
+            {
+                if (enemy.IsAlive)
+                {
+                    enemy.Position.X = (float)Math.Round(enemy.Position.X);
+                    enemy.Position.Y = (float)Math.Round(enemy.Position.Y);
+                    Console.WriteLine($"Enemy position rounded to ({enemy.Position.X}, {enemy.Position.Y})");
+                }
+            }
+        }
     }
 
     private void HandleMovementInput(GameState state)

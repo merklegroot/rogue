@@ -38,6 +38,7 @@ public class InstructionsPresenter : IInstructionsPresenter
         instructions.Add("(C) to spawn charger");
         instructions.Add("(Z) to toggle enemy spawning");
         instructions.Add("(M) to toggle enemy movement");
+        instructions.Add("(R) to round positions to nearest integer");
 
         // Join instructions with commas and "and" before the last one
         string instructionsText = string.Join(", ", instructions.Take(instructions.Count - 1)) + 
