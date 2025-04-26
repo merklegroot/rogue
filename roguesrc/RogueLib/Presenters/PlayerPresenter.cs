@@ -1,6 +1,7 @@
 using Raylib_cs;
 using RogueLib.Constants;
 using RogueLib.State;
+using System.Numerics;
 
 namespace RogueLib.Presenters;
 
@@ -32,7 +33,39 @@ public class PlayerPresenter : IPlayerPresenter
 
         var currentPlayerColor = GetCurrentPlayerColor(state);
 
-        _drawUtil.DrawCharacter(rayConnection, 1, playerScreenX, playerScreenY, currentPlayerColor, false, wobbleScale);
+        // Draw the player using SmileyBorderTexture and SmileyNeutralTexture
+        float scaledWidth = ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+        float scaledHeight = ScreenConstants.CharHeight * ScreenConstants.DisplayScale * wobbleScale;
+        
+        // Calculate the difference in height to keep bottom anchored
+        float heightDiff = scaledHeight - (ScreenConstants.CharHeight * ScreenConstants.DisplayScale);
+        
+        // Adjust Y position to keep bottom anchored
+        float adjustedY = playerScreenY - heightDiff;
+
+        // Draw the border texture
+        Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
+        Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
+
+        Raylib.DrawTexturePro(
+            rayConnection.SmileyBorderTexture,
+            source,
+            dest,
+            Vector2.Zero,
+            0,
+            currentPlayerColor
+        );
+
+        // Draw the neutral texture on top
+        source = new(0, 0, rayConnection.SmileyNeutralTexture.Width, rayConnection.SmileyNeutralTexture.Height);
+        Raylib.DrawTexturePro(
+            rayConnection.SmileyNeutralTexture,
+            source,
+            dest,
+            Vector2.Zero,
+            0,
+            currentPlayerColor
+        );
     }
 
     private Color GetCurrentPlayerColor(GameState state)
