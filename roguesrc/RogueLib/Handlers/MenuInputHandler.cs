@@ -11,8 +11,6 @@ public interface IMenuInputHandler
 
 public class MenuInputHandler : IMenuInputHandler
 {
-    private bool _shouldEnableCrtEffect = true;
-
     public void Handle(GameState state)
     {
         while (state.KeyEvents.Count > 0)
@@ -36,7 +34,7 @@ public class MenuInputHandler : IMenuInputHandler
             // Toggle CRT effect with T key
             if (key == KeyboardKey.T)
             {
-                _shouldEnableCrtEffect = !_shouldEnableCrtEffect;
+                state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect;
                 break;
             }
         }

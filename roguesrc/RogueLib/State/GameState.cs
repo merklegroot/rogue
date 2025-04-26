@@ -66,4 +66,6 @@ public class GameState
     public CrossbowState CrossbowState { get; set; } = new CrossbowState();
 
     public HealthPickupState HealthPickupState { get; set; } = new HealthPickupState();
+
+    public bool ShouldEnableCrtEffect { get; set; } = true;  // Default to true
 }

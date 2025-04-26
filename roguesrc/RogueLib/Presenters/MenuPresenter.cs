@@ -8,6 +8,7 @@ namespace RogueLib.Presenters;
 public interface IMenuPresenter
 {
     void Draw(IRayConnection rayConnection);
+    void HandleMouseClick(Vector2 mousePosition, GameState state);
 }
 
 public class MenuPresenter : IMenuPresenter
@@ -18,6 +19,7 @@ public class MenuPresenter : IMenuPresenter
     private const int VersionYOffset = 40;
     private const int DecorativeElementYOffset = 10;
     private readonly IDrawUtil _drawUtil;
+    private List<(Rectangle bounds, Action<GameState> action)> _menuItems = new();
 
     public MenuPresenter(IDrawUtil drawUtil)
     {
@@ -26,6 +28,9 @@ public class MenuPresenter : IMenuPresenter
 
     public void Draw(IRayConnection rayConnection)
     {
+        // Clear previous menu items
+        _menuItems.Clear();
+
         // Calculate screen dimensions
         var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         var screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
@@ -49,15 +54,34 @@ public class MenuPresenter : IMenuPresenter
         // Draw menu options
         var menuStartY = lineY + 30;
         
-        // Draw menu options with colored hotkeys
-        _drawUtil.DrawColoredHotkeyText(rayConnection, "Start (A)dventure", 
+        // Draw menu options with colored hotkeys and store their clickable areas
+        var adventureText = "Start (A)dventure";
+        var adventureSize = Raylib.MeasureTextEx(rayConnection.MenuFont, adventureText, ScreenConstants.MenuFontSize, 1);
+        _drawUtil.DrawColoredHotkeyText(rayConnection, adventureText, 
             centerX - 120, menuStartY);
-        _drawUtil.DrawColoredHotkeyText(rayConnection, "View (C)haracter Set", 
+        _menuItems.Add((new Rectangle(centerX - 120, menuStartY, adventureSize.X, adventureSize.Y), 
+            state => state.CurrentScreen = GameScreenEnum.Adventure));
+
+        var characterText = "View (C)haracter Set";
+        var characterSize = Raylib.MeasureTextEx(rayConnection.MenuFont, characterText, ScreenConstants.MenuFontSize, 1);
+        _drawUtil.DrawColoredHotkeyText(rayConnection, characterText, 
             centerX - 120, menuStartY + MenuSpacing);
-        _drawUtil.DrawColoredHotkeyText(rayConnection, "(T)oggle CRT Effect", 
+        _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing, characterSize.X, characterSize.Y), 
+            state => state.CurrentScreen = GameScreenEnum.CharacterSet));
+
+        var crtText = "(T)oggle CRT Effect";
+        var crtSize = Raylib.MeasureTextEx(rayConnection.MenuFont, crtText, ScreenConstants.MenuFontSize, 1);
+        _drawUtil.DrawColoredHotkeyText(rayConnection, crtText, 
             centerX - 120, menuStartY + MenuSpacing * 2);
-        _drawUtil.DrawColoredHotkeyText(rayConnection, "e(X)it Game", 
+        _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing * 2, crtSize.X, crtSize.Y), 
+            state => state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect));
+
+        var exitText = "e(X)it Game";
+        var exitSize = Raylib.MeasureTextEx(rayConnection.MenuFont, exitText, ScreenConstants.MenuFontSize, 1);
+        _drawUtil.DrawColoredHotkeyText(rayConnection, exitText, 
             centerX - 120, menuStartY + MenuSpacing * 3);
+        _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing * 3, exitSize.X, exitSize.Y), 
+            state => Raylib.CloseWindow()));
         
         // Draw version number
         var version = "v0.1 Alpha";
@@ -67,5 +91,17 @@ public class MenuPresenter : IMenuPresenter
         // Draw decorative element
         _drawUtil.DrawCharacter(rayConnection, 2, 
             centerX - 10, menuStartY + MenuSpacing * 4 + DecorativeElementYOffset, Color.White);
+    }
+
+    public void HandleMouseClick(Vector2 mousePosition, GameState state)
+    {
+        foreach (var (bounds, action) in _menuItems)
+        {
+            if (Raylib.CheckCollisionPointRec(mousePosition, bounds))
+            {
+                action(state);
+                break;
+            }
+        }
     }
 } 

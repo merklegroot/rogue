@@ -150,6 +150,12 @@ public class ScreenPresenter : IScreenPresenter
             case GameScreenEnum.Menu:
                 _menuPresenter.Draw(rayConnection);
                 _menuInputHandler.Handle(state);
+                // Handle mouse clicks on menu
+                if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+                {
+                    var mousePosition = Raylib.GetMousePosition();
+                    _menuPresenter.HandleMouseClick(mousePosition, state);
+                }
                 break;
 
             case GameScreenEnum.CharacterSet:
