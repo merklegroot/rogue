@@ -18,6 +18,8 @@ public class MenuPresenter : IMenuPresenter
     private const int LineHeight = 2;
     private const int VersionYOffset = 40;
     private const int DecorativeElementYOffset = 10;
+    private const int BorderPadding = 10;
+    private const int BorderThickness = 2;
     private readonly IDrawUtil _drawUtil;
     private List<(Rectangle bounds, Action<GameState> action, string text)> _menuItems = new();
 
@@ -54,33 +56,50 @@ public class MenuPresenter : IMenuPresenter
         // Draw menu options
         var menuStartY = lineY + 30;
         
+        // Find the widest menu item text
+        var menuTexts = new[] { "Start (A)dventure", "View (C)haracter Set", "(T)oggle CRT Effect", "e(X)it Game" };
+        var maxWidth = menuTexts.Max(text => Raylib.MeasureTextEx(rayConnection.MenuFont, text, ScreenConstants.MenuFontSize, 1).X);
+        var menuItemWidth = (int)maxWidth + (BorderPadding * 2);
+        
         // Draw menu options with colored hotkeys and store their clickable areas
         var adventureText = "Start (A)dventure";
         var adventureSize = Raylib.MeasureTextEx(rayConnection.MenuFont, adventureText, ScreenConstants.MenuFontSize, 1);
+        var adventureX = centerX - menuItemWidth / 2;
         _drawUtil.DrawColoredHotkeyText(rayConnection, adventureText, 
-            centerX - 120, menuStartY);
-        _menuItems.Add((new Rectangle(centerX - 120, menuStartY, adventureSize.X, adventureSize.Y), 
+            adventureX + BorderPadding, menuStartY);
+        Raylib.DrawRectangleLines((int)adventureX, (int)(menuStartY - BorderPadding), 
+            menuItemWidth, (int)(adventureSize.Y + (BorderPadding * 2)), Color.Gold);
+        _menuItems.Add((new Rectangle(adventureX, menuStartY - BorderPadding, menuItemWidth, adventureSize.Y + (BorderPadding * 2)), 
             state => state.CurrentScreen = GameScreenEnum.Adventure, adventureText));
 
         var characterText = "View (C)haracter Set";
         var characterSize = Raylib.MeasureTextEx(rayConnection.MenuFont, characterText, ScreenConstants.MenuFontSize, 1);
+        var characterX = centerX - menuItemWidth / 2;
         _drawUtil.DrawColoredHotkeyText(rayConnection, characterText, 
-            centerX - 120, menuStartY + MenuSpacing);
-        _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing, characterSize.X, characterSize.Y), 
+            characterX + BorderPadding, menuStartY + MenuSpacing);
+        Raylib.DrawRectangleLines((int)characterX, (int)(menuStartY + MenuSpacing - BorderPadding), 
+            menuItemWidth, (int)(characterSize.Y + (BorderPadding * 2)), Color.Gold);
+        _menuItems.Add((new Rectangle(characterX, menuStartY + MenuSpacing - BorderPadding, menuItemWidth, characterSize.Y + (BorderPadding * 2)), 
             state => state.CurrentScreen = GameScreenEnum.CharacterSet, characterText));
 
         var crtText = "(T)oggle CRT Effect";
         var crtSize = Raylib.MeasureTextEx(rayConnection.MenuFont, crtText, ScreenConstants.MenuFontSize, 1);
+        var crtX = centerX - menuItemWidth / 2;
         _drawUtil.DrawColoredHotkeyText(rayConnection, crtText, 
-            centerX - 120, menuStartY + MenuSpacing * 2);
-        _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing * 2, crtSize.X, crtSize.Y), 
+            crtX + BorderPadding, menuStartY + MenuSpacing * 2);
+        Raylib.DrawRectangleLines((int)crtX, (int)(menuStartY + MenuSpacing * 2 - BorderPadding), 
+            menuItemWidth, (int)(crtSize.Y + (BorderPadding * 2)), Color.Gold);
+        _menuItems.Add((new Rectangle(crtX, menuStartY + MenuSpacing * 2 - BorderPadding, menuItemWidth, crtSize.Y + (BorderPadding * 2)), 
             state => state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect, crtText));
 
         var exitText = "e(X)it Game";
         var exitSize = Raylib.MeasureTextEx(rayConnection.MenuFont, exitText, ScreenConstants.MenuFontSize, 1);
+        var exitX = centerX - menuItemWidth / 2;
         _drawUtil.DrawColoredHotkeyText(rayConnection, exitText, 
-            centerX - 120, menuStartY + MenuSpacing * 3);
-        _menuItems.Add((new Rectangle(centerX - 120, menuStartY + MenuSpacing * 3, exitSize.X, exitSize.Y), 
+            exitX + BorderPadding, menuStartY + MenuSpacing * 3);
+        Raylib.DrawRectangleLines((int)exitX, (int)(menuStartY + MenuSpacing * 3 - BorderPadding), 
+            menuItemWidth, (int)(exitSize.Y + (BorderPadding * 2)), Color.Gold);
+        _menuItems.Add((new Rectangle(exitX, menuStartY + MenuSpacing * 3 - BorderPadding, menuItemWidth, exitSize.Y + (BorderPadding * 2)), 
             state => Raylib.CloseWindow(), exitText));
         
         // Draw version number
