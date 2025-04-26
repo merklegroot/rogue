@@ -25,6 +25,6 @@ public static class GameConstants
     public const float ChargerSpeed = 0.3f; // Charger moves faster than regular enemies
     public const float KnockbackDuration = 0.08f;
     public const float KnockbackDistance = 0.5f;
-    public const float EnemySpeed = 0.5f;  // Time between enemy movements
-    public const float EnemyMoveSpeed = 0.5f;  // Distance enemies move per step
+    public const float EnemyMoveFrequency = 0.5f;  // Time between enemy movements
+    public const float EnemyMoveSpeed = 3.0f;  // Distance enemies move per step
 }
