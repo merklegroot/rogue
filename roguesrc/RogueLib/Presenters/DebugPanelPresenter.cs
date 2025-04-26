@@ -46,6 +46,11 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             {
                 Contents = $"Player at ({state.PlayerPosition.X:F2}, {state.PlayerPosition.Y:F2})",
                 Color = Color.Yellow
+            },
+            new LineInfo
+            {
+                Contents = $"Action Direction: {state.ActionDirection}",
+                Color = Color.Yellow
             }
         };
 
