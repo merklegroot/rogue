@@ -1424,6 +1424,54 @@ public class ScreenPresenter : IScreenPresenter
                 }
             }
         }
+
+        // Check for collision with spinners
+        foreach (var spinner in state.Spinners)
+        {
+            if (!spinner.IsAlive || spinner.IsMoving)
+                continue;
+
+            // Calculate distance from player to spinner
+            float dx = spinner.X - state.PlayerPosition.X;
+            float dy = spinner.Y - state.PlayerPosition.Y;
+            float distance = MathF.Sqrt(dx * dx + dy * dy);
+
+            // Check if spinner is within sword reach
+            if (distance <= state.SwordState.SwordReach)
+            {
+                // Check if spinner is in the correct direction
+                bool isInDirection = false;
+                switch (state.ActionDirection)
+                {
+                    case Direction.Left:
+                        isInDirection = dx < 0 && Math.Abs(dx) > Math.Abs(dy);
+                        break;
+                    case Direction.Right:
+                        isInDirection = dx > 0 && Math.Abs(dx) > Math.Abs(dy);
+                        break;
+                    case Direction.Up:
+                        isInDirection = dy < 0 && Math.Abs(dy) > Math.Abs(dx);
+                        break;
+                    case Direction.Down:
+                        isInDirection = dy > 0 && Math.Abs(dy) > Math.Abs(dx);
+                        break;
+                }
+
+                if (isInDirection)
+                {
+                    spinner.IsMoving = true;
+                    // Set direction angle based on sword swing
+                    switch (state.ActionDirection)
+                    {
+                        case Direction.Left: spinner.DirectionAngle = MathF.PI; break;
+                        case Direction.Right: spinner.DirectionAngle = 0f; break;
+                        case Direction.Up: spinner.DirectionAngle = -MathF.PI / 2f; break;
+                        case Direction.Down: spinner.DirectionAngle = MathF.PI / 2f; break;
+                    }
+                    spinner.MoveSpeed = 8.0f; // Launch speed
+                }
+            }
+        }
     }
 
     // Add this new method to ensure player spawns on a walkable tile
