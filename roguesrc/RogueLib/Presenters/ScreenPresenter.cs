@@ -390,6 +390,20 @@ public class ScreenPresenter : IScreenPresenter
         if (leftPressed) state.VelocityX -= moveAmount;
         if (rightPressed) state.VelocityX += moveAmount;
 
+        // --- Gamepad analog stick movement ---
+        if (Raylib.IsGamepadAvailable(0))
+        {
+            float axisX = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftX);
+            float axisY = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftY);
+            // Deadzone to prevent drift
+            float deadzone = 0.2f;
+            if (Math.Abs(axisX) > deadzone || Math.Abs(axisY) > deadzone)
+            {
+                state.VelocityX += axisX * moveAmount * 1.5f; // 1.5x for analog sensitivity
+                state.VelocityY += axisY * moveAmount * 1.5f;
+            }
+        }
+
         // Apply friction
         state.VelocityX *= GameConstants.PlayerFriction;
         state.VelocityY *= GameConstants.PlayerFriction;
