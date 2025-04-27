@@ -44,8 +44,11 @@ public class PlayerPresenter : IPlayerPresenter
         // Adjust Y position to keep bottom anchored
         float adjustedY = playerScreenY - heightDiff;
 
-        // Apply shear transformation for left/right movement
-        if (state.ActionDirection == Direction.Left || state.ActionDirection == Direction.Right)
+        // Calculate if player is moving based on velocity
+        bool isMoving = Math.Abs(state.VelocityX) > 0.1f || Math.Abs(state.VelocityY) > 0.1f;
+
+        // Apply shear transformation for left/right movement only when moving
+        if (isMoving && (state.ActionDirection == Direction.Left || state.ActionDirection == Direction.Right))
         {
             // Calculate shear amount (reversed direction)
             float shearAmount = state.ActionDirection == Direction.Left ? 0.3f : -0.3f;
@@ -98,7 +101,7 @@ public class PlayerPresenter : IPlayerPresenter
         }
         else
         {
-            // Draw without shear for up/down movement
+            // Draw without shear for up/down movement or when not moving
             Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
             Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
             Raylib.DrawTexturePro(
