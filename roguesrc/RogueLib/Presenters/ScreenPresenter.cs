@@ -320,6 +320,8 @@ public class ScreenPresenter : IScreenPresenter
         bool isGamepadDebugToggle = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonMenu);
         // Gamepad B button (button 1) acts as ESC
         bool isGamepadBPressed = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonB);
+        // Gamepad Y button (button Y) acts as X on menu        
+        bool isGamepadYPressed = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonY);
 
         // Toggle debug panel with H or gamepad menu button
         if ((key == KeyboardKey.H) || isGamepadDebugToggle)
@@ -331,6 +333,12 @@ public class ScreenPresenter : IScreenPresenter
         if (key == KeyboardKey.Escape || isGamepadBPressed)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
+            return;
+        }
+        // Y button acts as X on menu (exit game)
+        if (state.CurrentScreen == GameScreenEnum.Menu && (key == KeyboardKey.X || isGamepadYPressed))
+        {
+            Raylib.CloseWindow();
             return;
         }
         

@@ -15,28 +15,39 @@ public class MenuInputHandler : IMenuInputHandler
     {
         while (state.KeyEvents.Count > 0)
         {
-            var key = state.KeyEvents.Dequeue();
-            if (key == KeyboardKey.C)
-            {
-                state.CurrentScreen = GameScreenEnum.CharacterSet;
-                break;
-            }
-            if (key == KeyboardKey.A)
-            {
-                state.CurrentScreen = GameScreenEnum.Adventure;
-                break;
-            }
-            if (key == KeyboardKey.X)
-            {
-                Raylib.CloseWindow();
-                break;
-            }
-            // Toggle CRT effect with T key
-            if (key == KeyboardKey.T)
-            {
-                state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect;
-                break;
-            }
+            HandleInput(state);
+        }
+
+        HandleInput(state);
+    }
+
+    private void HandleInput(GameState state)
+    {
+        bool isGamepadYPressed = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonY);
+
+        var key = state.KeyEvents.Any() ? state.KeyEvents.Dequeue() : (KeyboardKey?)null;
+
+
+        if (key == KeyboardKey.C)
+        {
+            state.CurrentScreen = GameScreenEnum.CharacterSet;
+            return;
+        }
+        if (key == KeyboardKey.A)
+        {
+            state.CurrentScreen = GameScreenEnum.Adventure;
+            return;
+        }
+        if (key == KeyboardKey.X || isGamepadYPressed)
+        {
+            Raylib.CloseWindow();
+            return;
+        }
+        // Toggle CRT effect with T key
+        if (key == KeyboardKey.T)
+        {
+            state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect;
+            return;
         }
     }
 } 
