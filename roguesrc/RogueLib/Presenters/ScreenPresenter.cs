@@ -308,18 +308,21 @@ public class ScreenPresenter : IScreenPresenter
 
     private void HandleNextInput(GameState state)
     {
-        var key = state.KeyEvents.Dequeue();
+        var key =
+            state.KeyEvents.Any()
+            ? state.KeyEvents.Dequeue()
+            : (KeyboardKey?)null;
 
         // Gamepad X button (left face) acts as attack
-        bool gamepadAttack = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonX);
-
+        bool isGamepadAttackPressed = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonDown(0, (GamepadButton)SteamDeckConstants.ButtonX);
+        
         if (key == KeyboardKey.Escape)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
             return;
         }
         
-        if ((key == KeyboardKey.Space || gamepadAttack) && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
+        if ((key == KeyboardKey.Space || isGamepadAttackPressed) && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
         {
             state.SwordState.IsSwordSwinging = true;
             state.SwordState.SwordSwingTime = 0;
@@ -494,6 +497,8 @@ public class ScreenPresenter : IScreenPresenter
         {
             HandleNextInput(state);
         }
+        
+        HandleNextInput(state);
 
         HandleMovementInput(state);
 
