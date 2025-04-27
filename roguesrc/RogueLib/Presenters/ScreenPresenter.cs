@@ -304,13 +304,16 @@ public class ScreenPresenter : IScreenPresenter
     {
         var key = state.KeyEvents.Dequeue();
 
+        // Gamepad X button (left face) acts as attack
+        bool gamepadAttack = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (Raylib_cs.GamepadButton)3);
+
         if (key == KeyboardKey.Escape)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
             return;
         }
         
-        if (key == KeyboardKey.Space && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
+        if ((key == KeyboardKey.Space || gamepadAttack) && !state.SwordState.IsSwordSwinging && !state.SwordState.SwordOnCooldown)
         {
             state.SwordState.IsSwordSwinging = true;
             state.SwordState.SwordSwingTime = 0;
