@@ -669,7 +669,23 @@ public class ScreenPresenter : IScreenPresenter
                 
                 break;
             }
-        
+        }
+        // Spinner collision (bigger radius)
+        foreach (var spinner in state.Spinners)
+        {
+            if (!spinner.IsAlive)
+                continue;
+            float dx = spinner.X - state.PlayerPosition.X;
+            float dy = spinner.Y - state.PlayerPosition.Y;
+            float distance = MathF.Sqrt(dx * dx + dy * dy);
+            float spinnerCollisionRadius = 0.9f;
+            if (distance < spinnerCollisionRadius)
+            {
+                state.CurrentHealth--;
+                Console.WriteLine($"Player hit by spinner! Health: {state.CurrentHealth}");
+                ApplyKnockback(state, new Vector2(spinner.X, spinner.Y));
+                break;
+            }
         }
     }
 
@@ -1464,8 +1480,11 @@ public class ScreenPresenter : IScreenPresenter
             float dy = spinner.Y - state.PlayerPosition.Y;
             float distance = MathF.Sqrt(dx * dx + dy * dy);
 
-            // Check if spinner is within sword reach
-            if (distance <= state.SwordState.SwordReach)
+            // Use a larger collision radius for spinner
+            float spinnerCollisionRadius = 0.9f; // Larger than regular enemy (0.5)
+
+            // Check if spinner is within sword reach (for sword collision)
+            if (distance <= state.SwordState.SwordReach + spinnerCollisionRadius - 0.5f) // adjust for larger size
             {
                 // Check if spinner is in the correct direction
                 bool isInDirection = false;
