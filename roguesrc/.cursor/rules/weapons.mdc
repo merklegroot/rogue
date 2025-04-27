@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+ Weapons List Rule:
+
+- sword
+- crossbow
+- flintlock
+- boomstick
+
+Add new weapons to this list as they are introduced to the game. Each weapon should have unique mechanics or characteristics.
