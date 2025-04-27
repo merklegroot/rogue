@@ -232,7 +232,8 @@ public class ScreenPresenter : IScreenPresenter
         DrawGoldItems(rayConnection, state);
         DrawHealthPickups(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
-        _debugPanelPresenter.Draw(rayConnection, state);
+        if (state.ShowDebugPanel)
+            _debugPanelPresenter.Draw(rayConnection, state);
         _explosionPresenter.Draw(rayConnection, state);
         _swordPresenter.Draw(rayConnection, state);
         _flyingGoldPresenter.Draw(rayConnection, state);
@@ -315,8 +316,19 @@ public class ScreenPresenter : IScreenPresenter
 
         // Gamepad X button (left face) acts as attack
         bool isGamepadAttackPressed = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonDown(0, (GamepadButton)SteamDeckConstants.ButtonX);
+        // Gamepad button for debug toggle
+        bool isGamepadDebugToggle = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonMenu);
+        // Gamepad B button (button 1) acts as ESC
+        bool isGamepadBPressed = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonB);
+
+        // Toggle debug panel with H or gamepad menu button
+        if ((key == KeyboardKey.H) || isGamepadDebugToggle)
+        {
+            state.ShowDebugPanel = !state.ShowDebugPanel;
+        }
         
-        if (key == KeyboardKey.Escape)
+        // ESC or B button returns to menu
+        if (key == KeyboardKey.Escape || isGamepadBPressed)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
             return;
