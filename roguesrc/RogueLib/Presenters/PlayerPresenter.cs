@@ -44,49 +44,62 @@ public class PlayerPresenter : IPlayerPresenter
         // Adjust Y position to keep bottom anchored
         float adjustedY = playerScreenY - heightDiff;
 
-        // Draw the border texture
-        Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
-        Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
-
-        Raylib.DrawTexturePro(
-            rayConnection.SmileyBorderTexture,
-            source,
-            dest,
-            Vector2.Zero,
-            0,
-            currentPlayerColor
-        );
-
-        // Calculate offset for neutral texture based on ActionDirection
-        float offsetX = 0;
-        float offsetY = 0;
-        switch (state.ActionDirection)
+        // Apply shear transformation for left/right movement
+        if (state.ActionDirection == Direction.Left || state.ActionDirection == Direction.Right)
         {
-            case Direction.Left:
-                offsetX = -FaceMovementAmount;
-                break;
-            case Direction.Right:
-                offsetX = FaceMovementAmount;
-                break;
-            case Direction.Up:
-                offsetY = -FaceMovementAmount;
-                break;
-            case Direction.Down:
-                offsetY = FaceMovementAmount;
-                break;
-        }
+            // Calculate shear amount
+            float shearAmount = state.ActionDirection == Direction.Left ? -0.2f : 0.2f;
+            
+            // Draw the border texture with shear
+            Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
+            Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
+            
+            // Draw the border texture
+            Raylib.DrawTexturePro(
+                rayConnection.SmileyBorderTexture,
+                source,
+                dest,
+                new Vector2(scaledWidth/2, scaledHeight/2),
+                shearAmount * 10,  // Convert shear to rotation angle
+                currentPlayerColor
+            );
 
-        // Draw the neutral texture on top with offset
-        source = new(0, 0, rayConnection.SmileyNeutralTexture.Width, rayConnection.SmileyNeutralTexture.Height);
-        dest = new(playerScreenX + offsetX, adjustedY + offsetY, scaledWidth, scaledHeight);
-        Raylib.DrawTexturePro(
-            rayConnection.SmileyNeutralTexture,
-            source,
-            dest,
-            Vector2.Zero,
-            0,
-            currentPlayerColor
-        );
+            // Draw the neutral texture
+            Raylib.DrawTexturePro(
+                rayConnection.SmileyNeutralTexture,
+                source,
+                dest,
+                new Vector2(scaledWidth/2, scaledHeight/2),
+                shearAmount * 10,  // Convert shear to rotation angle
+                currentPlayerColor
+            );
+        }
+        else
+        {
+            // Draw without shear for up/down movement
+            Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
+            Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
+            Raylib.DrawTexturePro(
+                rayConnection.SmileyBorderTexture,
+                source,
+                dest,
+                Vector2.Zero,
+                0,
+                currentPlayerColor
+            );
+
+            // Draw the neutral texture
+            source = new(0, 0, rayConnection.SmileyNeutralTexture.Width, rayConnection.SmileyNeutralTexture.Height);
+            dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
+            Raylib.DrawTexturePro(
+                rayConnection.SmileyNeutralTexture,
+                source,
+                dest,
+                Vector2.Zero,
+                0,
+                currentPlayerColor
+            );
+        }
     }
 
     private Color GetCurrentPlayerColor(GameState state)
