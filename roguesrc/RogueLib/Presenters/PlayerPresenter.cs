@@ -48,31 +48,53 @@ public class PlayerPresenter : IPlayerPresenter
         if (state.ActionDirection == Direction.Left || state.ActionDirection == Direction.Right)
         {
             // Calculate shear amount
-            float shearAmount = state.ActionDirection == Direction.Left ? -0.2f : 0.2f;
+            float shearAmount = state.ActionDirection == Direction.Left ? -0.3f : 0.3f;
             
             // Draw the border texture with shear
-            Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
-            Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
-            
-            // Draw the border texture
-            Raylib.DrawTexturePro(
-                rayConnection.SmileyBorderTexture,
-                source,
-                dest,
-                new Vector2(scaledWidth/2, scaledHeight/2),
-                shearAmount * 10,  // Convert shear to rotation angle
-                currentPlayerColor
-            );
+            for (int y = 0; y < scaledHeight; y++)
+            {
+                float offset = shearAmount * y;
+                // Map the current y position to the texture's height
+                int sourceY = (int)((float)y / scaledHeight * rayConnection.SmileyBorderTexture.Height);
+                Rectangle source = new(0, sourceY, rayConnection.SmileyBorderTexture.Width, 1);
+                Rectangle dest = new(playerScreenX + offset, adjustedY + y, scaledWidth, 1);
+                
+                // Calculate the destination width to maintain aspect ratio
+                float aspectRatio = (float)rayConnection.SmileyBorderTexture.Width / rayConnection.SmileyBorderTexture.Height;
+                dest.Width = scaledHeight * aspectRatio;
+                
+                Raylib.DrawTexturePro(
+                    rayConnection.SmileyBorderTexture,
+                    source,
+                    dest,
+                    Vector2.Zero,
+                    0,
+                    currentPlayerColor
+                );
+            }
 
-            // Draw the neutral texture
-            Raylib.DrawTexturePro(
-                rayConnection.SmileyNeutralTexture,
-                source,
-                dest,
-                new Vector2(scaledWidth/2, scaledHeight/2),
-                shearAmount * 10,  // Convert shear to rotation angle
-                currentPlayerColor
-            );
+            // Draw the neutral texture with shear
+            for (int y = 0; y < scaledHeight; y++)
+            {
+                float offset = shearAmount * y;
+                // Map the current y position to the texture's height
+                int sourceY = (int)((float)y / scaledHeight * rayConnection.SmileyNeutralTexture.Height);
+                Rectangle source = new(0, sourceY, rayConnection.SmileyNeutralTexture.Width, 1);
+                Rectangle dest = new(playerScreenX + offset, adjustedY + y, scaledWidth, 1);
+                
+                // Calculate the destination width to maintain aspect ratio
+                float aspectRatio = (float)rayConnection.SmileyNeutralTexture.Width / rayConnection.SmileyNeutralTexture.Height;
+                dest.Width = scaledHeight * aspectRatio;
+                
+                Raylib.DrawTexturePro(
+                    rayConnection.SmileyNeutralTexture,
+                    source,
+                    dest,
+                    Vector2.Zero,
+                    0,
+                    currentPlayerColor
+                );
+            }
         }
         else
         {
