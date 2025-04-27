@@ -112,6 +112,9 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         spinner.SpinAngle += spinSpeed * frameTime;
         if (spinner.SpinAngle > MathF.PI * 2) spinner.SpinAngle -= MathF.PI * 2;
 
+        if (!spinner.IsMoving)
+            return;
+
         // Move in current direction
         float dx = MathF.Cos(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
         float dy = MathF.Sin(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
@@ -122,27 +125,8 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         bool hitWall = false;
         if (!_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(newX), (int)MathF.Floor(newY)))
         {
-            // Reflect direction
-            // Try horizontal bounce
-            float testX = spinner.X + dx;
-            float testY = spinner.Y;
-            if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(testX), (int)MathF.Floor(testY)))
-            {
-                spinner.DirectionAngle = MathF.PI - spinner.DirectionAngle;
-            }
-            // Try vertical bounce
-            else if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(spinner.X), (int)MathF.Floor(spinner.Y + dy)))
-            {
-                spinner.DirectionAngle = -spinner.DirectionAngle;
-            }
-            else
-            {
-                // Reverse direction
-                spinner.DirectionAngle += MathF.PI;
-            }
-            // Normalize
-            if (spinner.DirectionAngle > MathF.PI * 2) spinner.DirectionAngle -= MathF.PI * 2;
-            if (spinner.DirectionAngle < 0) spinner.DirectionAngle += MathF.PI * 2;
+            // Stop moving when hitting a wall
+            spinner.IsMoving = false;
             hitWall = true;
         }
         if (!hitWall)
