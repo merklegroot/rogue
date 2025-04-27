@@ -1,3 +1,8 @@
+---
+description: Cedilla mob rule
+globs: 
+alwaysApply: false
+---
 The Cedilla (Regular Enemy) Rules:
 - DO NOT modify movement pattern (random 8-direction)
 - DO NOT modify spawn conditions (floor tiles, 2 per chunk)
