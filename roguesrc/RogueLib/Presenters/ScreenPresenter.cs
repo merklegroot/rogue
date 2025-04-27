@@ -684,6 +684,10 @@ public class ScreenPresenter : IScreenPresenter
                 state.CurrentHealth--;
                 Console.WriteLine($"Player hit by spinner! Health: {state.CurrentHealth}");
                 ApplyKnockback(state, new Vector2(spinner.X, spinner.Y));
+                // Set spinner moving away from player
+                spinner.IsMoving = true;
+                spinner.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
+                spinner.MoveSpeed = 8.0f;
                 break;
             }
         }
@@ -1507,14 +1511,8 @@ public class ScreenPresenter : IScreenPresenter
                 if (isInDirection)
                 {
                     spinner.IsMoving = true;
-                    // Set direction angle based on sword swing
-                    switch (state.ActionDirection)
-                    {
-                        case Direction.Left: spinner.DirectionAngle = MathF.PI; break;
-                        case Direction.Right: spinner.DirectionAngle = 0f; break;
-                        case Direction.Up: spinner.DirectionAngle = -MathF.PI / 2f; break;
-                        case Direction.Down: spinner.DirectionAngle = MathF.PI / 2f; break;
-                    }
+                    // Set direction angle away from player
+                    spinner.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
                     spinner.MoveSpeed = 8.0f; // Launch speed
                 }
             }
