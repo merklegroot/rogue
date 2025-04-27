@@ -32,6 +32,10 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         {
             HandleEnemy(state, enemy, frameTime);
         }
+        foreach (var spinner in state.Spinners)
+        {
+            HandleSpinner(state, spinner, frameTime);
+        }
     }
 
     private void HandleEnemy(GameState state, Enemy enemy, float frameTime)
@@ -96,6 +100,56 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
 
         HandleCollisionWithPlayer(state, enemy);
         
+    }
+
+    private void HandleSpinner(GameState state, SpinnerEnemyState spinner, float frameTime)
+    {
+        if (!spinner.IsAlive)
+            return;
+
+        // Spin the blades
+        float spinSpeed = 4.0f; // radians per second
+        spinner.SpinAngle += spinSpeed * frameTime;
+        if (spinner.SpinAngle > MathF.PI * 2) spinner.SpinAngle -= MathF.PI * 2;
+
+        // Move in current direction
+        float dx = MathF.Cos(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
+        float dy = MathF.Sin(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
+        float newX = spinner.X + dx;
+        float newY = spinner.Y + dy;
+
+        // Bounce off walls (non-walkable tiles)
+        bool hitWall = false;
+        if (!_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(newX), (int)MathF.Floor(newY)))
+        {
+            // Reflect direction
+            // Try horizontal bounce
+            float testX = spinner.X + dx;
+            float testY = spinner.Y;
+            if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(testX), (int)MathF.Floor(testY)))
+            {
+                spinner.DirectionAngle = MathF.PI - spinner.DirectionAngle;
+            }
+            // Try vertical bounce
+            else if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(spinner.X), (int)MathF.Floor(spinner.Y + dy)))
+            {
+                spinner.DirectionAngle = -spinner.DirectionAngle;
+            }
+            else
+            {
+                // Reverse direction
+                spinner.DirectionAngle += MathF.PI;
+            }
+            // Normalize
+            if (spinner.DirectionAngle > MathF.PI * 2) spinner.DirectionAngle -= MathF.PI * 2;
+            if (spinner.DirectionAngle < 0) spinner.DirectionAngle += MathF.PI * 2;
+            hitWall = true;
+        }
+        if (!hitWall)
+        {
+            spinner.X = newX;
+            spinner.Y = newY;
+        }
     }
 
     private void HandleCollisionWithPlayer(GameState state, Enemy enemy)
