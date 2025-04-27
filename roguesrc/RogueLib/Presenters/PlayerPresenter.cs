@@ -47,6 +47,10 @@ public class PlayerPresenter : IPlayerPresenter
         // Calculate if player is moving based on velocity
         bool isMoving = Math.Abs(state.VelocityX) > 0.1f || Math.Abs(state.VelocityY) > 0.1f;
 
+        // Calculate the destination width to maintain aspect ratio
+        float aspectRatio = (float)rayConnection.SmileyBorderTexture.Width / rayConnection.SmileyBorderTexture.Height;
+        float destWidth = scaledHeight * aspectRatio * 0.7f; // Reduce width by 30%
+
         // Apply shear transformation for left/right movement only when moving
         if (isMoving && (state.ActionDirection == Direction.Left || state.ActionDirection == Direction.Right))
         {
@@ -60,11 +64,7 @@ public class PlayerPresenter : IPlayerPresenter
                 // Map the current y position to the texture's height
                 int sourceY = (int)((float)y / scaledHeight * rayConnection.SmileyBorderTexture.Height);
                 Rectangle source = new(0, sourceY, rayConnection.SmileyBorderTexture.Width, 1);
-                Rectangle dest = new(playerScreenX + offset, adjustedY + y, scaledWidth, 1);
-                
-                // Calculate the destination width to maintain aspect ratio
-                float aspectRatio = (float)rayConnection.SmileyBorderTexture.Width / rayConnection.SmileyBorderTexture.Height;
-                dest.Width = scaledHeight * aspectRatio;
+                Rectangle dest = new(playerScreenX + offset, adjustedY + y, destWidth, 1);
                 
                 Raylib.DrawTexturePro(
                     rayConnection.SmileyBorderTexture,
@@ -83,11 +83,7 @@ public class PlayerPresenter : IPlayerPresenter
                 // Map the current y position to the texture's height
                 int sourceY = (int)((float)y / scaledHeight * rayConnection.SmileyNeutralTexture.Height);
                 Rectangle source = new(0, sourceY, rayConnection.SmileyNeutralTexture.Width, 1);
-                Rectangle dest = new(playerScreenX + offset, adjustedY + y, scaledWidth, 1);
-                
-                // Calculate the destination width to maintain aspect ratio
-                float aspectRatio = (float)rayConnection.SmileyNeutralTexture.Width / rayConnection.SmileyNeutralTexture.Height;
-                dest.Width = scaledHeight * aspectRatio;
+                Rectangle dest = new(playerScreenX + offset, adjustedY + y, destWidth, 1);
                 
                 Raylib.DrawTexturePro(
                     rayConnection.SmileyNeutralTexture,
@@ -103,7 +99,7 @@ public class PlayerPresenter : IPlayerPresenter
         {
             // Draw without shear for up/down movement or when not moving
             Rectangle source = new(0, 0, rayConnection.SmileyBorderTexture.Width, rayConnection.SmileyBorderTexture.Height);
-            Rectangle dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
+            Rectangle dest = new(playerScreenX, adjustedY, destWidth, scaledHeight);
             Raylib.DrawTexturePro(
                 rayConnection.SmileyBorderTexture,
                 source,
@@ -115,7 +111,7 @@ public class PlayerPresenter : IPlayerPresenter
 
             // Draw the neutral texture
             source = new(0, 0, rayConnection.SmileyNeutralTexture.Width, rayConnection.SmileyNeutralTexture.Height);
-            dest = new(playerScreenX, adjustedY, scaledWidth, scaledHeight);
+            dest = new(playerScreenX, adjustedY, destWidth, scaledHeight);
             Raylib.DrawTexturePro(
                 rayConnection.SmileyNeutralTexture,
                 source,
