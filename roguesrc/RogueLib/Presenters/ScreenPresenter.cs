@@ -49,6 +49,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IExplosionPresenter _explosionPresenter;
     private readonly IMapPresenter _mapPresenter;
     private readonly IMapUtil _mapUtil;
+    private static readonly string BuildDateTime = "Built: " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " | " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // fallback if not replaced
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -155,6 +156,11 @@ public class ScreenPresenter : IScreenPresenter
                     var mousePosition = Raylib.GetMousePosition();
                     _menuPresenter.HandleMouseClick(mousePosition, state);
                 }
+                // Draw build date/time at the bottom right
+                int textWidth = Raylib.MeasureText(BuildDateTime, 18);
+                int screenWidth = Raylib.GetScreenWidth();
+                int screenHeight = Raylib.GetScreenHeight();
+                Raylib.DrawText(BuildDateTime, screenWidth - textWidth - 20, screenHeight - 40, 18, Color.Gray);
                 break;
 
             case GameScreenEnum.CharacterSet:
@@ -305,7 +311,7 @@ public class ScreenPresenter : IScreenPresenter
         var key = state.KeyEvents.Dequeue();
 
         // Gamepad X button (left face) acts as attack
-        bool gamepadAttack = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)3);
+        bool gamepadAttack = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)SteamDeckConstants.ButtonX);
 
         if (key == KeyboardKey.Escape)
         {
