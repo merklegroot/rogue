@@ -122,14 +122,42 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         float newY = spinner.Y + dy;
 
         // Bounce off walls (non-walkable tiles)
-        bool hitWall = false;
+        bool bounced = false;
         if (!_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(newX), (int)MathF.Floor(newY)))
         {
-            // Stop moving when hitting a wall
-            spinner.IsMoving = false;
-            hitWall = true;
+            // Try horizontal bounce
+            float testX = spinner.X + dx;
+            float testY = spinner.Y;
+            if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(testX), (int)MathF.Floor(testY)))
+            {
+                spinner.DirectionAngle = MathF.PI - spinner.DirectionAngle;
+                bounced = true;
+            }
+            // Try vertical bounce
+            else if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(spinner.X), (int)MathF.Floor(spinner.Y + dy)))
+            {
+                spinner.DirectionAngle = -spinner.DirectionAngle;
+                bounced = true;
+            }
+            else
+            {
+                // Reverse direction if stuck
+                spinner.DirectionAngle += MathF.PI;
+                bounced = true;
+            }
+            // Normalize
+            if (spinner.DirectionAngle > MathF.PI * 2) spinner.DirectionAngle -= MathF.PI * 2;
+            if (spinner.DirectionAngle < 0) spinner.DirectionAngle += MathF.PI * 2;
+            if (bounced)
+            {
+                // Move a small step in the new direction to avoid getting stuck
+                float step = 0.1f;
+                spinner.X += MathF.Cos(spinner.DirectionAngle) * step;
+                spinner.Y += MathF.Sin(spinner.DirectionAngle) * step;
+            }
+            return;
         }
-        if (!hitWall)
+        else
         {
             spinner.X = newX;
             spinner.Y = newY;
