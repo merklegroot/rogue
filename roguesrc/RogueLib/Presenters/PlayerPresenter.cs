@@ -47,8 +47,8 @@ public class PlayerPresenter : IPlayerPresenter
         // Apply shear transformation for left/right movement
         if (state.ActionDirection == Direction.Left || state.ActionDirection == Direction.Right)
         {
-            // Calculate shear amount
-            float shearAmount = state.ActionDirection == Direction.Left ? -0.3f : 0.3f;
+            // Calculate shear amount (reversed direction)
+            float shearAmount = state.ActionDirection == Direction.Left ? 0.3f : -0.3f;
             
             // Draw the border texture with shear
             for (int y = 0; y < scaledHeight; y++)
