@@ -76,6 +76,25 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             });
         }
 
+        // List currently pressed gamepad buttons
+        if (Raylib.IsGamepadAvailable(0))
+        {
+            var pressedButtons = new List<string>();
+            for (int i = 0; i < 16; i++) // Raylib supports up to 16 buttons
+            {
+                if (Raylib.IsGamepadButtonDown(0, (GamepadButton)i))
+                {
+                    pressedButtons.Add(i.ToString());
+                }
+            }
+            string pressed = pressedButtons.Count > 0 ? string.Join(", ", pressedButtons) : "none";
+            lines.Add(new LineInfo
+            {
+                Contents = $"Gamepad Buttons Down: {pressed}",
+                Color = Color.SkyBlue
+            });
+        }
+
         return lines;
     }
 } 

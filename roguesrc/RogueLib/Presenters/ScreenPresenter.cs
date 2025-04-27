@@ -305,7 +305,7 @@ public class ScreenPresenter : IScreenPresenter
         var key = state.KeyEvents.Dequeue();
 
         // Gamepad X button (left face) acts as attack
-        bool gamepadAttack = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (Raylib_cs.GamepadButton)3);
+        bool gamepadAttack = Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, (GamepadButton)3);
 
         if (key == KeyboardKey.Escape)
         {
