@@ -1,0 +1,18 @@
+The Charger Rules:
+- DO NOT modify movement pattern (direct to player)
+- DO NOT modify spawn conditions (map edges)
+- DO NOT modify combat stats (5 hits to kill, 2 damage)
+- DO NOT modify invincibility frames
+- DO NOT modify gold drops (3 items, 10-20 gold each)
+- DO NOT modify spawn trigger (20 regular kills)
+- DO NOT modify movement speed (0.3)
+
+Current implementation:
+- Moves directly toward player
+- Spawns at map edges
+- Moves faster (speed 0.3)
+- Takes 5 hits to kill
+- Deals 2 damage to player on collision
+- Has invincibility frames after being hit
+- Drops 3 gold items worth 10-20 gold each when killed
+- Spawns after killing 20 regular enemies 

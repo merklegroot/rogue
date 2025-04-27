@@ -1,0 +1,15 @@
+The Cedilla (Regular Enemy) Rules:
+- DO NOT modify movement pattern (random 8-direction)
+- DO NOT modify spawn conditions (floor tiles, 2 per chunk)
+- DO NOT modify combat stats (1 hit to kill, 1 damage)
+- DO NOT modify spawn timing (1.0 seconds)
+- DO NOT modify movement speed (3.0)
+
+Current implementation:
+- Moves randomly in 8 directions (including diagonals)
+- Spawns on floor tiles ('.')
+- Limited to 2 enemies per chunk
+- Moves at speed 3.0
+- Takes 1 hit to kill
+- Deals 1 damage to player on collision
+- Spawns every 1.0 seconds 
