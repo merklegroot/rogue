@@ -46,6 +46,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
         public int FlickerLoc { get; init; }
         public int TimeLoc { get; init; }
         public int ScanlineCountLoc { get; init; }
+        public List<string> SarcasticRemarks { get; init; }
 
         public RayConnection(IRayLoader rayLoader)
         {
@@ -57,6 +58,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
             SmileyBorderTexture = rayLoader.LoadSmileyBorderImage();
             SmileyNeutralTexture = rayLoader.LoadSmileyNeutralImage();
             SmileyDeterminedTexture = rayLoader.LoadSmileyDeterminedImage();
+            SarcasticRemarks = rayLoader.LoadSarcasticRemarks();
 
             // Create a render texture the size of the window
             int width = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;

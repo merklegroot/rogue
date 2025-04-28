@@ -22,6 +22,7 @@
       <EmbeddedResource Include="images/sword.png" />
       <EmbeddedResource Include="resources/crt.fs" />
       <EmbeddedResource Include="resources/map.txt" />
+      <EmbeddedResource Include="resources/sarcastic-remarks.txt" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using Raylib_cs;
+using RogueLib.Utils;
 
 namespace RogueLib;
 
@@ -13,6 +14,7 @@ public interface IRayLoader
     Texture2D LoadSmileyBorderImage();
     Texture2D LoadSmileyNeutralImage();
     Texture2D LoadSmileyDeterminedImage();
+    List<string> LoadSarcasticRemarks();
     List<string> LoadMap();
 }
 
@@ -26,7 +28,7 @@ public class RayLoader : IRayLoader
     public List<string> LoadMap()
     {
         var mapText = _resourceReader.ReadResourceString("map.txt", typeof(RayLoader).Assembly);
-        var lines = mapText.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+        var lines = mapText.SplitLines()
             .Where(line => !string.IsNullOrEmpty(line))
             .ToList();
 
@@ -59,6 +61,10 @@ public class RayLoader : IRayLoader
 
     public Shader LoadCrtShader() =>
         LoadShaderFromEmbeddedResource("crt.fs");
+
+    public List<string> LoadSarcasticRemarks() =>
+        LoadStringFromEmbeddedResource("sarcastic-remarks.txt")
+        .SplitLines().ToList();
     
     private Shader LoadShaderFromEmbeddedResource(string resourceName) =>
         LoadFromEmbeddedResource(resourceName, (fileName) => Raylib.LoadShader(null, fileName));
@@ -92,4 +98,7 @@ public class RayLoader : IRayLoader
 
     private Font LoadFontFromEmbeddedResource(string resourceName) =>
         LoadFromEmbeddedResource(resourceName, Raylib.LoadFont);
+
+    private string LoadStringFromEmbeddedResource(string resourceName) =>
+        _resourceReader.ReadResourceString(resourceName, typeof(RayLoader).Assembly);
 }
