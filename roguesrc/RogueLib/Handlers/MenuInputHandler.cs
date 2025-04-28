@@ -38,6 +38,11 @@ public class MenuInputHandler : IMenuInputHandler
             state.CurrentScreen = GameScreenEnum.Adventure;
             return;
         }
+        if (key == KeyboardKey.B)
+        {
+            state.CurrentScreen = GameScreenEnum.Bestiary;
+            return;
+        }
         if (key == KeyboardKey.X || isGamepadYPressed)
         {
             Raylib.CloseWindow();

@@ -50,6 +50,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IChargerPresenter _chargerPresenter;
     private readonly IGoldPickupPresenter _goldPickupPresenter;
     private readonly IMapUtil _mapUtil;
+    private readonly IBestiaryPresenter _bestiaryPresenter;
     private GameScreenEnum _lastScreen = (GameScreenEnum)(-1);
     private int _lastMenuRemarkSeed = -1;
 
@@ -77,7 +78,8 @@ public class ScreenPresenter : IScreenPresenter
         IExplosionPresenter explosionPresenter,
         IMapPresenter mapPresenter,
         IGoldPickupPresenter goldPickupPresenter,
-        IMapUtil mapUtil)
+        IMapUtil mapUtil,
+        IBestiaryPresenter bestiaryPresenter)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -103,6 +105,7 @@ public class ScreenPresenter : IScreenPresenter
         _mapPresenter = mapPresenter;
         _goldPickupPresenter = goldPickupPresenter;
         _mapUtil = mapUtil;
+        _bestiaryPresenter = bestiaryPresenter;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -190,6 +193,11 @@ public class ScreenPresenter : IScreenPresenter
             case GameScreenEnum.Shop:
                 _shopPresenter.Draw(rayConnection, state);
                 HandleShopInput(state);
+                break;
+
+            case GameScreenEnum.Bestiary:
+                _bestiaryPresenter.Draw(rayConnection);
+                HandleBestiaryInput(state);
                 break;
         }
         
@@ -1734,5 +1742,13 @@ public class ScreenPresenter : IScreenPresenter
             roomX + roomWidth / 2 + 0.5f,
             roomY + roomHeight / 2 + 0.5f
         );
+    }
+
+    private void HandleBestiaryInput(GameState state)
+    {
+        if (state.KeyEvents.Count > 0)
+        {
+            state.CurrentScreen = GameScreenEnum.Menu;
+        }
     }
 }

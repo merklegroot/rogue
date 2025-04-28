@@ -5,5 +5,6 @@ public enum GameScreenEnum
     Menu,
     CharacterSet,
     Adventure,
-    Shop
+    Shop,
+    Bestiary
 }
