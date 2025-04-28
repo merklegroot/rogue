@@ -48,6 +48,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IExplosionPresenter _explosionPresenter;
     private readonly IMapPresenter _mapPresenter;
     private readonly IChargerPresenter _chargerPresenter;
+    private readonly IGoldPickupPresenter _goldPickupPresenter;
     private readonly IMapUtil _mapUtil;
     private GameScreenEnum _lastScreen = (GameScreenEnum)(-1);
     private int _lastMenuRemarkSeed = -1;
@@ -75,6 +76,7 @@ public class ScreenPresenter : IScreenPresenter
         IEnemyPresenter enemyPresenter,
         IExplosionPresenter explosionPresenter,
         IMapPresenter mapPresenter,
+        IGoldPickupPresenter goldPickupPresenter,
         IMapUtil mapUtil)
     {
         _rayLoader = rayLoader;
@@ -99,6 +101,7 @@ public class ScreenPresenter : IScreenPresenter
         _enemyPresenter = enemyPresenter;
         _explosionPresenter = explosionPresenter;
         _mapPresenter = mapPresenter;
+        _goldPickupPresenter = goldPickupPresenter;
         _mapUtil = mapUtil;
     }
 
@@ -241,7 +244,7 @@ public class ScreenPresenter : IScreenPresenter
         _mapPresenter.Draw(rayConnection, state);
         _enemyPresenter.Draw(rayConnection, state);
         _chargerPresenter.Draw(rayConnection, state);
-        DrawGoldItems(rayConnection, state);
+        _goldPickupPresenter.Draw(rayConnection, state);
         DrawHealthPickups(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
         _debugPanelPresenter.Draw(rayConnection, state);
@@ -284,19 +287,6 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
     }
-
-    private void DrawGoldItems(IRayConnection rayConnection, GameState state)
-    {
-        // Draw gold items - with updated horizontal spacing
-        foreach (var gold in state.GoldItems)
-        {
-            if (Math.Abs(gold.Position.X - state.CameraState.X) < 15 && Math.Abs(gold.Position.Y - state.CameraState.Y) < 10)
-            {
-                _screenDrawUtil.DrawCharacter(rayConnection, 36, 100 + (int)((gold.Position.X - state.CameraState.X) * 32) + 400, 100 + (int)((gold.Position.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.GoldColor); // $ symbol
-            }
-        }
-    }
-
 
     private void HandleNextInput(GameState state)
     {

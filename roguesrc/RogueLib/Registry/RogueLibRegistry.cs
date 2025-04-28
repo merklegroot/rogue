@@ -36,5 +36,6 @@ public static class RogueLibRegistry
             .AddScoped<IExplosionPresenter, ExplosionPresenter>()
             .AddScoped<IMapPresenter, MapPresenter>()
             .AddScoped<IMapUtil, MapUtil>()
-            .AddScoped<IChargerPresenter, ChargerPresenter>();
+            .AddScoped<IChargerPresenter, ChargerPresenter>()
+            .AddScoped<IGoldPickupPresenter, GoldPickupPresenter>();
 }
