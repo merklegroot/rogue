@@ -18,7 +18,10 @@ public class BestiaryPresenter : IBestiaryPresenter
     private const int DescriptionSize = 20;
     private const int EntrySpacing = 180;
     private const int BorderPadding = 20;
+    private const int ScreenMargin = 60;  // Margin from screen edges
     private const int BorderThickness = 2;
+    private const int ProfileSize = 120;   // Size of the profile square
+    private const int ProfileMargin = 20;  // Margin between profile and text
 
     public BestiaryPresenter(IDrawUtil drawUtil)
     {
@@ -30,6 +33,9 @@ public class BestiaryPresenter : IBestiaryPresenter
         // Calculate screen dimensions
         var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         var screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
+        
+        // Calculate card width (screen width minus margins)
+        var cardWidth = screenWidth - (ScreenMargin * 2);
         
         // Draw title
         var title = "BESTIARY";
@@ -59,7 +65,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Takes 1 hit to defeat",
             "- Deals 1 damage on contact",
             "- Common enemy, spawns frequently"
-        }, startY, Color.White);
+        }, startY, Color.White, cardWidth);
 
         // Draw The Spinner entry
         DrawEnemyEntry(rayConnection, "The Spinner", new[]
@@ -69,7 +75,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Can be knocked back with sword",
             "- Deals 1 damage on contact",
             "- Moves in straight lines until hit"
-        }, startY + EntrySpacing, Color.Yellow);
+        }, startY + EntrySpacing, Color.Yellow, cardWidth);
 
         // Draw The Charger entry
         DrawEnemyEntry(rayConnection, "The Charger", new[]
@@ -80,44 +86,55 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Deals 2 damage on contact",
             "- Drops valuable gold when defeated",
             "- Appears after killing 20 regular enemies"
-        }, startY + EntrySpacing * 2, Color.Red);
+        }, startY + EntrySpacing * 2, Color.Red, cardWidth);
 
         // Draw return instruction
         _drawUtil.DrawText(rayConnection, "Press any key to return", 20, 
             screenHeight - 40, Color.White);
     }
 
-    private void DrawEnemyEntry(IRayConnection rayConnection, string name, string[] description, float y, Color color)
+    private void DrawEnemyEntry(IRayConnection rayConnection, string name, string[] description, float y, Color color, float cardWidth)
     {
         var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         var centerX = screenWidth / 2;
         var nameSize = Raylib.MeasureTextEx(rayConnection.MenuFont, name, EnemyNameSize, 1);
         
-        // Calculate the widest description line for border width
-        float maxWidth = description.Max(line => Raylib.MeasureTextEx(rayConnection.MenuFont, line, DescriptionSize, 1).X);
-        float borderWidth = Math.Max(nameSize.X, maxWidth) + (BorderPadding * 2);
-        float borderHeight = nameSize.Y + (description.Length * (DescriptionSize + 5)) + (BorderPadding * 2);
-        float borderX = centerX - borderWidth / 2;
+        // Calculate border dimensions
+        float borderHeight = Math.Max(ProfileSize + (BorderPadding * 2), 
+            nameSize.Y + (description.Length * (DescriptionSize + 5)) + (BorderPadding * 2));
+        float borderX = centerX - cardWidth / 2;
         float borderY = y - BorderPadding;
 
-        // Draw border
+        // Draw outer border
         Raylib.DrawRectangleLines(
             (int)borderX, (int)borderY,
-            (int)borderWidth, (int)borderHeight,
+            (int)cardWidth, (int)borderHeight,
             Color.Gold);
 
-        // Draw name
+        // Draw profile box on the left
+        float profileX = borderX + BorderPadding;
+        float profileY = borderY + (borderHeight - ProfileSize) / 2;
+        Raylib.DrawRectangleLines(
+            (int)profileX, (int)profileY,
+            ProfileSize, ProfileSize,
+            Color.Gold);
+
+        // Calculate text start position (after profile box)
+        float textStartX = profileX + ProfileSize + ProfileMargin;
+        float textWidth = cardWidth - (textStartX - borderX) - BorderPadding;
+
+        // Draw name (aligned with text area)
+        float nameX = textStartX;
         Raylib.DrawTextEx(rayConnection.MenuFont, name,
-            new Vector2(centerX - nameSize.X/2, y),
+            new Vector2(nameX, y),
             EnemyNameSize, 1, color);
 
-        // Draw description lines
+        // Draw description lines (aligned with text area)
         float descY = y + nameSize.Y + 10;
         foreach (var line in description)
         {
-            var descSize = Raylib.MeasureTextEx(rayConnection.MenuFont, line, DescriptionSize, 1);
             Raylib.DrawTextEx(rayConnection.MenuFont, line,
-                new Vector2(centerX - descSize.X/2, descY),
+                new Vector2(textStartX, descY),
                 DescriptionSize, 1, Color.LightGray);
             descY += DescriptionSize + 5;
         }
