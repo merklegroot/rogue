@@ -276,12 +276,11 @@ public class ScreenPresenter : IScreenPresenter
 
     private void DrawChargerHealth(IRayConnection rayConnection, GameState state)
     {
-        // Draw charger health if active
-        if (state.IsChargerActive && state.Charger != null && state.Charger.IsAlive)
-        {
-            string healthText = $"Charger HP: {state.Charger.Health}/{ChargerConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
-            _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
-        }
+        if (state.Charger == null || !state.Charger.IsAlive)
+            return;
+        
+        var healthText = $"Charger HP: {state.Charger.Health}/{ChargerConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
+        _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
     }
 
     private void DrawHealthPickups(IRayConnection rayConnection, GameState state)
@@ -1288,7 +1287,6 @@ public class ScreenPresenter : IScreenPresenter
             Health = ChargerConstants.ChargerHealth,
             IsAlive = true 
         };
-        state.IsChargerActive = true;
         
         // Show the boss banner
         state.BannerText = "\u0001 Everybody's gangsta until the charger appears \u0001";

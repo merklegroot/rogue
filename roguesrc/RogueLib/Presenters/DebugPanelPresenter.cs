@@ -49,7 +49,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
             }
         };
 
-        if (state.IsChargerActive && state.Charger.IsAlive)
+        if (state.Charger.IsAlive)
         {
             lines.Add(new LineInfo
             {

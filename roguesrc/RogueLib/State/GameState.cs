@@ -52,7 +52,6 @@ public class GameState
 
     public List<string> Map { get; set; } = [];
 
-    public bool IsChargerActive { get; set; }
     public ChargerEnemyState Charger { get; set; } = new ChargerEnemyState();
     
     // Banner state
@@ -71,8 +70,6 @@ public class GameState
     public bool ShouldEnableCrtEffect { get; set; } = true;  // Default to true
 
     public bool ShouldShowDebugPanel { get; set; } = false;
-
-    private ChargerEnemyState? ChargerState { get; set; } = new ChargerEnemyState();
 
     public string? CurrentSarcasticRemark { get; set; } = null;
 }
