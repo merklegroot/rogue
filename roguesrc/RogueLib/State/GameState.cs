@@ -71,4 +71,6 @@ public class GameState
     public bool ShouldEnableCrtEffect { get; set; } = true;  // Default to true
 
     public bool ShowDebugPanel { get; set; } = true;
+
+    private ChargerEnemyState? ChargerState { get; set; } = new ChargerEnemyState();
 }

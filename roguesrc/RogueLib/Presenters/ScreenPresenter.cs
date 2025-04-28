@@ -25,7 +25,6 @@ public class ScreenPresenter : IScreenPresenter
 
     private int _enemiesKilled = 0;
     private bool _isChargerActive = false;
-    private ChargerEnemyState? _chargerState = null;
     private bool _didGameJustStart = true;
     private readonly IRayLoader _rayLoader;
     private readonly IDrawUtil _screenDrawUtil;    
@@ -48,6 +47,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IEnemyPresenter _enemyPresenter;
     private readonly IExplosionPresenter _explosionPresenter;
     private readonly IMapPresenter _mapPresenter;
+    private readonly IChargerPresenter _chargerPresenter;
     private readonly IMapUtil _mapUtil;
     private static readonly string BuildDateTime = "Built: " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " | " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // fallback if not replaced
     private string? _currentSarcasticRemark = null;
@@ -63,6 +63,7 @@ public class ScreenPresenter : IScreenPresenter
         IDebugPanelPresenter debugPanelPresenter,
         ISpawnEnemyHandler spawnEnemyHandler,
         IPlayerPresenter playerPresenter,
+        IChargerPresenter chargerPresenter,
         IBannerPresenter bannerPresenter,
         IMenuPresenter menuPresenter,
         ICharacterSetPresenter characterSetPresenter,
@@ -86,6 +87,7 @@ public class ScreenPresenter : IScreenPresenter
         _debugPanelPresenter = debugPanelPresenter;
         _spawnEnemyHandler = spawnEnemyHandler;
         _playerPresenter = playerPresenter;
+        _chargerPresenter = chargerPresenter;
         _bannerPresenter = bannerPresenter;
         _menuPresenter = menuPresenter;
         _characterSetPresenter = characterSetPresenter;
@@ -249,7 +251,7 @@ public class ScreenPresenter : IScreenPresenter
         UpdateCamera(state);
         _mapPresenter.Draw(rayConnection, state);
         _enemyPresenter.Draw(rayConnection, state);
-        DrawCharger(rayConnection, state);        
+        _chargerPresenter.Draw(rayConnection, state);
         DrawGoldItems(rayConnection, state);
         DrawHealthPickups(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
@@ -318,15 +320,6 @@ public class ScreenPresenter : IScreenPresenter
         }
     }
 
-    private void DrawCharger(IRayConnection rayConnection, GameState state)
-    {
-        // Draw charger if active - with updated horizontal spacing
-        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && 
-            Math.Abs(_chargerState.X - state.CameraState.X) < 15 && Math.Abs(_chargerState.Y - state.CameraState.Y) < 10)
-        {
-            _screenDrawUtil.DrawCharacter(rayConnection, 6, 100 + (int)((_chargerState.X - state.CameraState.X) * 32) + 400, 100 + (int)((_chargerState.Y - state.CameraState.Y) * 40) + 200, ScreenConstants.ChargerColor);
-        }
-    }
 
     private void HandleNextInput(GameState state)
     {
@@ -558,7 +551,6 @@ public class ScreenPresenter : IScreenPresenter
         _spawnEnemyHandler.Handle(state);
 
         UpdateCharger(state);
-
         AdvanceInvisibility(state);
         AdvanceExplosions(state);
         AdvanceFlyingGold(state);
@@ -624,17 +616,17 @@ public class ScreenPresenter : IScreenPresenter
         HandlePlayerBumpsEnemies(state);
         
         // Check for collisions with charger (deals more damage)
-        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && !state.IsInvincible)
+        if (_isChargerActive && state.Charger != null && state.Charger.IsAlive && !state.IsInvincible)
         {
             // Check if player is colliding with the charger
-            if (Math.Abs(state.PlayerPosition.X - _chargerState.X) < 0.5f && Math.Abs(state.PlayerPosition.Y - _chargerState.Y) < 0.5f)
+            if (Math.Abs(state.PlayerPosition.X - state.Charger.X) < 0.5f && Math.Abs(state.PlayerPosition.Y - state.Charger.Y) < 0.5f)
             {
                 // Player takes more damage from charger (2 instead of 1)
                 state.CurrentHealth -= 2;
                 Console.WriteLine($"Player hit by charger! Health: {state.CurrentHealth}");
                 
                 // Apply stronger knockback
-                ApplyKnockback(state, new Vector2(_chargerState.X, _chargerState.Y), 1.0f); // Double knockback distance
+                ApplyKnockback(state, new Vector2(state.Charger.X, state.Charger.Y), 1.0f); // Double knockback distance
             }
         }
 
@@ -861,64 +853,64 @@ public class ScreenPresenter : IScreenPresenter
     // Also update the charger movement logic
     private void UpdateCharger(GameState state)
     {
-        if (!_isChargerActive || _chargerState == null || !_chargerState.IsAlive)
+        if (!_isChargerActive || state.Charger == null || !state.Charger.IsAlive)
             return;
         
         float frameTime = Raylib.GetFrameTime();
         
         // Update charger invincibility
-        if (_chargerState.IsInvincible)
+        if (state.Charger.IsInvincible)
         {
-            _chargerState.InvincibilityTimer += frameTime;
-            if (_chargerState.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
+            state.Charger.InvincibilityTimer += frameTime;
+            if (state.Charger.InvincibilityTimer >= 0.5f) // 0.5 seconds of invincibility
             {
-                _chargerState.IsInvincible = false;
+                state.Charger.IsInvincible = false;
             }
         }
         
         // Update charger movement
-        _chargerState.MoveTimer += frameTime;
-        if (_chargerState.MoveTimer >= ChargerConstants.ChargerSpeed) // Charger moves faster than regular enemies
+        state.Charger.MoveTimer += frameTime;
+        if (state.Charger.MoveTimer >= ChargerConstants.ChargerSpeed) // Charger moves faster than regular enemies
         {
-            _chargerState.MoveTimer = 0f;
+            state.Charger.MoveTimer = 0f;
             
             // Calculate direction to player
             float dx = 0;
             float dy = 0;
             
             // Charger AI: move directly toward player
-            if (_chargerState.X < state.PlayerPosition.X) dx = GameConstants.PlayerMoveSpeed;
-            else if (_chargerState.X > state.PlayerPosition.X) dx = -GameConstants.PlayerMoveSpeed;
+            if (state.Charger.X < state.PlayerPosition.X) dx = GameConstants.PlayerMoveSpeed;
+            else if (state.Charger.X > state.PlayerPosition.X) dx = -GameConstants.PlayerMoveSpeed;
             
-            if (_chargerState.Y < state.PlayerPosition.Y) dy = GameConstants.PlayerMoveSpeed;
-            else if (_chargerState.Y > state.PlayerPosition.Y) dy = -GameConstants.PlayerMoveSpeed;
+            if (state.Charger.Y < state.PlayerPosition.Y) dy = GameConstants.PlayerMoveSpeed;
+            else if (state.Charger.Y > state.PlayerPosition.Y) dy = -GameConstants.PlayerMoveSpeed;
             
             // Try to move horizontally first
             if (dx != 0)
             {
                 // Check if the new position is walkable
-                if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X + (double)dx), (int)Math.Floor((double)_chargerState.Y)))
+                if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)state.Charger.X + (double)dx), (int)Math.Floor((double)state.Charger.Y)))
                 {
-                    _chargerState.X += dx;
+                    state.Charger.X += dx;
                 }
                 // If horizontal movement is blocked, try vertical
-                else if (dy != 0 && _mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
+                else if (dy != 0 && _mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)state.Charger.X), (int)Math.Floor((double)state.Charger.Y + (double)dy)))
                 {
-                    _chargerState.Y += dy;
+                    state.Charger.Y += dy;
                 }
             }
             // If no horizontal movement, try vertical
             else if (dy != 0)
             {
                 // Check if the new position is walkable
-                if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)_chargerState.X), (int)Math.Floor((double)_chargerState.Y + (double)dy)))
+                if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor((double)state.Charger.X), (int)Math.Floor((double)state.Charger.Y + (double)dy)))
                 {
-                    _chargerState.Y += dy;
+                    state.Charger.Y += dy;
                 }
             }
             
             // Check for collision with player
-            if (Math.Abs(_chargerState.X - state.PlayerPosition.X) < 0.5f && Math.Abs(_chargerState.Y - state.PlayerPosition.Y) < 0.5f)
+            if (Math.Abs(state.Charger.X - state.PlayerPosition.X) < 0.5f && Math.Abs(state.Charger.Y - state.PlayerPosition.Y) < 0.5f)
             {
                 // Only damage player if not invincible
                 if (!state.IsInvincible)
@@ -927,7 +919,7 @@ public class ScreenPresenter : IScreenPresenter
                     state.CurrentHealth -= 2;
                     
                     // Apply stronger knockback
-                    ApplyKnockback(state, new Vector2(_chargerState.X, _chargerState.Y), 1.5f);
+                    ApplyKnockback(state, new Vector2(state.Charger.X, state.Charger.Y), 1.5f);
                     
                     // Make player briefly invincible
                     state.IsInvincible = true;
@@ -1218,29 +1210,29 @@ public class ScreenPresenter : IScreenPresenter
     // Create a completely new method for handling charger damage
     private void HandleChargerDamage(GameState state, bool fromSwinging)
     {
-        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive && !_chargerState.IsInvincible)
+        if (_isChargerActive && state.Charger != null && state.Charger.IsAlive && !state.Charger.IsInvincible)
         {
             // Increment hit counter
-            _chargerState.HitCount++;
+            state.Charger.HitCount++;
             
             // Update displayed health
-            _chargerState.Health = ChargerConstants.ChargerHealth - _chargerState.HitCount;
+            state.Charger.Health = ChargerConstants.ChargerHealth - state.Charger.HitCount;
             
-            Console.WriteLine($"COLLISION FIX: Charger hit {_chargerState.HitCount} times. Health display: {_chargerState.Health}");
+            Console.WriteLine($"COLLISION FIX: Charger hit {state.Charger.HitCount} times. Health display: {state.Charger.Health}");
             
             // Make charger briefly invincible to prevent multiple hits
-            _chargerState.IsInvincible = true;
-            _chargerState.InvincibilityTimer = 0f;
+            state.Charger.IsInvincible = true;
+            state.Charger.InvincibilityTimer = 0f;
             
             // Only kill if hit exactly 5 times
-            if (_chargerState.HitCount >= 5)
+            if (state.Charger.HitCount >= 5)
             {
                 Console.WriteLine("COLLISION FIX: Charger defeated after 5 hits!");
-                _chargerState.IsAlive = false;
+                state.Charger.IsAlive = false;
                 
                 // Create explosion at charger position
                 state.Explosions.Add(new ExplosionState {
-                    Position = new Coord2dFloat(_chargerState.X, _chargerState.Y),
+                    Position = new Coord2dFloat(state.Charger.X, state.Charger.Y),
                     Timer = 0f 
                 });
                 
@@ -1248,7 +1240,7 @@ public class ScreenPresenter : IScreenPresenter
                 for (int i = 0; i < 3; i++)
                 {
                     state.GoldItems.Add(new GoldItem {
-                        Position = new Coord2dFloat(_chargerState.X + i, _chargerState.Y),
+                        Position = new Coord2dFloat(state.Charger.X + i, state.Charger.Y),
                         Value = _random.Next(10, 21)  // 10-20 gold per drop, 3 drops
                     });
                 }
@@ -1471,11 +1463,11 @@ public class ScreenPresenter : IScreenPresenter
         }
         
         // Check for collision with charger
-        if (_isChargerActive && _chargerState != null && _chargerState.IsAlive)
+        if (_isChargerActive && state.Charger != null && state.Charger.IsAlive)
         {
             // Calculate distance from player to charger
-            float dx = Math.Abs(state.PlayerPosition.X - _chargerState.X);
-            float dy = Math.Abs(state.PlayerPosition.Y - _chargerState.Y);
+            float dx = Math.Abs(state.PlayerPosition.X - state.Charger.X);
+            float dy = Math.Abs(state.PlayerPosition.Y - state.Charger.Y);
             float distance = Math.Max(dx, dy); // Use max for grid-based distance
 
             // Check if charger is within sword range (between 0 and sword reach)
@@ -1486,16 +1478,16 @@ public class ScreenPresenter : IScreenPresenter
                 switch (state.ActionDirection)
                 {
                     case Direction.Left:
-                        isInDirection = _chargerState.X < state.PlayerPosition.X;
+                        isInDirection = state.Charger.X < state.PlayerPosition.X;
                         break;
                     case Direction.Right:
-                        isInDirection = _chargerState.X > state.PlayerPosition.X;
+                        isInDirection = state.Charger.X > state.PlayerPosition.X;
                         break;
                     case Direction.Up:
-                        isInDirection = _chargerState.Y < state.PlayerPosition.Y;
+                        isInDirection = state.Charger.Y < state.PlayerPosition.Y;
                         break;
                     case Direction.Down:
-                        isInDirection = _chargerState.Y > state.PlayerPosition.Y;
+                        isInDirection = state.Charger.Y > state.PlayerPosition.Y;
                         break;
                 }
 

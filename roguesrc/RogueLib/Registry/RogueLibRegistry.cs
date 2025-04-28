@@ -35,5 +35,6 @@ public static class RogueLibRegistry
             .AddScoped<IEnemyPresenter, EnemyPresenter>()
             .AddScoped<IExplosionPresenter, ExplosionPresenter>()
             .AddScoped<IMapPresenter, MapPresenter>()
-            .AddScoped<IMapUtil, MapUtil>();
+            .AddScoped<IMapUtil, MapUtil>()
+            .AddScoped<IChargerPresenter, ChargerPresenter>();
 }

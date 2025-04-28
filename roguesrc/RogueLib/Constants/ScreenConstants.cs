@@ -55,7 +55,7 @@ public static class ScreenConstants
     public static readonly Color ExplosionColor = new(255, 165, 0, 255);  // Orange color for explosions
     public static readonly Color BoltColor = new(210, 180, 140, 255);  // Light brown color for bolts
     public static readonly Color ChargerColor = new(255, 50, 50, 255);  // Bright red color for charger  // Health value for the charger enemy
-
+    public const int ChargerCharacter = 6;
     public static readonly Color PlayerColor = Color.Yellow;  // Yellow for player
     public static readonly Color InvinciblePlayerColor = new(255, 255, 255, 150);  // Semi-transparent white for invincible player
 }
