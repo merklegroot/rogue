@@ -49,8 +49,6 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IMapPresenter _mapPresenter;
     private readonly IChargerPresenter _chargerPresenter;
     private readonly IMapUtil _mapUtil;
-    private static readonly string BuildDateTime = "Built: " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " | " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // fallback if not replaced
-    private string? _currentSarcasticRemark = null;
     private GameScreenEnum _lastScreen = (GameScreenEnum)(-1);
     private int _lastMenuRemarkSeed = -1;
 
@@ -160,10 +158,11 @@ public class ScreenPresenter : IScreenPresenter
                     if (remarks != null && remarks.Count > 0)
                     {
                         var rand = new Random();
-                        _currentSarcasticRemark = remarks[rand.Next(remarks.Count)];
+                        state.CurrentSarcasticRemark = remarks[rand.Next(remarks.Count)];
                     }
                 }
-                _menuPresenter.Draw(rayConnection);
+
+                _menuPresenter.Draw(rayConnection, state);
                 _menuInputHandler.Handle(state);
                 // Handle mouse clicks on menu
                 if (Raylib.IsMouseButtonPressed(MouseButton.Left))
@@ -171,18 +170,8 @@ public class ScreenPresenter : IScreenPresenter
                     var mousePosition = Raylib.GetMousePosition();
                     _menuPresenter.HandleMouseClick(mousePosition, state);
                 }
-                // Draw build date/time at the bottom right
-                int textWidth = Raylib.MeasureText(BuildDateTime, 18);
-                int screenWidth = Raylib.GetScreenWidth();
-                int screenHeight = Raylib.GetScreenHeight();
-                Raylib.DrawText(BuildDateTime, screenWidth - textWidth - 20, screenHeight - 40, 18, Color.Gray);
-                // Draw sarcastic remark at the bottom center
-                if (!string.IsNullOrEmpty(_currentSarcasticRemark))
-                {
-                    int remarkFontSize = 22;
-                    int remarkWidth = Raylib.MeasureText(_currentSarcasticRemark, remarkFontSize);
-                    Raylib.DrawText(_currentSarcasticRemark, (screenWidth - remarkWidth) / 2, screenHeight - 80, remarkFontSize, Color.LightGray);
-                }
+
+
                 break;
 
             case GameScreenEnum.CharacterSet:
@@ -338,9 +327,7 @@ public class ScreenPresenter : IScreenPresenter
 
         // Toggle debug panel with H or gamepad menu button
         if ((key == KeyboardKey.H) || isGamepadDebugToggle)
-        {
-            state.ShowDebugPanel = !state.ShowDebugPanel;
-        }
+            state.ShouldShowDebugPanel = !state.ShouldShowDebugPanel;
         
         // ESC or B button returns to menu
         if (key == KeyboardKey.Escape || isGamepadBPressed)

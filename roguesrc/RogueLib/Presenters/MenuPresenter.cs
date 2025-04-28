@@ -7,7 +7,7 @@ namespace RogueLib.Presenters;
 
 public interface IMenuPresenter
 {
-    void Draw(IRayConnection rayConnection);
+    void Draw(IRayConnection rayConnection, GameState state);
     void HandleMouseClick(Vector2 mousePosition, GameState state);
 }
 
@@ -23,14 +23,18 @@ public class MenuPresenter : IMenuPresenter
     private readonly IDrawUtil _drawUtil;
     private List<(Rectangle bounds, Action<GameState> action, string text)> _menuItems = new();
     private int _hoveredItemIndex = -1;
+    private static readonly string BuildDateTime = "Built: " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " | " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // fallback if not replaced
 
     public MenuPresenter(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
     }
 
-    public void Draw(IRayConnection rayConnection)
+    public void Draw(IRayConnection rayConnection, GameState state)
     {
+        if (state.CurrentScreen != GameScreenEnum.Menu)
+            return;
+
         // Clear previous menu items
         _menuItems.Clear();
         _hoveredItemIndex = -1;
@@ -131,8 +135,32 @@ public class MenuPresenter : IMenuPresenter
         // Draw decorative element
         _drawUtil.DrawCharacter(rayConnection, 2, 
             centerX - 10, menuStartY + MenuSpacing * 4 + DecorativeElementYOffset, Color.White);
+
+        DrawBuildDateTime();
+
+        DrawSarcasticRemark(state);        
     }
 
+    private void DrawBuildDateTime()
+    {
+        int textWidth = Raylib.MeasureText(BuildDateTime, 18);
+        int screenWidth = Raylib.GetScreenWidth();
+        int screenHeight = Raylib.GetScreenHeight();
+        Raylib.DrawText(BuildDateTime, screenWidth - textWidth - 20, screenHeight - 40, 18, Color.Gray);
+    }
+
+    private void DrawSarcasticRemark(GameState state)
+    {
+        if (string.IsNullOrWhiteSpace(state.CurrentSarcasticRemark))
+        return;
+
+        int screenWidth = Raylib.GetScreenWidth();
+        int screenHeight = Raylib.GetScreenHeight();
+        int remarkFontSize = 22;
+
+        int remarkWidth = Raylib.MeasureText(state.CurrentSarcasticRemark, remarkFontSize);
+        Raylib.DrawText(state.CurrentSarcasticRemark, (screenWidth - remarkWidth) / 2, screenHeight - 80, remarkFontSize, Color.LightGray);
+    }
     public void HandleMouseClick(Vector2 mousePosition, GameState state)
     {
         foreach (var (bounds, action, _) in _menuItems)

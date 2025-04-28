@@ -70,7 +70,9 @@ public class GameState
 
     public bool ShouldEnableCrtEffect { get; set; } = true;  // Default to true
 
-    public bool ShowDebugPanel { get; set; } = true;
+    public bool ShouldShowDebugPanel { get; set; } = false;
 
     private ChargerEnemyState? ChargerState { get; set; } = new ChargerEnemyState();
+
+    public string? CurrentSarcasticRemark { get; set; } = null;
 }

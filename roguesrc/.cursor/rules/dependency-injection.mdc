@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 When using dependency injection in C#:
 
 1. Always register new types in the registry (RogueLibRegistry.cs)
