@@ -250,7 +250,6 @@ public class ScreenPresenter : IScreenPresenter
         _flyingGoldPresenter.Draw(rayConnection, state);
         _cooldownIndicatorPresenter.Draw(rayConnection, state);
         DrawCrossbowBolts(rayConnection, state);
-        DrawChargerHealth(rayConnection, state);
         _bannerPresenter.Draw(rayConnection, state);
         _instructionsPresenter.Draw(rayConnection, state);
         _chunkPresenter.Draw(rayConnection, state);
@@ -272,15 +271,6 @@ public class ScreenPresenter : IScreenPresenter
             // Draw the bolt at its current position - updated horizontal spacing
             _screenDrawUtil.DrawCharacter(rayConnection, boltChar, 100 + (int)(bolt.X * 32), 100 + (int)(bolt.Y * 40), ScreenConstants.BoltColor);
         }
-    }
-
-    private void DrawChargerHealth(IRayConnection rayConnection, GameState state)
-    {
-        if (state.Charger == null || !state.Charger.IsAlive)
-            return;
-        
-        var healthText = $"Charger HP: {state.Charger.Health}/{ChargerConstants.ChargerHealth} (Hit {state.Charger.HitCount} times)";
-        _screenDrawUtil.DrawText(rayConnection, healthText, 20, 60, ScreenConstants.ChargerColor);
     }
 
     private void DrawHealthPickups(IRayConnection rayConnection, GameState state)
