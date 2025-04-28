@@ -255,8 +255,7 @@ public class ScreenPresenter : IScreenPresenter
         DrawGoldItems(rayConnection, state);
         DrawHealthPickups(rayConnection, state);
         _playerPresenter.Draw(rayConnection, state);
-        if (state.ShowDebugPanel)
-            _debugPanelPresenter.Draw(rayConnection, state);
+        _debugPanelPresenter.Draw(rayConnection, state);
         _explosionPresenter.Draw(rayConnection, state);
         _swordPresenter.Draw(rayConnection, state);
         _flyingGoldPresenter.Draw(rayConnection, state);

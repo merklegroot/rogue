@@ -21,7 +21,7 @@ public class DebugPanelPresenter : IDebugPanelPresenter
 
     public void Draw(IRayConnection rayConnection, GameState state)
     {
-        if (rayConnection == null || state == null)
+        if (rayConnection == null || state == null || !state.ShowDebugPanel)
             return;
 
         var debugLines = CollectDebugLines(state);
