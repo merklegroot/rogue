@@ -64,7 +64,8 @@ public class RayLoader : IRayLoader
 
     public List<string> LoadSarcasticRemarks() =>
         LoadStringFromEmbeddedResource("sarcastic-remarks.txt")
-        .SplitLines().ToList();
+        .SplitLines()
+        .ToList();
     
     private Shader LoadShaderFromEmbeddedResource(string resourceName) =>
         LoadFromEmbeddedResource(resourceName, (fileName) => Raylib.LoadShader(null, fileName));

@@ -15,6 +15,7 @@ public interface IRayConnection : IDisposable
     Texture2D SmileyBorderTexture { get; init; }
     Texture2D SmileyNeutralTexture { get; init; }
     Texture2D SmileyDeterminedTexture { get; init; }
+    public List<string> SarcasticRemarks { get; init; }
     int TimeLoc { get; init; }    
 }
 

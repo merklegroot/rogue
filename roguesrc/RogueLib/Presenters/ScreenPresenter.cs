@@ -50,6 +50,8 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IMapPresenter _mapPresenter;
     private readonly IMapUtil _mapUtil;
     private static readonly string BuildDateTime = "Built: " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " | " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // fallback if not replaced
+    private string? _currentSarcasticRemark = null;
+    private int _lastMenuRemarkSeed = -1;
 
     public ScreenPresenter(
         IRayLoader rayLoader, 
@@ -148,6 +150,18 @@ public class ScreenPresenter : IScreenPresenter
         switch (state.CurrentScreen)
         {
             case GameScreenEnum.Menu:
+                // Pick a new sarcastic remark if entering menu or if none set
+                int menuSeed = (int)(state.MovementStartTime + state.PlayerGold + state.CurrentHealth + DateTime.Now.Second);
+                if (_currentSarcasticRemark == null || _lastMenuRemarkSeed != menuSeed)
+                {
+                    var remarks = rayConnection.SarcasticRemarks;
+                    if (remarks != null && remarks.Count > 0)
+                    {
+                        var rand = new Random(menuSeed);
+                        _currentSarcasticRemark = remarks[rand.Next(remarks.Count)];
+                        _lastMenuRemarkSeed = menuSeed;
+                    }
+                }
                 _menuPresenter.Draw(rayConnection);
                 _menuInputHandler.Handle(state);
                 // Handle mouse clicks on menu
@@ -161,6 +175,13 @@ public class ScreenPresenter : IScreenPresenter
                 int screenWidth = Raylib.GetScreenWidth();
                 int screenHeight = Raylib.GetScreenHeight();
                 Raylib.DrawText(BuildDateTime, screenWidth - textWidth - 20, screenHeight - 40, 18, Color.Gray);
+                // Draw sarcastic remark at the bottom center
+                if (!string.IsNullOrEmpty(_currentSarcasticRemark))
+                {
+                    int remarkFontSize = 22;
+                    int remarkWidth = Raylib.MeasureText(_currentSarcasticRemark, remarkFontSize);
+                    Raylib.DrawText(_currentSarcasticRemark, (screenWidth - remarkWidth) / 2, screenHeight - 80, remarkFontSize, Color.LightGray);
+                }
                 break;
 
             case GameScreenEnum.CharacterSet:
