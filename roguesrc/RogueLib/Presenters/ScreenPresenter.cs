@@ -51,6 +51,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IMapUtil _mapUtil;
     private static readonly string BuildDateTime = "Built: " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " | " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // fallback if not replaced
     private string? _currentSarcasticRemark = null;
+    private GameScreenEnum _lastScreen = (GameScreenEnum)(-1);
     private int _lastMenuRemarkSeed = -1;
 
     public ScreenPresenter(
@@ -150,16 +151,14 @@ public class ScreenPresenter : IScreenPresenter
         switch (state.CurrentScreen)
         {
             case GameScreenEnum.Menu:
-                // Pick a new sarcastic remark if entering menu or if none set
-                int menuSeed = (int)(state.MovementStartTime + state.PlayerGold + state.CurrentHealth + DateTime.Now.Second);
-                if (_currentSarcasticRemark == null || _lastMenuRemarkSeed != menuSeed)
+                // Only pick a new sarcastic remark if we just entered the menu
+                if (_lastScreen != GameScreenEnum.Menu)
                 {
                     var remarks = rayConnection.SarcasticRemarks;
                     if (remarks != null && remarks.Count > 0)
                     {
-                        var rand = new Random(menuSeed);
+                        var rand = new Random();
                         _currentSarcasticRemark = remarks[rand.Next(remarks.Count)];
-                        _lastMenuRemarkSeed = menuSeed;
                     }
                 }
                 _menuPresenter.Draw(rayConnection);
@@ -232,6 +231,7 @@ public class ScreenPresenter : IScreenPresenter
 
         // Clear processed events
         state.KeyEvents.Clear();
+        _lastScreen = state.CurrentScreen;
     }
 
     private void HandleCharacterSetInput(GameState state)
