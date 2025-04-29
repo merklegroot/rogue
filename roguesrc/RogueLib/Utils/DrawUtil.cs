@@ -1,9 +1,8 @@
-using Raylib_cs;
 using System.Numerics;
+using Raylib_cs;
 using RogueLib.Constants;
-using RogueLib.Models;
 
-namespace RogueLib;
+namespace RogueLib.Utils;
 
 public interface IDrawUtil
 {
