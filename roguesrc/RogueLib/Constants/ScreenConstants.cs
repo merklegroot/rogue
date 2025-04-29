@@ -17,7 +17,7 @@ public static class ScreenConstants
     public const string Title = "ROGUE ADVENTURE";
 
 
-    public const int EnemyChar = 128; // (Captial C with a cedilla under it)
+    public const int CedillaChar = 128; // (Captial C with a cedilla under it)
 
     public static readonly Color SwordColor = new(180, 210, 230, 255);  // Silvery-blue color
 

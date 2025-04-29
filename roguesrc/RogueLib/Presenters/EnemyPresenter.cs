@@ -4,16 +4,16 @@ using RogueLib.Constants;
 
 namespace RogueLib.Presenters;
 
-public interface ICedillaPresenter
+public interface IEnemyPresenter
 {
     void Draw(IRayConnection rayConnection, GameState state);
 }
 
-public class CedillaPresenter : ICedillaPresenter
+public class EnemyPresenter : IEnemyPresenter
 {
     private readonly IDrawUtil _drawUtil;
 
-    public CedillaPresenter(IDrawUtil drawUtil)
+    public EnemyPresenter(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
     }
@@ -22,15 +22,16 @@ public class CedillaPresenter : ICedillaPresenter
     {
         foreach (var enemy in state.Enemies)
         {
-            DrawEnemy(rayConnection, state, enemy);
+            DrawCedilla(rayConnection, state, enemy);
         }
+        
         foreach (var spinner in state.Spinners)
         {
             DrawSpinner(rayConnection, state, spinner);
         }
     }
 
-    private void DrawEnemy(IRayConnection rayConnection, GameState state, Enemy enemy)
+    private void DrawCedilla(IRayConnection rayConnection, GameState state, Enemy enemy)
     {
         if (!enemy.IsAlive)
             return;
@@ -41,7 +42,7 @@ public class CedillaPresenter : ICedillaPresenter
         if (!IsOnScreen(enemyScreenX, enemyScreenY))
             return;
 
-        _drawUtil.DrawCharacter(rayConnection, ScreenConstants.EnemyChar, enemyScreenX, enemyScreenY, ScreenConstants.EnemyColor);
+        _drawUtil.DrawCharacter(rayConnection, ScreenConstants.CedillaChar, enemyScreenX, enemyScreenY, ScreenConstants.EnemyColor);
     }
 
     private void DrawSpinner(IRayConnection rayConnection, GameState state, SpinnerEnemyState spinner)
