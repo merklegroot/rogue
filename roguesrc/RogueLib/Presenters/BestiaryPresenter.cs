@@ -3,6 +3,7 @@ using RogueLib.Constants;
 using RogueLib.State;
 using System.Numerics;
 using RogueLib.Utils;
+using RogueLib.Models;
 
 namespace RogueLib.Presenters;
 
@@ -14,6 +15,7 @@ public interface IBestiaryPresenter
 public class BestiaryPresenter : IBestiaryPresenter
 {
     private readonly IDrawUtil _drawUtil;
+    private readonly IDrawEnemyUtil _drawEnemyUtil;
     private const int TitleSize = 48;
     private const int EnemyNameSize = 32;
     private const int DescriptionSize = 20;
@@ -24,9 +26,10 @@ public class BestiaryPresenter : IBestiaryPresenter
     private const int ProfileSize = 120;   // Size of the profile square
     private const int ProfileMargin = 20;  // Margin between profile and text
 
-    public BestiaryPresenter(IDrawUtil drawUtil)
+    public BestiaryPresenter(IDrawUtil drawUtil, IDrawEnemyUtil drawEnemyUtil)
     {
         _drawUtil = drawUtil;
+        _drawEnemyUtil = drawEnemyUtil;
     }
 
     public void Draw(IRayConnection rayConnection)
@@ -66,7 +69,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Takes 1 hit to defeat",
             "- Deals 1 damage on contact",
             "- Common enemy, spawns frequently"
-        }, startY, Color.White, cardWidth);
+        }, startY, Color.White, cardWidth, EnemyEnum.Cedilla);
 
         // Draw The Spinner entry
         DrawEnemyEntry(rayConnection, "The Spinner", new[]
@@ -76,7 +79,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Can be knocked back with sword",
             "- Deals 1 damage on contact",
             "- Moves in straight lines until hit"
-        }, startY + EntrySpacing, Color.Yellow, cardWidth);
+        }, startY + EntrySpacing, Color.Yellow, cardWidth, EnemyEnum.Spinner);
 
         // Draw The Charger entry
         DrawEnemyEntry(rayConnection, "The Charger", new[]
@@ -87,14 +90,14 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Deals 2 damage on contact",
             "- Drops valuable gold when defeated",
             "- Appears after killing 20 regular enemies"
-        }, startY + EntrySpacing * 2, Color.Red, cardWidth);
+        }, startY + EntrySpacing * 2, Color.Red, cardWidth, EnemyEnum.Charger);
 
         // Draw return instruction
         _drawUtil.DrawText(rayConnection, "Press any key to return", 20, 
             screenHeight - 40, Color.White);
     }
 
-    private void DrawEnemyEntry(IRayConnection rayConnection, string name, string[] description, float y, Color color, float cardWidth)
+    private void DrawEnemyEntry(IRayConnection rayConnection, string name, string[] description, float y, Color color, float cardWidth, EnemyEnum enemyType)
     {
         var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         var centerX = screenWidth / 2;
@@ -119,6 +122,21 @@ public class BestiaryPresenter : IBestiaryPresenter
             (int)profileX, (int)profileY,
             ProfileSize, ProfileSize,
             Color.Gold);
+
+        // Draw the enemy in the profile box
+        var screenPos = new Coord2dInt(
+            (int)(profileX + ProfileSize/2),
+            (int)(profileY + ProfileSize/2)
+        );
+
+        if (enemyType == EnemyEnum.Spinner)
+        {
+            _drawEnemyUtil.DrawSpinner(rayConnection, screenPos, 0);
+        }
+        else
+        {
+            _drawEnemyUtil.Draw(rayConnection, enemyType, screenPos);
+        }
 
         // Calculate text start position (after profile box)
         float textStartX = profileX + ProfileSize + ProfileMargin;
