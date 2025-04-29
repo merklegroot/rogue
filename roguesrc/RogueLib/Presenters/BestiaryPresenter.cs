@@ -67,8 +67,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "A basic enemy that wanders aimlessly",
             "- Moves randomly in 8 directions",
             "- Takes 1 hit to defeat",
-            "- Deals 1 damage on contact",
-            "- Common enemy, spawns frequently"
+            "- Deals 1 damage on contact"
         }, startY, Color.White, cardWidth, EnemyEnum.Cedilla);
 
         // Draw The Spinner entry
@@ -123,10 +122,10 @@ public class BestiaryPresenter : IBestiaryPresenter
             ProfileSize, ProfileSize,
             Color.Gold);
 
-        // Draw the enemy in the profile box
+        // Draw the enemy in the profile box - adjusted to be more centered
         var screenPos = new Coord2dInt(
-            (int)(profileX + ProfileSize/2),
-            (int)(profileY + ProfileSize/2)
+            (int)(profileX + ProfileSize/2 - (ScreenConstants.CharWidth * ScreenConstants.DisplayScale)/2),
+            (int)(profileY + ProfileSize/2 - (ScreenConstants.CharHeight * ScreenConstants.DisplayScale)/2)
         );
 
         if (enemyType == EnemyEnum.Spinner)
