@@ -16,6 +16,7 @@ public static class RogueLibRegistry
             .AddScoped<IShopPresenter, ShopPresenter>()
             .AddScoped<IGameApp, GameAppApp>()
             .AddScoped<IDrawUtil, DrawUtil>()
+            .AddScoped<IDrawEnemyUtil, DrawEnemyUtil>()
             .AddScoped<IRayConnectionFactory, RayConnectionFactory>()
             .AddScoped<IRayLoader, RayLoader>()
             .AddScoped<IChunkPresenter, ChunkPresenter>()
@@ -36,6 +37,7 @@ public static class RogueLibRegistry
             .AddScoped<IExplosionPresenter, ExplosionPresenter>()
             .AddScoped<IMapPresenter, MapPresenter>()
             .AddScoped<IMapUtil, MapUtil>()
+            .AddScoped<IScreenUtil, ScreenUtil>()
             .AddScoped<IChargerPresenter, ChargerPresenter>()
             .AddScoped<IGoldPickupPresenter, GoldPickupPresenter>()
             .AddScoped<IBestiaryPresenter, BestiaryPresenter>();
