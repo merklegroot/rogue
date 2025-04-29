@@ -4,16 +4,16 @@ using RogueLib.Constants;
 
 namespace RogueLib.Presenters;
 
-public interface IEnemyPresenter
+public interface ICedillaPresenter
 {
     void Draw(IRayConnection rayConnection, GameState state);
 }
 
-public class EnemyPresenter : IEnemyPresenter
+public class CedillaPresenter : ICedillaPresenter
 {
     private readonly IDrawUtil _drawUtil;
 
-    public EnemyPresenter(IDrawUtil drawUtil)
+    public CedillaPresenter(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
     }

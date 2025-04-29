@@ -80,7 +80,7 @@ public class BestiaryPresenter : IBestiaryPresenter
         // Draw The Charger entry
         DrawEnemyEntry(rayConnection, "The Charger", new[]
         {
-            "A powerful boss that hunts you down",
+            "A powerful enemy that hunts you down",
             "- Charges directly at the player",
             "- Takes 5 hits to defeat",
             "- Deals 2 damage on contact",

@@ -44,7 +44,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly ICooldownIndicatorPresenter _cooldownIndicatorPresenter;
     private readonly IUpdateEnemiesHandler _updateEnemiesHandler;
     private readonly IMenuInputHandler _menuInputHandler;
-    private readonly IEnemyPresenter _enemyPresenter;
+    private readonly ICedillaPresenter _enemyPresenter;
     private readonly IExplosionPresenter _explosionPresenter;
     private readonly IMapPresenter _mapPresenter;
     private readonly IChargerPresenter _chargerPresenter;
@@ -74,7 +74,7 @@ public class ScreenPresenter : IScreenPresenter
         ICooldownIndicatorPresenter cooldownIndicatorPresenter,
         IUpdateEnemiesHandler updateEnemiesHandler,
         IMenuInputHandler menuInputHandler,
-        IEnemyPresenter enemyPresenter,
+        ICedillaPresenter enemyPresenter,
         IExplosionPresenter explosionPresenter,
         IMapPresenter mapPresenter,
         IGoldPickupPresenter goldPickupPresenter,
