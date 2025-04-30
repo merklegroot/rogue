@@ -56,7 +56,7 @@ public class BestiaryPresenter : IBestiaryPresenter
         // Draw decorative line under title
         var lineY = 40 + TitleSize + 10;
         var lineWidth = titleSize.X - 20;
-        Raylib.DrawRectangle((int)(centerX - lineWidth/2), (int)lineY, (int)lineWidth, 2, Color.Gold);
+        Raylib.DrawRectangle((int)(centerX - lineWidth/2), lineY, (int)lineWidth, 2, Color.Gold);
 
         // Start Y position for enemy entries
         var startY = lineY + 50;
@@ -123,9 +123,9 @@ public class BestiaryPresenter : IBestiaryPresenter
             Color.Gold);
 
         // Draw the enemy in the profile box - adjusted to be more centered
-        var screenPos = new Coord2dInt(
-            (int)(profileX + ProfileSize/2 - (ScreenConstants.CharWidth * ScreenConstants.DisplayScale)/2),
-            (int)(profileY + ProfileSize/2 - (ScreenConstants.CharHeight * ScreenConstants.DisplayScale)/2)
+        var screenPos = new Coord2dFloat(
+            profileX + ProfileSize/2 - (ScreenConstants.CharWidth * ScreenConstants.DisplayScale)/2,
+            profileY + ProfileSize/2 - (ScreenConstants.CharHeight * ScreenConstants.DisplayScale)/2
         );
 
         if (enemyType == EnemyEnum.Spinner)

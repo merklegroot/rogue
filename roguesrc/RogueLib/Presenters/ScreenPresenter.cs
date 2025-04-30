@@ -1330,17 +1330,21 @@ public class ScreenPresenter : IScreenPresenter
         if (Math.Abs(deltaX) > GameConstants.CameraDeadZone)
         {
             // Move camera in the direction of the player
-            state.CameraState.X += deltaX > 0 ? 
-                Math.Min(deltaX - GameConstants.CameraDeadZone, 0.5f) : 
-                Math.Max(deltaX + GameConstants.CameraDeadZone, -0.5f);
+            var cameraX = state.CameraState.X + (deltaX > 0
+                ? Math.Min(deltaX - GameConstants.CameraDeadZone, 0.5f)
+                : Math.Max(deltaX + GameConstants.CameraDeadZone, -0.5f));
+            
+            state.CameraState = state.CameraState with { X = cameraX };
         }
         
         if (Math.Abs(deltaY) > GameConstants.CameraDeadZone)
         {
             // Move camera in the direction of the player
-            state.CameraState.Y += deltaY > 0 ? 
+            var cameraY = state.CameraState.Y + (deltaY > 0 ? 
                 Math.Min(deltaY - GameConstants.CameraDeadZone, 0.5f) : 
-                Math.Max(deltaY + GameConstants.CameraDeadZone, -0.5f);
+                Math.Max(deltaY + GameConstants.CameraDeadZone, -0.5f));
+            
+            state.CameraState = state.CameraState with { Y = cameraY };
         }
     }
 
@@ -1649,8 +1653,7 @@ public class ScreenPresenter : IScreenPresenter
         state.PlayerPosition = new Coord2dFloat(newX + 0.5f, newY + 0.5f);
 
         // Immediately center camera on player for initial spawn
-        state.CameraState.X = state.PlayerPosition.X;
-        state.CameraState.Y = state.PlayerPosition.Y;
+        state.CameraState = new Coord2dFloat(state.PlayerPosition.X, state.PlayerPosition.Y);
 
         if (_mapUtil.IsWalkableTile(state.Map, (int)Math.Floor(state.PlayerPosition.X), (int)Math.Floor(state.PlayerPosition.Y)))
         {

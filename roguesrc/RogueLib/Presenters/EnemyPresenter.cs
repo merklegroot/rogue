@@ -29,7 +29,7 @@ public class EnemyPresenter : IEnemyPresenter
             if (!enemy.IsAlive)
                 continue;
             
-            var cedillaScreenPos = _screenUtil.ToScreenCoord(enemy.Position, state);
+            var cedillaScreenPos = _screenUtil.ToScreenCoord(enemy.Position, state.CameraState);
             _drawEnemyUtil.Draw(rayConnection, EnemyEnum.Cedilla, cedillaScreenPos);
         }
         
@@ -38,7 +38,7 @@ public class EnemyPresenter : IEnemyPresenter
             if (!spinner.IsAlive)
                 continue;
             
-            var spinnerScreenPos = _screenUtil.ToScreenCoord(new Coord2dInt((int)spinner.X, (int)spinner.Y), state);
+            var spinnerScreenPos = _screenUtil.ToScreenCoord(new Coord2dFloat(spinner.X, spinner.Y), state.CameraState);
             _drawEnemyUtil.DrawSpinner(rayConnection, spinnerScreenPos, spinner.SpinAngle);
         }
     }

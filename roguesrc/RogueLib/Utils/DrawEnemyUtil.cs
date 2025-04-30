@@ -15,7 +15,8 @@ public enum EnemyEnum
 public interface IDrawEnemyUtil
 {
     void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dInt screenPosition);
-    void DrawSpinner(IRayConnection rayConnection, Coord2dInt screenPosition, float spinAngle);
+    void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dFloat screenPosition);
+    void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle);
 }
 
 public class DrawEnemyUtil : IDrawEnemyUtil
@@ -25,6 +26,11 @@ public class DrawEnemyUtil : IDrawEnemyUtil
     public DrawEnemyUtil(IDrawUtil drawUtil)
     {
         _drawUtil = drawUtil;
+    }
+
+    public void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dFloat screenPosition)
+    {
+        Draw(rayConnection, enemyEnum, new Coord2dInt((int)screenPosition.X, (int)screenPosition.Y));
     }
     
     public void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dInt screenPosition)
@@ -52,10 +58,10 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         _drawUtil.DrawCharacter(rayConnection, ScreenConstants.ChargerCharacter, screenPosition.X, screenPosition.Y, ScreenConstants.ChargerColor);
     }
     
-    public void DrawSpinner(IRayConnection rayConnection, Coord2dInt screenPosition, float spinAngle)
+    public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)
     {
         // Draw the center 'O'
-        _drawUtil.DrawCharacter(rayConnection, 'O', screenPosition.X, screenPosition.Y, Color.LightGray);
+        _drawUtil.DrawCharacter(rayConnection, 'O', (int)screenPosition.X, (int)screenPosition.Y, Color.LightGray);
 
         // Blade length in pixels
         const int bladeLen = 24;
@@ -72,7 +78,7 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             Raylib.DrawLineEx(new System.Numerics.Vector2(screenPosition.X, screenPosition.Y), new System.Numerics.Vector2(bx, by), bladeThick, Color.LightGray);
             
             // Draw '%' at blade tip
-            _drawUtil.DrawCharacter(rayConnection, '%', bx, by, Color.LightGray);
+            _drawUtil.DrawCharacter(rayConnection, '%', (int)bx, (int)by, Color.LightGray);
         }
     }
 }

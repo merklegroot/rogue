@@ -48,7 +48,7 @@ public class GameState
     
     public ShopState ShopState { get; set; } = new ShopState();
 
-    public CameraState CameraState { get; set; } = new CameraState();
+    public Coord2dFloat CameraState { get; set; } = new Coord2dFloat();
 
     public List<string> Map { get; set; } = [];
 
