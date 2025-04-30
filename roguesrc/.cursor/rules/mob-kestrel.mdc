@@ -1,1 +1,30 @@
- 
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Kestrel Enemy [°]>
+
+The Kestrel is an agile flying enemy that hunts the player with swooping attacks:
+
+## Behavior
+- Can only move left or right.
+- When the player moves between it and a wall, it darts in the horizontal direction toward the player.
+- Once launched, it keeps moving until it hits the wall.
+- Once it's hits the wall, it turns around and stays still.
+
+## Combat Properties
+- Takes 1 hits to defeat
+- Deals 1 damage on collision
+- Moves fast!
+
+## Visual Design
+- Represented by the ASCII art: [°]>
+- Right facing: [°]>
+- Left facing: <[°]
+- Faces left/right depending on movement direction
+
+## Spawning
+- Kestrels should only spawn along a wall facing away from it.
+- There should be at least two empty spaces for the Kestrel to spawn.
+

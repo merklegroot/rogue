@@ -4,14 +4,6 @@ using RogueLib.Constants;
 using RogueLib.Models;
 using RogueLib.Utils;
 
-public enum EnemyEnum
-{
-    Invalid = 0,
-    Cedilla = 1,
-    Spinner = 2,
-    Charger = 3
-}
-
 public interface IDrawEnemyUtil
 {
     void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dInt screenPosition);
