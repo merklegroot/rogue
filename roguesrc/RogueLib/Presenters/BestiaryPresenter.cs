@@ -61,6 +61,17 @@ public class BestiaryPresenter : IBestiaryPresenter
         // Start Y position for enemy entries
         var startY = lineY + 50;
 
+        // Draw The Kestrel entry
+        DrawEnemyEntry(rayConnection, "The Kestrel", new[]
+        {
+            "An agile flying enemy that hunts the player",
+            "- Can only move left or right",
+            "- Darts toward player when between it and wall",
+            "- Keeps moving until hitting a wall",
+            "- Takes 1 hit to defeat",
+            "- Deals 1 damage on contact"
+        }, startY, Color.SkyBlue, cardWidth, EnemyEnum.Kestrel);
+
         // Draw The Cedilla entry
         DrawEnemyEntry(rayConnection, "The Cedilla", new[]
         {
@@ -68,7 +79,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Moves randomly in 8 directions",
             "- Takes 1 hit to defeat",
             "- Deals 1 damage on contact"
-        }, startY, Color.White, cardWidth, EnemyEnum.Cedilla);
+        }, startY + EntrySpacing, Color.White, cardWidth, EnemyEnum.Cedilla);
 
         // Draw The Spinner entry
         DrawEnemyEntry(rayConnection, "The Spinner", new[]
@@ -78,7 +89,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Can be knocked back with sword",
             "- Deals 1 damage on contact",
             "- Moves in straight lines until hit"
-        }, startY + EntrySpacing, Color.Yellow, cardWidth, EnemyEnum.Spinner);
+        }, startY + EntrySpacing * 2, Color.Yellow, cardWidth, EnemyEnum.Spinner);
 
         // Draw The Charger entry
         DrawEnemyEntry(rayConnection, "The Charger", new[]
@@ -89,7 +100,7 @@ public class BestiaryPresenter : IBestiaryPresenter
             "- Deals 2 damage on contact",
             "- Drops valuable gold when defeated",
             "- Appears after killing 20 regular enemies"
-        }, startY + EntrySpacing * 2, Color.Red, cardWidth, EnemyEnum.Charger);
+        }, startY + EntrySpacing * 3, Color.Red, cardWidth, EnemyEnum.Charger);
 
         // Draw return instruction
         _drawUtil.DrawText(rayConnection, "Press any key to return", 20, 

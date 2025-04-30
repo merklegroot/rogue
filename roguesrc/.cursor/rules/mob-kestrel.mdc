@@ -5,7 +5,7 @@ alwaysApply: true
 ---
 # Kestrel Enemy [°]>
 
-The Kestrel is an agile flying enemy that hunts the player with swooping attacks:
+The Kestrel is an agile flying enemy that hunts the player with darting attacks:
 
 ## Behavior
 - Can only move left or right.

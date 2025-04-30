@@ -71,9 +71,9 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         var kestrelColor = new Color(135, 206, 235, 255); // Sky blue color for the kestrel
         
         // TODO: Add direction parameter to determine facing. For now, draw right-facing
-        _drawUtil.DrawCharacter(rayConnection, '[', screenPosition.X - 1, screenPosition.Y, kestrelColor); // body
-        _drawUtil.DrawCharacter(rayConnection, '°', screenPosition.X, screenPosition.Y, kestrelColor); // eye
-        _drawUtil.DrawCharacter(rayConnection, '>', screenPosition.X + 1, screenPosition.Y, kestrelColor); // beak
+        _drawUtil.DrawCharacter(rayConnection, '[', screenPosition.X - 20, screenPosition.Y, kestrelColor); // body
+        _drawUtil.DrawCharacter(rayConnection, 7, screenPosition.X, screenPosition.Y - 14, kestrelColor); // eye
+        _drawUtil.DrawCharacter(rayConnection, '>', screenPosition.X + 20, screenPosition.Y, kestrelColor); // beak
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)
