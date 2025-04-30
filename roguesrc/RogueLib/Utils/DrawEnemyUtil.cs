@@ -4,6 +4,15 @@ using RogueLib.Constants;
 using RogueLib.Models;
 using RogueLib.Utils;
 
+public enum EnemyEnum
+{
+    Invalid = 0,
+    Cedilla = 1,
+    Spinner = 2,
+    Charger = 3,
+    Kestrel = 4
+}
+
 public interface IDrawEnemyUtil
 {
     void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dInt screenPosition);
@@ -38,6 +47,12 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             DrawCharger(rayConnection, screenPosition);
             return;
         }
+
+        if (enemyEnum == EnemyEnum.Kestrel)
+        {
+            DrawKestrel(rayConnection, screenPosition);
+            return;
+        }
     }
 
     private void DrawCedilla(IRayConnection rayConnection, Coord2dInt screenPosition)
@@ -48,6 +63,17 @@ public class DrawEnemyUtil : IDrawEnemyUtil
     private void DrawCharger(IRayConnection rayConnection, Coord2dInt screenPosition)
     {
         _drawUtil.DrawCharacter(rayConnection, ScreenConstants.ChargerCharacter, screenPosition.X, screenPosition.Y, ScreenConstants.ChargerColor);
+    }
+
+    private void DrawKestrel(IRayConnection rayConnection, Coord2dInt screenPosition)
+    {
+        // Draw the kestrel bird character by character: [°]>
+        var kestrelColor = new Color(135, 206, 235, 255); // Sky blue color for the kestrel
+        
+        // TODO: Add direction parameter to determine facing. For now, draw right-facing
+        _drawUtil.DrawCharacter(rayConnection, '[', screenPosition.X - 1, screenPosition.Y, kestrelColor); // body
+        _drawUtil.DrawCharacter(rayConnection, '°', screenPosition.X, screenPosition.Y, kestrelColor); // eye
+        _drawUtil.DrawCharacter(rayConnection, '>', screenPosition.X + 1, screenPosition.Y, kestrelColor); // beak
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)
