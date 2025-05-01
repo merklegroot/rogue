@@ -27,6 +27,8 @@ public class BestiaryPresenter : IBestiaryPresenter
     private const int ProfileMargin = 20;  // Margin between profile and text
     private const int HorizontalSpacing = 40; // Spacing between entries in the same row
 
+    private record struct EnemyEntry(string Name, string[] Description, Color Color, EnemyEnum Type);
+
     public BestiaryPresenter(IDrawUtil drawUtil, IDrawEnemyUtil drawEnemyUtil)
     {
         _drawUtil = drawUtil;
@@ -35,6 +37,64 @@ public class BestiaryPresenter : IBestiaryPresenter
 
     public void Draw(IRayConnection rayConnection)
     {
+        // Define all enemy entries
+        var entries = new[]
+        {
+            new EnemyEntry(
+                "The Kestrel",
+                new[]
+                {
+                    "An agile flying enemy that hunts the player",
+                    "- Can only move left or right",
+                    "- Darts toward player when between it and wall",
+                    "- Keeps moving until hitting a wall",
+                    "- Takes 1 hit to defeat",
+                    "- Deals 1 damage on contact"
+                },
+                Color.SkyBlue,
+                EnemyEnum.Kestrel
+            ),
+            new EnemyEntry(
+                "The Cedilla",
+                new[]
+                {
+                    "A basic enemy that wanders aimlessly",
+                    "- Moves randomly in 8 directions",
+                    "- Takes 1 hit to defeat",
+                    "- Deals 1 damage on contact"
+                },
+                Color.White,
+                EnemyEnum.Cedilla
+            ),
+            new EnemyEntry(
+                "The Spinner",
+                new[]
+                {
+                    "A whirling menace that bounces around",
+                    "- Larger collision radius than other enemies",
+                    "- Can be knocked back with sword",
+                    "- Deals 1 damage on contact",
+                    "- Moves in straight lines until hit"
+                },
+                Color.Yellow,
+                EnemyEnum.Spinner
+            ),
+            new EnemyEntry(
+                "The Charger",
+                new[]
+                {
+                    "A powerful enemy that hunts you down",
+                    "- Charges directly at the player",
+                    "- Takes 5 hits to defeat",
+                    "- Deals 2 damage on contact",
+                    "- Drops valuable gold when defeated",
+                    "- Appears after killing 20 regular enemies"
+                },
+                Color.Red,
+                EnemyEnum.Charger
+            )
+        };
+
         // Calculate screen dimensions
         var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
         var screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
@@ -42,6 +102,18 @@ public class BestiaryPresenter : IBestiaryPresenter
         // Calculate card width (screen width minus margins and spacing between cards)
         var totalWidth = screenWidth - (ScreenMargin * 2);
         var cardWidth = (totalWidth - HorizontalSpacing) / 2; // Split width between two cards
+        
+        // Calculate maximum height needed for any entry
+        float maxHeight = 0;
+        foreach (var entry in entries)
+        {
+            var nameSize = Raylib.MeasureTextEx(rayConnection.MenuFont, entry.Name, EnemyNameSize, 1);
+            var height = Math.Max(
+                ProfileSize + (BorderPadding * 2),
+                nameSize.Y + (entry.Description.Length * (DescriptionSize + 5)) + (BorderPadding * 2)
+            );
+            maxHeight = Math.Max(maxHeight, height);
+        }
         
         // Draw title
         var title = "BESTIARY";
@@ -67,57 +139,31 @@ public class BestiaryPresenter : IBestiaryPresenter
         var leftX = ScreenMargin;
         var rightX = ScreenMargin + cardWidth + HorizontalSpacing;
 
-        // First row: Kestrel and Cedilla
-        DrawEnemyEntry(rayConnection, "The Kestrel", new[]
+        // Draw entries in rows of two
+        for (int i = 0; i < entries.Length; i += 2)
         {
-            "An agile flying enemy that hunts the player",
-            "- Can only move left or right",
-            "- Darts toward player when between it and wall",
-            "- Keeps moving until hitting a wall",
-            "- Takes 1 hit to defeat",
-            "- Deals 1 damage on contact"
-        }, startY, leftX, Color.SkyBlue, cardWidth, EnemyEnum.Kestrel);
-
-        DrawEnemyEntry(rayConnection, "The Cedilla", new[]
-        {
-            "A basic enemy that wanders aimlessly",
-            "- Moves randomly in 8 directions",
-            "- Takes 1 hit to defeat",
-            "- Deals 1 damage on contact"
-        }, startY, rightX, Color.White, cardWidth, EnemyEnum.Cedilla);
-
-        // Second row: Spinner and Charger
-        DrawEnemyEntry(rayConnection, "The Spinner", new[]
-        {
-            "A whirling menace that bounces around",
-            "- Larger collision radius than other enemies",
-            "- Can be knocked back with sword",
-            "- Deals 1 damage on contact",
-            "- Moves in straight lines until hit"
-        }, startY + EntrySpacing, leftX, Color.Yellow, cardWidth, EnemyEnum.Spinner);
-
-        DrawEnemyEntry(rayConnection, "The Charger", new[]
-        {
-            "A powerful enemy that hunts you down",
-            "- Charges directly at the player",
-            "- Takes 5 hits to defeat",
-            "- Deals 2 damage on contact",
-            "- Drops valuable gold when defeated",
-            "- Appears after killing 20 regular enemies"
-        }, startY + EntrySpacing, rightX, Color.Red, cardWidth, EnemyEnum.Charger);
+            var rowY = startY + (i / 2 * (maxHeight + EntrySpacing));
+            
+            // Draw left entry
+            DrawEnemyEntry(rayConnection, entries[i].Name, entries[i].Description, rowY, leftX, 
+                entries[i].Color, cardWidth, entries[i].Type, maxHeight);
+            
+            // Draw right entry if it exists
+            if (i + 1 < entries.Length)
+            {
+                DrawEnemyEntry(rayConnection, entries[i + 1].Name, entries[i + 1].Description, rowY, rightX, 
+                    entries[i + 1].Color, cardWidth, entries[i + 1].Type, maxHeight);
+            }
+        }
 
         // Draw return instruction
         _drawUtil.DrawText(rayConnection, "Press any key to return", 20, 
             screenHeight - 40, Color.White);
     }
 
-    private void DrawEnemyEntry(IRayConnection rayConnection, string name, string[] description, float y, float x, Color color, float cardWidth, EnemyEnum enemyType)
+    private void DrawEnemyEntry(IRayConnection rayConnection, string name, string[] description, float y, float x, Color color, float cardWidth, EnemyEnum enemyType, float borderHeight)
     {
         var nameSize = Raylib.MeasureTextEx(rayConnection.MenuFont, name, EnemyNameSize, 1);
-        
-        // Calculate border dimensions
-        float borderHeight = Math.Max(ProfileSize + (BorderPadding * 2), 
-            nameSize.Y + (description.Length * (DescriptionSize + 5)) + (BorderPadding * 2));
         float borderX = x;
         float borderY = y - BorderPadding;
 
