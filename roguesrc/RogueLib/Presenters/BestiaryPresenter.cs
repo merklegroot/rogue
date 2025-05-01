@@ -167,15 +167,45 @@ public class BestiaryPresenter : IBestiaryPresenter
         float borderX = x;
         float borderY = y - BorderPadding;
 
+        // Use consistent dark background colors based on white
+        var backgroundColor = new Color(
+            (byte)(255 * 0.2f),
+            (byte)(255 * 0.2f),
+            (byte)(255 * 0.2f),
+            (byte)255
+        );
+
+        // Even darker background for profile box
+        var profileBackgroundColor = new Color(
+            (byte)(255 * 0.1f),
+            (byte)(255 * 0.1f),
+            (byte)(255 * 0.1f),
+            (byte)255
+        );
+
+        // Draw main entry background
+        Raylib.DrawRectangle(
+            (int)borderX, (int)borderY,
+            (int)cardWidth, (int)borderHeight,
+            backgroundColor);
+
         // Draw outer border
         Raylib.DrawRectangleLines(
             (int)borderX, (int)borderY,
             (int)cardWidth, (int)borderHeight,
             Color.Gold);
 
-        // Draw profile box on the left
+        // Draw profile box background and border
         float profileX = borderX + BorderPadding;
         float profileY = borderY + (borderHeight - ProfileSize) / 2;
+
+        // Draw profile background
+        Raylib.DrawRectangle(
+            (int)profileX, (int)profileY,
+            ProfileSize, ProfileSize,
+            profileBackgroundColor);
+
+        // Draw profile border
         Raylib.DrawRectangleLines(
             (int)profileX, (int)profileY,
             ProfileSize, ProfileSize,
