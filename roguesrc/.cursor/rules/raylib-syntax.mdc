@@ -1,0 +1,98 @@
+---
+description: 
+globs: *.cs
+alwaysApply: false
+---
+# Raylib C# Syntax Guide
+
+## Color Handling
+
+### Color Properties
+- Use uppercase properties: `Color.R`, `Color.G`, `Color.B`, `Color.A`
+- ❌ Incorrect: `color.r`, `color.g`, `color.b`, `color.a`
+- ✅ Correct: `color.R`, `color.G`, `color.B`, `color.A`
+
+### Color Constructor
+- Constructor is overloaded for both `byte` and `int`
+- Always explicitly cast to `byte` to avoid ambiguity
+- ❌ Incorrect: `new Color(255, 255, 255, 255)`
+- ✅ Correct: `new Color((byte)255, (byte)255, (byte)255, (byte)255)`
+
+### Predefined Colors
+- Use built-in colors when possible: `Color.White`, `Color.Gold`, etc.
+- For custom colors, use byte values (0-255)
+- For color math, remember to cast back to byte:
+```csharp
+var darkColor = new Color(
+    (byte)(baseColor.R * 0.2f),
+    (byte)(baseColor.G * 0.2f),
+    (byte)(baseColor.B * 0.2f),
+    (byte)255
+);
+```
+
+## Drawing Functions
+
+### Rectangle Drawing
+- Position and size parameters are `int`
+- Cast float values to int:
+```csharp
+Raylib.DrawRectangle(
+    (int)x, (int)y,
+    (int)width, (int)height,
+    color
+);
+```
+
+### Text Drawing
+- `DrawText` uses basic font with position and size
+- `DrawTextEx` allows custom font and more control
+- Vector2 for position in `DrawTextEx`:
+```csharp
+Raylib.DrawTextEx(
+    font,
+    text,
+    new Vector2(x, y),
+    fontSize,
+    spacing,
+    color
+);
+```
+
+## Texture Handling
+
+### Loading Textures
+- Always unload textures when done
+- Use `LoadTexture` for files
+- Use `LoadTextureFromImage` for image data
+
+### RenderTextures
+- Used for off-screen rendering
+- Begin/End pattern:
+```csharp
+Raylib.BeginTextureMode(renderTexture);
+// Drawing code here
+Raylib.EndTextureMode();
+```
+
+## Common Gotchas
+
+1. Color Constructor Ambiguity
+   - Always cast to byte
+   - Use predefined colors when possible
+
+2. Float to Int Conversion
+   - Drawing functions expect int coordinates
+   - Cast float positions explicitly
+
+3. Text Measurement
+   - `MeasureText` for basic font
+   - `MeasureTextEx` for custom fonts
+
+4. Shader Values
+   - Set shader values with correct type
+   - Use `ShaderUniformDataType` enum
+
+5. Rectangle Structs
+   - Y can be negative for flipped drawing
+   - Source rectangles use texture coordinates
