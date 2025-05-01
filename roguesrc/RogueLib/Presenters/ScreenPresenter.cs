@@ -34,6 +34,7 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IDebugPanelPresenter _debugPanelPresenter;
     private readonly ISpawnEnemyHandler _spawnEnemyHandler;
     private readonly IPlayerPresenter _playerPresenter;
+    private readonly IChargerPresenter _chargerPresenter;
     private readonly IBannerPresenter _bannerPresenter;
     private readonly IMenuPresenter _menuPresenter;
     private readonly ICharacterSetPresenter _characterSetPresenter;
@@ -47,11 +48,11 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IEnemyPresenter _enemyPresenter;
     private readonly IExplosionPresenter _explosionPresenter;
     private readonly IMapPresenter _mapPresenter;
-    private readonly IChargerPresenter _chargerPresenter;
     private readonly IGoldPickupPresenter _goldPickupPresenter;
     private readonly IMapUtil _mapUtil;
     private readonly IBestiaryPresenter _bestiaryPresenter;
     private readonly IInitializeShopHandler _initializeShopHandler;
+    private readonly IShopInputHandler _shopInputHandler;
     private GameScreenEnum _lastScreen = (GameScreenEnum)(-1);
     private int _lastMenuRemarkSeed = -1;
 
@@ -81,7 +82,8 @@ public class ScreenPresenter : IScreenPresenter
         IGoldPickupPresenter goldPickupPresenter,
         IMapUtil mapUtil,
         IBestiaryPresenter bestiaryPresenter,
-        IInitializeShopHandler initializeShopHandler)
+        IInitializeShopHandler initializeShopHandler,
+        IShopInputHandler shopInputHandler)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -109,6 +111,7 @@ public class ScreenPresenter : IScreenPresenter
         _mapUtil = mapUtil;
         _bestiaryPresenter = bestiaryPresenter;
         _initializeShopHandler = initializeShopHandler;
+        _shopInputHandler = shopInputHandler;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -195,7 +198,7 @@ public class ScreenPresenter : IScreenPresenter
 
             case GameScreenEnum.Shop:
                 _shopPresenter.Draw(rayConnection, state);
-                HandleShopInput(state);
+                _shopInputHandler.Handle(state);
                 break;
 
             case GameScreenEnum.Bestiary:
@@ -997,55 +1000,6 @@ public class ScreenPresenter : IScreenPresenter
         return closeRequested;
     }
 
-    private void HandleShopInput(GameState state)
-    {
-        while (state.KeyEvents.Count > 0)
-        {
-            var key = state.KeyEvents.Dequeue();
-            
-            if (key == KeyboardKey.Escape)
-            {
-                state.CurrentScreen = GameScreenEnum.Adventure;
-            }
-            else if (key == KeyboardKey.Up)
-            {
-                // Move selection up, skipping headers
-                int newSelection = state.ShopState.SelectedShopItem - 1;
-                while (newSelection >= 0 && state.ShopState.ShopInventory[newSelection].Category == ShopCategory.Header)
-                {
-                    newSelection--;
-                }
-                state.ShopState.SelectedShopItem = Math.Max(0, newSelection);
-            }
-            else if (key == KeyboardKey.Down)
-            {
-                // Move selection down, skipping headers
-                int newSelection = state.ShopState.SelectedShopItem + 1;
-                while (newSelection < state.ShopState.ShopInventory.Count && state.ShopState.ShopInventory[newSelection].Category == ShopCategory.Header)
-                {
-                    newSelection++;
-                }
-                state.ShopState.SelectedShopItem = Math.Min(state.ShopState.ShopInventory.Count - 1, newSelection);
-            }
-            else if (key == KeyboardKey.Enter)
-            {
-                // Try to purchase the selected item
-                if (state.ShopState.SelectedShopItem >= 0 && state.ShopState.SelectedShopItem < state.ShopState.ShopInventory.Count)
-                {
-                    var item = state.ShopState.ShopInventory[state.ShopState.SelectedShopItem];
-                    // Don't allow purchasing headers
-                    if (item.Category != ShopCategory.Header && state.PlayerGold >= item.Price)
-                    {
-                        // Deduct gold
-                        state.PlayerGold -= item.Price;
-                        
-                        // Apply the purchase effect
-                        item.OnPurchase();
-                    }
-                }
-            }
-        }
-    }
 
     private void UpdateCrossbowBolts(GameState state)
     {
