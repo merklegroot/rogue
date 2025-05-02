@@ -87,24 +87,22 @@ public class DrawEnemyUtil : IDrawEnemyUtil
     
     private void DrawMinotaur(IRayConnection rayConnection, Coord2dInt screenPosition)
     {
-        // First frame of the minotaur:
-        // ┌[Ö]┐
-        //  ┃|┃
-        //  / \
+        // Use the first frame from MinotaurFrames
         var color = Color.Brown;
-        _drawUtil.DrawCharacter(rayConnection, '┌', screenPosition.X - 2, screenPosition.Y, color);
-        _drawUtil.DrawCharacter(rayConnection, '[', screenPosition.X - 1, screenPosition.Y, color);
-        _drawUtil.DrawCharacter(rayConnection, 'Ö', screenPosition.X, screenPosition.Y, color);
-        _drawUtil.DrawCharacter(rayConnection, ']', screenPosition.X + 1, screenPosition.Y, color);
-        _drawUtil.DrawCharacter(rayConnection, '┐', screenPosition.X + 2, screenPosition.Y, color);
-
-        _drawUtil.DrawCharacter(rayConnection, '┃', screenPosition.X - 1, screenPosition.Y + 1, color);
-        _drawUtil.DrawCharacter(rayConnection, '|', screenPosition.X, screenPosition.Y + 1, color);
-        _drawUtil.DrawCharacter(rayConnection, '┃', screenPosition.X + 1, screenPosition.Y + 1, color);
-
-        _drawUtil.DrawCharacter(rayConnection, '/', screenPosition.X - 1, screenPosition.Y + 2, color);
-        _drawUtil.DrawCharacter(rayConnection, ' ', screenPosition.X, screenPosition.Y + 2, color);
-        _drawUtil.DrawCharacter(rayConnection, '\\', screenPosition.X + 1, screenPosition.Y + 2, color);
+        if (rayConnection.MinotaurFrames == null || rayConnection.MinotaurFrames.Count == 0)
+            return;
+        var frame = rayConnection.MinotaurFrames[0];
+        for (int dy = 0; dy < frame.Count; dy++)
+        {
+            var line = frame[dy];
+            for (int dx = 0; dx < line.Length; dx++)
+            {
+                char ch = line[dx];
+                if (ch == ' ')
+                    continue;
+                _drawUtil.DrawCharacter(rayConnection, ch, screenPosition.X + dx, screenPosition.Y + dy, color);
+            }
+        }
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)

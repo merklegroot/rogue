@@ -15,7 +15,8 @@ public interface IRayConnection : IDisposable
     Texture2D SmileyBorderTexture { get; init; }
     Texture2D SmileyNeutralTexture { get; init; }
     Texture2D SmileyDeterminedTexture { get; init; }
-    public List<string> SarcasticRemarks { get; init; }
+    List<string> SarcasticRemarks { get; init; }
+    List<List<string>> MinotaurFrames { get; init; }
     int TimeLoc { get; init; }    
 }
 
@@ -48,6 +49,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
         public int TimeLoc { get; init; }
         public int ScanlineCountLoc { get; init; }
         public List<string> SarcasticRemarks { get; init; }
+        public List<List<string>> MinotaurFrames { get; init; }
 
         public RayConnection(IRayLoader rayLoader)
         {
@@ -60,6 +62,7 @@ public class RayConnectionFactory(IRayLoader rayLoader) : IRayConnectionFactory
             SmileyNeutralTexture = rayLoader.LoadSmileyNeutralImage();
             SmileyDeterminedTexture = rayLoader.LoadSmileyDeterminedImage();
             SarcasticRemarks = rayLoader.LoadSarcasticRemarks();
+            MinotaurFrames = rayLoader.LoadMinotaur();
 
             // Create a render texture the size of the window
             int width = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
