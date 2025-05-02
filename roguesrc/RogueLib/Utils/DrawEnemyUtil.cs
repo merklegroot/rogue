@@ -100,7 +100,8 @@ public class DrawEnemyUtil : IDrawEnemyUtil
                 char ch = line[dx];
                 if (ch == ' ')
                     continue;
-                _drawUtil.DrawCharacter(rayConnection, ch, screenPosition.X + dx, screenPosition.Y + dy, color);
+
+                _drawUtil.DrawCharacter(rayConnection, ch, (int)(screenPosition.X + dx * _screenUtil.ScreenDelX), (int)(screenPosition.Y + dy * _screenUtil.ScreenDelY), color);
             }
         }
     }

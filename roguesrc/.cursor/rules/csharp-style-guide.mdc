@@ -1,7 +1,7 @@
 ---
 description: 
-globs: *.cs
-alwaysApply: false
+globs: 
+alwaysApply: true
 ---
 # C# Style Guide
 

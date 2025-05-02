@@ -90,9 +90,9 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
         var randomIndex = Random.Next(validPositions.Count);
         var (newX, newY) = validPositions[randomIndex];
         
-        // 10% chance to spawn a minotaur, otherwise regular enemy
-        var spawnMinotaur = Random.NextDouble() < 0.1;
-        var enemyType = spawnMinotaur ? EnemyEnum.Minotaur : EnemyEnum.Cedilla;
+        // 20% chance to spawn a minotaur, otherwise regular enemy
+        var shouldSpawnMinotaur = Random.NextDouble() < 0.2;
+        var enemyType = shouldSpawnMinotaur ? EnemyEnum.Minotaur : EnemyEnum.Cedilla;
         state.Enemies.Add(new Enemy { Position = new Coord2dFloat(newX, newY), IsAlive = true, EnemyType = enemyType });
         
         // Spawn a spinner at the same position, with a random direction
