@@ -16,6 +16,8 @@ public interface IRayLoader
     Texture2D LoadSmileyDeterminedImage();
     List<string> LoadSarcasticRemarks();
     List<string> LoadMap();
+
+    List<List<string>> LoadMinotaur();
 }
 
 public class RayLoader : IRayLoader
@@ -69,6 +71,59 @@ public class RayLoader : IRayLoader
         .Select(queryLine => queryLine.Trim())
         .ToList();
     
+    public List<List<string>> LoadMinotaur()
+    {
+        var minotaurText = _resourceReader.ReadResourceString("minotaur.txt", typeof(RayLoader).Assembly);
+        // Frames are separated by # Frame
+        var frames = minotaurText.Split("# Frame");
+
+        // The frame starts on the first non-null/whitespace line
+        // and ends before the last null/whitespace line or the end of the group.
+
+
+        var minotaur = new List<List<string>>();
+        foreach (var frame in frames)
+        {
+            // Find the first non-empty line
+            var allLines = frame.SplitLines();
+            var startIndex = -1;
+            var endIndex = -1;
+            
+            // Find the first non-empty line
+            for (int i = 0; i < allLines.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(allLines[i]))
+                {
+                    startIndex = i;
+                    break;
+                }
+            }
+            
+            // Find the last non-empty line
+            for (int i = allLines.Length - 1; i >= 0; i--)
+            {
+                if (!string.IsNullOrWhiteSpace(allLines[i]))
+                {
+                    endIndex = i;
+                    break;
+                }
+            }
+            
+            // If we found valid content
+            if (startIndex >= 0 && endIndex >= 0)
+            {
+                var lines = allLines
+                    .Skip(startIndex)
+                    .Take(endIndex - startIndex + 1)
+                    .ToList();
+                
+                minotaur.Add(lines);
+            }
+        }
+
+        return minotaur;
+    }
+
     private Shader LoadShaderFromEmbeddedResource(string resourceName) =>
         LoadFromEmbeddedResource(resourceName, (fileName) => Raylib.LoadShader(null, fileName));
     

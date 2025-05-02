@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: *.cs
 alwaysApply: false
 ---
 # C# Style Guide
@@ -164,23 +164,37 @@ Use 'var' when:
 - The type is clear from the method name (e.g., `var result = GetUserById(id)`)
 - The type is a complex generic (e.g., `var dictionary = new Dictionary<string, List<int>>()`)
 
-Do not use 'var' when:
-- The type is not immediately clear
-- The type is a primitive (e.g., `int count = 0`)
-- The type is important for readability
-- The type is part of a public API 
-
 Boolean naming examples:
 ```csharp
 // Good
-bool isEnabled = true;
-bool hasPermission = false;
-bool canExecute = true;
-bool shouldProcess = false;
+var isEnabled = true;
+var hasPermission = false;
+var canExecute = true;
+var shouldProcess = false;
 
 // Bad
-bool enabled = true;
-bool permission = false;
-bool execute = true;
-bool process = false;
+var enabled = true;
+var permission = false;
+var execute = true;
+var process = false;
 ```
+
+## String Literals
+
+### Line Breaks
+- Use `Environment.NewLine` for platform-agnostic line breaks
+- ❌ Incorrect: `"\n"` or `$"\n"`
+- ✅ Correct: `Environment.NewLine` or `$"{Environment.NewLine}"`
+
+### Rationale
+- `Environment.NewLine` automatically uses the correct line ending for the current platform
+- Windows uses `\r\n`
+- Unix/Linux uses `\n`
+- Using `\n` directly may cause inconsistent line endings across platforms
+
+### Exception Cases
+- Only use `\n` when:
+  - Working with specific protocols that require LF
+  - Dealing with external systems that expect LF
+  - Writing cross-platform file formats that specify LF
+
