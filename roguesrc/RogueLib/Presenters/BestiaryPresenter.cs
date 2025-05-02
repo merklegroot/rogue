@@ -1,6 +1,5 @@
 using Raylib_cs;
 using RogueLib.Constants;
-using RogueLib.State;
 using System.Numerics;
 using RogueLib.Utils;
 using RogueLib.Models;
@@ -19,10 +18,9 @@ public class BestiaryPresenter : IBestiaryPresenter
     private const int TitleSize = 48;
     private const int EnemyNameSize = 32;
     private const int DescriptionSize = 20;
-    private const int EntrySpacing = 180;  // Vertical spacing between rows
+    private const int EntrySpacing = 20;  // Vertical spacing between rows
     private const int BorderPadding = 20;
     private const int ScreenMargin = 60;  // Margin from screen edges
-    private const int BorderThickness = 2;
     private const int ProfileSize = 120;   // Size of the profile square
     private const int ProfileMargin = 20;  // Margin between profile and text
     private const int HorizontalSpacing = 40; // Spacing between entries in the same row
@@ -92,6 +90,19 @@ public class BestiaryPresenter : IBestiaryPresenter
                 },
                 Color.Red,
                 EnemyEnum.Charger
+            ),
+            new EnemyEntry(
+                "The Minotaur",
+                new[]
+                {
+                    "A legendary beast that lurks in the maze",
+                    "- Large and imposing, but does not move (yet)",
+                    "- Takes many hits to defeat (future)",
+                    "- Deals heavy damage on contact (future)",
+                    "- Rarely spawns among regular enemies"
+                },
+                Color.Brown,
+                EnemyEnum.Minotaur
             )
         };
 
