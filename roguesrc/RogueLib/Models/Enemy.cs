@@ -10,4 +10,6 @@ public class Enemy
     public bool IsAlive { get; set; } = true;
     public bool IsMoving { get; set; } = false;
     public float MoveTimer { get; set; } = 0f;
+
+    public EnemyEnum EnemyType { get; set; } = EnemyEnum.Cedilla;
 }

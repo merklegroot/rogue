@@ -10,7 +10,8 @@ public enum EnemyEnum
     Cedilla = 1,
     Spinner = 2,
     Charger = 3,
-    Kestrel = 4
+    Kestrel = 4,
+    Minotaur = 5
 }
 
 public interface IDrawEnemyUtil
@@ -54,6 +55,12 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             DrawKestrel(rayConnection, screenPosition);
             return;
         }
+
+        if (enemyEnum == EnemyEnum.Minotaur)
+        {
+            DrawMinotaur(rayConnection, screenPosition);
+            return;
+        }
     }
 
     private void DrawCedilla(IRayConnection rayConnection, Coord2dInt screenPosition)
@@ -76,6 +83,28 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         _drawUtil.DrawCharacter(rayConnection, AsciiConstants.Ring, screenPosition.X, 
             (int)(screenPosition.Y - _screenUtil.ScreenDelY / 2.0f), kestrelColor); // eye
         _drawUtil.DrawCharacter(rayConnection, '>', (int)(screenPosition.X + _screenUtil.ScreenDelX), screenPosition.Y, kestrelColor); // beak
+    }
+    
+    private void DrawMinotaur(IRayConnection rayConnection, Coord2dInt screenPosition)
+    {
+        // First frame of the minotaur:
+        // ┌[Ö]┐
+        //  ┃|┃
+        //  / \
+        var color = Color.Brown;
+        _drawUtil.DrawCharacter(rayConnection, '┌', screenPosition.X - 2, screenPosition.Y, color);
+        _drawUtil.DrawCharacter(rayConnection, '[', screenPosition.X - 1, screenPosition.Y, color);
+        _drawUtil.DrawCharacter(rayConnection, 'Ö', screenPosition.X, screenPosition.Y, color);
+        _drawUtil.DrawCharacter(rayConnection, ']', screenPosition.X + 1, screenPosition.Y, color);
+        _drawUtil.DrawCharacter(rayConnection, '┐', screenPosition.X + 2, screenPosition.Y, color);
+
+        _drawUtil.DrawCharacter(rayConnection, '┃', screenPosition.X - 1, screenPosition.Y + 1, color);
+        _drawUtil.DrawCharacter(rayConnection, '|', screenPosition.X, screenPosition.Y + 1, color);
+        _drawUtil.DrawCharacter(rayConnection, '┃', screenPosition.X + 1, screenPosition.Y + 1, color);
+
+        _drawUtil.DrawCharacter(rayConnection, '/', screenPosition.X - 1, screenPosition.Y + 2, color);
+        _drawUtil.DrawCharacter(rayConnection, ' ', screenPosition.X, screenPosition.Y + 2, color);
+        _drawUtil.DrawCharacter(rayConnection, '\\', screenPosition.X + 1, screenPosition.Y + 2, color);
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)

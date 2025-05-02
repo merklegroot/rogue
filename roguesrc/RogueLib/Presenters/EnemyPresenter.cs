@@ -29,8 +29,8 @@ public class EnemyPresenter : IEnemyPresenter
             if (!enemy.IsAlive)
                 continue;
             
-            var cedillaScreenPos = _screenUtil.ToScreenCoord(enemy.Position, state.CameraState);
-            _drawEnemyUtil.Draw(rayConnection, EnemyEnum.Cedilla, cedillaScreenPos);
+            var screenPos = _screenUtil.ToScreenCoord(enemy.Position, state.CameraState);
+            _drawEnemyUtil.Draw(rayConnection, enemy.EnemyType, screenPos);
         }
         
         foreach (var spinner in state.Spinners)

@@ -6,5 +6,6 @@ public enum EnemyEnum
     Cedilla = 1,
     Spinner = 2,
     Charger = 3,
-    Kestrel = 4
+    Kestrel = 4,
+    Minotaur = 5
 }

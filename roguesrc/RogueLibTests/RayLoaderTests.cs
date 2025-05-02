@@ -22,10 +22,12 @@ public class RayLoaderTests(ITestOutputHelper outputHelper)
         for (int i = 0; i < minotaur.Count; i++)
         {
             outputHelper.WriteLine($"{Environment.NewLine}Frame {i + 1}:");
+            outputHelper.WriteLine("[BEGIN]");
             foreach (var line in minotaur[i])
             {
                 outputHelper.WriteLine(line);
             }
+            outputHelper.WriteLine("[END]");
         }
     }
 
