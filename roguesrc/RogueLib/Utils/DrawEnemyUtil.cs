@@ -87,23 +87,8 @@ public class DrawEnemyUtil : IDrawEnemyUtil
     
     private void DrawMinotaur(IRayConnection rayConnection, Coord2dInt screenPosition)
     {
-        // Use the first frame from MinotaurFrames
-        var color = Color.Brown;
-        if (rayConnection.MinotaurFrames == null || rayConnection.MinotaurFrames.Count == 0)
-            return;
-        var frame = rayConnection.MinotaurFrames[0];
-        for (int dy = 0; dy < frame.Count; dy++)
-        {
-            var line = frame[dy];
-            for (int dx = 0; dx < line.Length; dx++)
-            {
-                char ch = line[dx];
-                if (ch == ' ')
-                    continue;
-
-                _drawUtil.DrawCharacter(rayConnection, ch, (int)(screenPosition.X + dx * _screenUtil.ScreenDelX), (int)(screenPosition.Y + dy * _screenUtil.ScreenDelY), color);
-            }
-        }
+        // The first frame is good enough for the loiks of you.
+        DrawSimpleFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)
@@ -127,6 +112,23 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             
             // Draw '%' at blade tip
             _drawUtil.DrawCharacter(rayConnection, '%', (int)bx, (int)by, Color.LightGray);
+        }
+    }
+
+    private void DrawSimpleFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
+    {
+        var color = Color.White;
+        for (int dy = 0; dy < frame.Count; dy++)
+        {
+            var line = frame[dy];
+            for (int dx = 0; dx < line.Length; dx++)
+            {
+                char ch = line[dx];
+                if (ch == ' ')
+                    continue;
+
+                _drawUtil.DrawCharacter(rayConnection, ch, (int)(screenPosition.X + dx * _screenUtil.ScreenDelX), (int)(screenPosition.Y + dy * _screenUtil.ScreenDelY), color);
+            }
         }
     }
 }

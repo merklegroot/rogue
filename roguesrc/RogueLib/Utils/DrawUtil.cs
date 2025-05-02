@@ -11,7 +11,6 @@ public interface IDrawUtil
     void DrawColoredHotkeyText(IRayConnection rayConnection, string text, int x, int y, ColoredHotkeyOptions? options = null);
 }
 
-
 public class DrawUtil : IDrawUtil
 {
     public void DrawText(IRayConnection rayConnection, string text, int x, int y, Color color)
