@@ -1656,7 +1656,7 @@ public class ScreenPresenter : IScreenPresenter
 
     private void HandleDevTestingInput(GameState state)
     {
-        if (Raylib.GetKeyPressed() != 0)
+        if (state.KeyEvents.Count > 0)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
         }
