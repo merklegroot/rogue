@@ -53,6 +53,8 @@ public class ScreenPresenter : IScreenPresenter
     private readonly IBestiaryPresenter _bestiaryPresenter;
     private readonly IInitializeShopHandler _initializeShopHandler;
     private readonly IShopInputHandler _shopInputHandler;
+    private readonly IBestiaryInputHandler _bestiaryInputHandler;
+    private readonly IDevTestingInputHandler _devTestingInputHandler;
     private GameScreenEnum _lastScreen = (GameScreenEnum)(-1);
     private int _lastMenuRemarkSeed = -1;
 
@@ -83,7 +85,9 @@ public class ScreenPresenter : IScreenPresenter
         IMapUtil mapUtil,
         IBestiaryPresenter bestiaryPresenter,
         IInitializeShopHandler initializeShopHandler,
-        IShopInputHandler shopInputHandler)
+        IShopInputHandler shopInputHandler,
+        IBestiaryInputHandler bestiaryInputHandler,
+        IDevTestingInputHandler devTestingInputHandler)
     {
         _rayLoader = rayLoader;
         _screenDrawUtil = drawUtil;
@@ -112,6 +116,8 @@ public class ScreenPresenter : IScreenPresenter
         _bestiaryPresenter = bestiaryPresenter;
         _initializeShopHandler = initializeShopHandler;
         _shopInputHandler = shopInputHandler;
+        _bestiaryInputHandler = bestiaryInputHandler;
+        _devTestingInputHandler = devTestingInputHandler;
     }
 
     public void Initialize(IRayConnection rayConnection, GameState state)
@@ -203,12 +209,12 @@ public class ScreenPresenter : IScreenPresenter
 
             case GameScreenEnum.Bestiary:
                 _bestiaryPresenter.Draw(rayConnection);
-                HandleBestiaryInput(state);
+                _bestiaryInputHandler.Handle(state);
                 break;
 
             case GameScreenEnum.DevTesting:
                 DrawDevTestingPage(rayConnection);
-                HandleDevTestingInput(state);
+                _devTestingInputHandler.Handle(state);
                 break;
         }
         
@@ -1640,25 +1646,9 @@ public class ScreenPresenter : IScreenPresenter
         );
     }
 
-    private void HandleBestiaryInput(GameState state)
-    {
-        if (state.KeyEvents.Count > 0)
-        {
-            state.CurrentScreen = GameScreenEnum.Menu;
-        }
-    }
-
     private void DrawDevTestingPage(IRayConnection rayConnection)
     {
         // Draw a blank page (could add a title or message if desired)
         Raylib.ClearBackground(ScreenConstants.BackgroundColor);
-    }
-
-    private void HandleDevTestingInput(GameState state)
-    {
-        if (state.KeyEvents.Count > 0)
-        {
-            state.CurrentScreen = GameScreenEnum.Menu;
-        }
     }
 }

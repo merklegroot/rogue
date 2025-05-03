@@ -42,5 +42,7 @@ public static class RogueLibRegistry
             .AddScoped<IGoldPickupPresenter, GoldPickupPresenter>()
             .AddScoped<IBestiaryPresenter, BestiaryPresenter>()
             .AddScoped<IInitializeShopHandler, InitializeShopHandler>()
-            .AddScoped<IShopInputHandler, ShopInputHandler>();
+            .AddScoped<IShopInputHandler, ShopInputHandler>()
+            .AddScoped<IBestiaryInputHandler, BestiaryInputHandler>()
+            .AddScoped<IDevTestingInputHandler, DevTestingInputHandler>();
 }
