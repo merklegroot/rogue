@@ -13,7 +13,6 @@ public interface IScreenPresenter
     void Initialize(IRayConnection rayConnection, GameState state);
     void Update(GameState state);
     void Draw(IRayConnection rayConnection, GameState state);
-    bool WindowShouldClose();
 }
 
 public class ScreenPresenter : IScreenPresenter
@@ -1000,21 +999,6 @@ public class ScreenPresenter : IScreenPresenter
         
         // Spawn the health pickup
         state.HealthPickupState.HealthPickups.Add(new HealthPickup { X = newX, Y = newY, HealAmount = 20 });  // Restore 20 health
-    }
-
-    public bool WindowShouldClose()
-    {
-        // Check if window close was requested (like clicking the X button)
-        // but ignore if it was triggered by the Escape key
-        bool closeRequested = Raylib.WindowShouldClose();
-        
-        // If close is requested and it's because of Escape key, ignore it
-        if (closeRequested && Raylib.IsKeyPressed(KeyboardKey.Escape))
-        {
-            return false;
-        }
-        
-        return closeRequested;
     }
 
 

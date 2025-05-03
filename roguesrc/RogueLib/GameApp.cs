@@ -1,6 +1,7 @@
 using RogueLib.Models;
 using RogueLib.Presenters;
 using RogueLib.State;
+using Raylib_cs;
 
 namespace RogueLib;
 
@@ -9,13 +10,13 @@ public interface IGameApp
     void Run();
 }
 
-public class GameAppApp : IGameApp
+public class GameApp : IGameApp
 {
     private readonly IScreenPresenter _presenter;
     private readonly GameState _state;
     private readonly IRayConnectionFactory _rayConnectionFactory;
 
-    public GameAppApp(IScreenPresenter presenter, IRayConnectionFactory rayConnectionFactory)
+    public GameApp(IScreenPresenter presenter, IRayConnectionFactory rayConnectionFactory)
     {
         _presenter = presenter;
         _rayConnectionFactory = rayConnectionFactory;
@@ -32,7 +33,7 @@ public class GameAppApp : IGameApp
 
         try
         {
-            while (!_presenter.WindowShouldClose())
+            while (!WindowShouldClose())
             {
                 _presenter.Update(_state);
                 _presenter.Draw(rayConnection, _state);
@@ -42,5 +43,20 @@ public class GameAppApp : IGameApp
         {
             rayConnection.Dispose();
         }
+    }
+
+    private bool WindowShouldClose()
+    {
+        // Check if window close was requested (like clicking the X button)
+        // but ignore if it was triggered by the Escape key
+        bool closeRequested = Raylib.WindowShouldClose();
+        
+        // If close is requested and it's because of Escape key, ignore it
+        if (closeRequested && Raylib.IsKeyPressed(KeyboardKey.Escape))
+        {
+            return false;
+        }
+        
+        return closeRequested;
     }
 }
