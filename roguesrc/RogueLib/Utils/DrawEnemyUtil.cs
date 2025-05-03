@@ -3,7 +3,7 @@ using RogueLib;
 using RogueLib.Constants;
 using RogueLib.Models;
 using RogueLib.Utils;
-
+using System.Numerics;
 public enum EnemyEnum
 {
     Invalid = 0,
@@ -78,7 +78,7 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         // Draw the kestrel bird character by character: [°]>
         var kestrelColor = new Color(135, 206, 235, 255); // Sky blue color for the kestrel
         
-        // TODO: Add direction parameter to determine facing. For now, draw right-facing
+        // TODO: Add direction parameter to determine fafcing. For now, draw right-facing
         _drawUtil.DrawCharacter(rayConnection, '[', (int)(screenPosition.X - _screenUtil.ScreenDelX), screenPosition.Y, kestrelColor); // body
         _drawUtil.DrawCharacter(rayConnection, AsciiConstants.Ring, screenPosition.X, 
             (int)(screenPosition.Y - _screenUtil.ScreenDelY / 2.0f), kestrelColor); // eye
@@ -88,7 +88,8 @@ public class DrawEnemyUtil : IDrawEnemyUtil
     private void DrawMinotaur(IRayConnection rayConnection, Coord2dInt screenPosition)
     {
         // The first frame is good enough for the loiks of you.
-        DrawSimpleFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
+        // DrawSimpleAsciiFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
+        DrawSimpleFontFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)
@@ -115,11 +116,13 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         }
     }
 
-    private void DrawSimpleFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
+    private void DrawSimpleAsciiFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
     {
         var color = Color.White;
         for (int dy = 0; dy < frame.Count; dy++)
         {
+            var y = (float)dy - (float)frame.Count / 2.0f + 0.5f;
+
             var line = frame[dy];
             for (int dx = 0; dx < line.Length; dx++)
             {
@@ -127,7 +130,41 @@ public class DrawEnemyUtil : IDrawEnemyUtil
                 if (ch == ' ')
                     continue;
 
-                _drawUtil.DrawCharacter(rayConnection, ch, (int)(screenPosition.X + dx * _screenUtil.ScreenDelX), (int)(screenPosition.Y + dy * _screenUtil.ScreenDelY), color);
+                var x = (float)dx - (float)line.Length / 2.0f;
+
+                _drawUtil.DrawCharacter(rayConnection, ch, (int)(screenPosition.X + x * _screenUtil.ScreenDelX), (int)(screenPosition.Y + y * _screenUtil.ScreenDelY), color);
+            }
+        }
+    }
+
+    private void DrawSimpleFontFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
+    {
+        var color = Color.White;
+        for (int dy = 0; dy < frame.Count; dy++)
+        {
+            var y = (float)dy - (float)frame.Count / 2.0f + 0.5f;
+
+            var line = frame[dy];
+            for (int dx = 0; dx < line.Length; dx++)
+            {
+                char ch = line[dx];
+                if (ch == ' ')
+                    continue;
+
+                var x = (float)dx - (float)line.Length / 2.0f;
+
+                // Instead of DrawCharacter which draws a glyph, we want to write an individual letter from the default font.
+                // We can use DrawTextEx to draw a single character.
+                var font = rayConnection.MenuFont;
+                var fontTexture = font.Texture;
+
+                // Draw the character.
+                Raylib.DrawTextEx(font, ch.ToString(), 
+                new Vector2(screenPosition.X + x * _screenUtil.ScreenDelX, 
+                screenPosition.Y + y * _screenUtil.ScreenDelY), 22, 1, color);
+                
+                
+                
             }
         }
     }
