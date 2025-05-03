@@ -142,6 +142,20 @@ public class MenuPresenter : IMenuPresenter
         _menuItems.Add((exitBounds, 
             state => Raylib.CloseWindow(), exitText));
         
+        var devTestText = "(D)ev Testing Page";
+        var devTestSize = Raylib.MeasureTextEx(rayConnection.MenuFont, devTestText, ScreenConstants.MenuFontSize, 1);
+        var devTestX = centerX - menuItemWidth / 2;
+        var devTestBounds = new Rectangle(devTestX, menuStartY + MenuSpacing * 5 - BorderPadding, menuItemWidth, devTestSize.Y + (BorderPadding * 2));
+        _drawUtil.DrawColoredHotkeyText(rayConnection, devTestText, 
+            devTestX + BorderPadding, menuStartY + MenuSpacing * 5, new ColoredHotkeyOptions { 
+                IsHovered = Raylib.CheckCollisionPointRec(mousePosition, devTestBounds),
+                HoverBounds = devTestBounds
+            });
+        Raylib.DrawRectangleLines((int)devTestX, (int)(menuStartY + MenuSpacing * 5 - BorderPadding), 
+            menuItemWidth, (int)(devTestSize.Y + (BorderPadding * 2)), Color.Gold);
+        _menuItems.Add((devTestBounds, 
+            state => state.CurrentScreen = GameScreenEnum.DevTesting, devTestText));
+        
         // Draw version number
         var version = "v0.1 Alpha";
         _drawUtil.DrawText(rayConnection, version, 20, 

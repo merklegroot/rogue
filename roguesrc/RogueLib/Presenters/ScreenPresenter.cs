@@ -205,6 +205,11 @@ public class ScreenPresenter : IScreenPresenter
                 _bestiaryPresenter.Draw(rayConnection);
                 HandleBestiaryInput(state);
                 break;
+
+            case GameScreenEnum.DevTesting:
+                DrawDevTestingPage(rayConnection);
+                HandleDevTestingInput(state);
+                break;
         }
         
         Raylib.EndTextureMode();
@@ -1638,6 +1643,20 @@ public class ScreenPresenter : IScreenPresenter
     private void HandleBestiaryInput(GameState state)
     {
         if (state.KeyEvents.Count > 0)
+        {
+            state.CurrentScreen = GameScreenEnum.Menu;
+        }
+    }
+
+    private void DrawDevTestingPage(IRayConnection rayConnection)
+    {
+        // Draw a blank page (could add a title or message if desired)
+        Raylib.ClearBackground(ScreenConstants.BackgroundColor);
+    }
+
+    private void HandleDevTestingInput(GameState state)
+    {
+        if (Raylib.GetKeyPressed() != 0)
         {
             state.CurrentScreen = GameScreenEnum.Menu;
         }

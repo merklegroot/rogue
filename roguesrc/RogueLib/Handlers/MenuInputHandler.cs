@@ -48,10 +48,15 @@ public class MenuInputHandler : IMenuInputHandler
             Raylib.CloseWindow();
             return;
         }
-        // Toggle CRT effect with T key
         if (key == KeyboardKey.T)
         {
             state.ShouldEnableCrtEffect = !state.ShouldEnableCrtEffect;
+            return;
+        }
+
+        if(key == KeyboardKey.D)
+        {
+            state.CurrentScreen = GameScreenEnum.DevTesting;
             return;
         }
     }

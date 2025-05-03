@@ -6,5 +6,6 @@ public enum GameScreenEnum
     CharacterSet,
     Adventure,
     Shop,
-    Bestiary
+    Bestiary,
+    DevTesting
 }
