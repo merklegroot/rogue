@@ -166,6 +166,45 @@ public class ScreenPresenter : IScreenPresenter
         Raylib.BeginTextureMode(rayConnection.GameTexture);
         Raylib.ClearBackground(ScreenConstants.BackgroundColor);
 
+        DrawCurrentScreen(state, rayConnection);
+        
+        Raylib.EndTextureMode();
+        
+        // Draw render texture to screen with shader
+        Raylib.BeginDrawing();
+        Raylib.ClearBackground(Color.Black);
+        
+        if (state.ShouldEnableCrtEffect)
+        {
+            Raylib.BeginShaderMode(rayConnection.CrtShader);
+            Raylib.DrawTextureRec(
+                rayConnection.GameTexture.Texture,
+                new Rectangle(0, 0, rayConnection.GameTexture.Texture.Width, -rayConnection.GameTexture.Texture.Height),
+                new Vector2(0, 0),
+                Color.White
+            );
+            Raylib.EndShaderMode();
+        }
+        else
+        {
+            // Draw without shader if effect is disabled
+            Raylib.DrawTextureRec(
+                rayConnection.GameTexture.Texture,
+                new Rectangle(0, 0, rayConnection.GameTexture.Texture.Width, -rayConnection.GameTexture.Texture.Height),
+                new Vector2(0, 0),
+                Color.White
+            );
+        }
+        
+        Raylib.EndDrawing();
+
+        // Clear processed events
+        state.KeyEvents.Clear();
+        _lastScreen = state.CurrentScreen;
+    }
+
+    private void DrawCurrentScreen(GameState state, IRayConnection rayConnection){
+
         switch (state.CurrentScreen)
         {
             case GameScreenEnum.Menu:
@@ -218,39 +257,6 @@ public class ScreenPresenter : IScreenPresenter
                 break;
         }
         
-        Raylib.EndTextureMode();
-        
-        // Draw render texture to screen with shader
-        Raylib.BeginDrawing();
-        Raylib.ClearBackground(Color.Black);
-        
-        if (state.ShouldEnableCrtEffect)
-        {
-            Raylib.BeginShaderMode(rayConnection.CrtShader);
-            Raylib.DrawTextureRec(
-                rayConnection.GameTexture.Texture,
-                new Rectangle(0, 0, rayConnection.GameTexture.Texture.Width, -rayConnection.GameTexture.Texture.Height),
-                new Vector2(0, 0),
-                Color.White
-            );
-            Raylib.EndShaderMode();
-        }
-        else
-        {
-            // Draw without shader if effect is disabled
-            Raylib.DrawTextureRec(
-                rayConnection.GameTexture.Texture,
-                new Rectangle(0, 0, rayConnection.GameTexture.Texture.Width, -rayConnection.GameTexture.Texture.Height),
-                new Vector2(0, 0),
-                Color.White
-            );
-        }
-        
-        Raylib.EndDrawing();
-
-        // Clear processed events
-        state.KeyEvents.Clear();
-        _lastScreen = state.CurrentScreen;
     }
 
     private void HandleCharacterSetInput(GameState state)
