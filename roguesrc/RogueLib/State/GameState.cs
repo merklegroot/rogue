@@ -69,7 +69,10 @@ public class GameState
 
     public bool ShouldEnableCrtEffect { get; set; } = true;  // Default to true
 
-    public bool ShouldShowDebugPanel { get; set; } = false;
+    public bool ShouldShowDebugPanel { get; set; }
 
-    public string? CurrentSarcasticRemark { get; set; } = null;
+    public string? CurrentSarcasticRemark { get; set; }
+    public float ShaderTime { get; set; }
+    public int EnemiesKilled { get; set; }
+    public bool DidGameJustStart { get; set; } = true;
 }
