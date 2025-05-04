@@ -1640,5 +1640,8 @@ public class ScreenPresenter : IScreenPresenter
     {
         // Draw a blank page (could add a title or message if desired)
         Raylib.ClearBackground(ScreenConstants.BackgroundColor);
+        var screenWidth = ScreenConstants.Width * ScreenConstants.CharWidth * ScreenConstants.DisplayScale;
+        var screenHeight = ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale;
+        _screenDrawUtil.DrawText(rayConnection, "Press any key to return", 20, screenHeight - 40, Color.White);
     }
 }
