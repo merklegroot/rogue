@@ -197,4 +197,38 @@ var process = false;
   - Working with specific protocols that require LF
   - Dealing with external systems that expect LF
   - Writing cross-platform file formats that specify LF
+  
+### Blank lines
+- Add a blank line after the end of a closure (unless it's the last line in the file.)
 
+// Bad
+```csharp
+if (condition)
+  return true;
+doSomething();
+```
+
+// Good
+```csharp
+if (condition)
+  return true;
+
+doSomething();
+```
+
+// Bad
+```csharp
+if (condition)
+{
+  return true;
+}
+doSomething();
+
+// Good
+if (condition)
+{
+  return true;
+}
+
+doSomething();
+```
