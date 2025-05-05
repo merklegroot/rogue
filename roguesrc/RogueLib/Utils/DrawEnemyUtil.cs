@@ -90,7 +90,8 @@ public class DrawEnemyUtil : IDrawEnemyUtil
     {
         // The first frame is good enough for the loiks of you.
         // DrawSimpleAsciiFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
-        DrawSimpleFontFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
+        // DrawSimpleFontFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
+        DrawTranslatedAsciiFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
     }
     
     public void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle)
@@ -193,20 +194,20 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             {
                 char translatedChar = ch switch
                 {
-                    '┌' => '╔',
-                    '┐' => '╗',
-                    '└' => '╚',
-                    '┘' => '╝',
-                    '─' => '═',
-                    '│' => '║',
-                    '┃' => '║',
-                    '┬' => '╦',
-                    '┴' => '╩',
-                    '┤' => '╣',
-                    '├' => '╠',
-                    '┼' => '╬',
-                    '╱' => '/',
-                    '╲' => '\\',
+                    '☺' => (char)1,
+                    '☻' => (char)2,
+                    '♥' => (char)3,
+                    '♦' => (char)4,
+                    '♣' => (char)5,
+                    '♠' => (char)6,
+                    
+                    // follow the pattern above for the pipe-like characters
+                    '│' => (char)7,
+                    // '┃' => (char)8,
+                    '┃' => (char)222,
+                    
+                    'Ö' => (char)148,
+                    
                     _ => ch // Pass through characters that don't need translation
                 };
                 
