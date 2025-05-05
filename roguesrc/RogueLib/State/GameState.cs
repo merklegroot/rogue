@@ -75,4 +75,6 @@ public class GameState
     public float ShaderTime { get; set; }
     public int EnemiesKilled { get; set; }
     public bool DidGameJustStart { get; set; } = true;
+
+    public int SelectedCharIndex { get; set; } = 0;
 }

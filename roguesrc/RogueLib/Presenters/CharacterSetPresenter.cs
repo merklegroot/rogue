@@ -1,12 +1,13 @@
 using Raylib_cs;
 using RogueLib.Constants;
+using RogueLib.State;
 using RogueLib.Utils;
 
 namespace RogueLib.Presenters;
 
 public interface ICharacterSetPresenter
 {
-    void Draw(IRayConnection rayConnection);
+    void Draw(IRayConnection rayConnection, GameState state);
 }
 
 public class CharacterSetPresenter : ICharacterSetPresenter
@@ -18,7 +19,7 @@ public class CharacterSetPresenter : ICharacterSetPresenter
         _drawUtil = drawUtil;
     }
 
-    public void Draw(IRayConnection rayConnection)
+    public void Draw(IRayConnection rayConnection, GameState state)
     {
         const int offsetX = 32;
         const int offsetY = 32;
@@ -33,9 +34,14 @@ public class CharacterSetPresenter : ICharacterSetPresenter
                 charNum,
                 offsetX + (col * 35),
                 offsetY + (row * 60),
-                ScreenConstants.SampleColors[charNum % ScreenConstants.SampleColors.Length]
+                charNum == state.SelectedCharIndex ? Color.Gold : ScreenConstants.SampleColors[charNum % ScreenConstants.SampleColors.Length]
             );
         }
+
+        // Show selected character and its index below the grid
+        var selectedChar = (char)state.SelectedCharIndex;
+        var info = $"Selected: '{selectedChar}' (Index: {state.SelectedCharIndex})";
+        _drawUtil.DrawText(rayConnection, info, offsetX, offsetY + 32 * 60 + 20, Color.White);
 
         _drawUtil.DrawText(rayConnection, "Press any key to return", 20, ScreenConstants.Height * ScreenConstants.CharHeight * ScreenConstants.DisplayScale - 40, Color.White);
     }

@@ -224,7 +224,7 @@ public class ScreenPresenter : IScreenPresenter
                 break;
 
             case GameScreenEnum.CharacterSet:
-                _characterSetPresenter.Draw(rayConnection);
+                _characterSetPresenter.Draw(rayConnection, state);
                 HandleCharacterSetInput(state);
                 break;
 
@@ -253,9 +253,21 @@ public class ScreenPresenter : IScreenPresenter
 
     private void HandleCharacterSetInput(GameState state)
     {
-        if (state.KeyEvents.Count > 0)
+        while (state.KeyEvents.Count > 0)
         {
-            state.CurrentScreen = GameScreenEnum.Menu;
+            var key = state.KeyEvents.Dequeue();
+            int idx = state.SelectedCharIndex;
+            if (key == KeyboardKey.W)
+                idx = (idx - 32 + 256) % 256;
+            else if (key == KeyboardKey.S)
+                idx = (idx + 32) % 256;
+            else if (key == KeyboardKey.A)
+                idx = (idx - 1 + 256) % 256;
+            else if (key == KeyboardKey.D)
+                idx = (idx + 1) % 256;
+            else
+                state.CurrentScreen = GameScreenEnum.Menu;
+            state.SelectedCharIndex = idx;
         }
     }
 
