@@ -192,6 +192,9 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             
             foreach (var ch in line)
             {
+                // ┌[Ö]┐
+                // ┃|┃
+                // / \
                 char translatedChar = ch switch
                 {
                     '☺' => (char)1,
@@ -207,6 +210,9 @@ public class DrawEnemyUtil : IDrawEnemyUtil
                     '┃' => (char)222,
                     
                     'Ö' => (char)148,
+
+                    '┌' => (char)169,
+                    '┐' => (char)170,
                     
                     _ => ch // Pass through characters that don't need translation
                 };
