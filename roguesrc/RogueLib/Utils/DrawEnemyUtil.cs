@@ -4,6 +4,7 @@ using RogueLib.Constants;
 using RogueLib.Models;
 using RogueLib.Utils;
 using System.Numerics;
+using System.Text;
 public enum EnemyEnum
 {
     Invalid = 0,
@@ -162,10 +163,60 @@ public class DrawEnemyUtil : IDrawEnemyUtil
                 Raylib.DrawTextEx(font, ch.ToString(), 
                 new Vector2(screenPosition.X + x * _screenUtil.ScreenDelX, 
                 screenPosition.Y + y * _screenUtil.ScreenDelY), 22, 1, color);
-                
-                
-                
             }
         }
+
+    }
+    private void DrawTranslatedAsciiFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
+    {
+        var translatedFrame = TranslateAsciiFrame(frame);
+        DrawSimpleAsciiFrame(rayConnection, screenPosition, translatedFrame);
+    }
+
+    private List<string> TranslateAsciiFrame(List<string> frame)
+    {
+        /*
+        We have characters that almost match what's in the ascii chart, but are using
+        character codes from the modern font system.
+
+        For known matches, translate them.
+        When a match is not know, just pass the value through.
+        */
+
+        var translatedFrame = new List<string>();
+        
+        foreach (var line in frame)
+        {
+            var translatedLine = new StringBuilder();
+            
+            foreach (var ch in line)
+            {
+                char translatedChar = ch switch
+                {
+                    '┌' => '╔',
+                    '┐' => '╗',
+                    '└' => '╚',
+                    '┘' => '╝',
+                    '─' => '═',
+                    '│' => '║',
+                    '┃' => '║',
+                    '┬' => '╦',
+                    '┴' => '╩',
+                    '┤' => '╣',
+                    '├' => '╠',
+                    '┼' => '╬',
+                    '╱' => '/',
+                    '╲' => '\\',
+                    _ => ch // Pass through characters that don't need translation
+                };
+                
+                translatedLine.Append(translatedChar);
+            }
+            
+            translatedFrame.Add(translatedLine.ToString());
+        }
+        
+        return translatedFrame;
+
     }
 }
