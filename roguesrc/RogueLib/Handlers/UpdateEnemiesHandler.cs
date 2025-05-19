@@ -38,7 +38,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         }
     }
 
-    private void HandleEnemy(GameState state, Enemy enemy, float frameTime)
+    private void HandleEnemy(GameState state, EnemyState enemy, float frameTime)
     {
         if (!enemy.IsAlive)
             return;
@@ -164,7 +164,7 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         }
     }
 
-    private void HandleCollisionWithPlayer(GameState state, Enemy enemy)
+    private void HandleCollisionWithPlayer(GameState state, EnemyState enemy)
     {
         if (state.IsInvincible || !IsCollidingWithPlayer(state, enemy))
             return;
@@ -176,13 +176,13 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         ApplyKnockback(state, new Vector2(enemy.Position.X, enemy.Position.Y));
     }
 
-    private bool IsCollidingWithPlayer(GameState state, Enemy enemy)
+    private bool IsCollidingWithPlayer(GameState state, EnemyState enemy)
     {
         return Math.Abs(enemy.Position.X - state.PlayerPosition.X) < 0.5f && 
                Math.Abs(enemy.Position.Y - state.PlayerPosition.Y) < 0.5f;
     }
 
-    private void ChooseNewDirection(GameState state, Enemy enemy)
+    private void ChooseNewDirection(GameState state, EnemyState enemy)
     {
         // List of possible directions (including diagonals)
         var directions = new List<(int dx, int dy)>

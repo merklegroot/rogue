@@ -2,7 +2,7 @@ using RogueLib.Models;
 
 namespace RogueLib;
 
-public class Enemy
+public class EnemyState
 {
     public Coord2dFloat Position { get; set; } = new(0f, 0f);
     public Coord2dFloat TargetPosition { get; set; } = new(0f, 0f);

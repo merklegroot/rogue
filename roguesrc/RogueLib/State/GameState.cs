@@ -34,7 +34,7 @@ public class GameState
     public float WobbleTimer { get; set; } = 0f;
     // Constants moved to GameConstants
 
-    public List<Enemy> Enemies { get; } = [];
+    public List<EnemyState> Enemies { get; } = [];
     public List<SpinnerEnemyState> Spinners { get; } = [];
     public float EnemySpawnTimer { get; set; }
     
