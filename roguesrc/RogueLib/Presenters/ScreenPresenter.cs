@@ -717,6 +717,9 @@ public class ScreenPresenter : IScreenPresenter
                 state.CurrentHealth--;
                 Console.WriteLine($"Player hit by spinner! Health: {state.CurrentHealth}");
                 ApplyKnockback(state, new Vector2(spinner.X, spinner.Y));
+                // Make player briefly invincible
+                state.IsInvincible = true;
+                state.InvincibilityTimer = 0f;
                 // Set spinner moving away from player
                 spinner.IsMoving = true;
                 spinner.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
