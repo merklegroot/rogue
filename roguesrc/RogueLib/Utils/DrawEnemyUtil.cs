@@ -17,8 +17,7 @@ public enum EnemyEnum
 
 public interface IDrawEnemyUtil
 {
-    void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dInt screenPosition);
-    void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dFloat screenPosition);
+    void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dFloat screenPosition, IEnemyContext? enemyContext);
     void DrawSpinner(IRayConnection rayConnection, Coord2dFloat screenPosition, float spinAngle);
 }
 
@@ -32,12 +31,7 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         _screenUtil = screenUtil;
     }
 
-    public void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dFloat screenPosition)
-    {
-        Draw(rayConnection, enemyEnum, new Coord2dInt((int)screenPosition.X, (int)screenPosition.Y));
-    }
-    
-    public void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dInt screenPosition)
+    public void Draw(IRayConnection rayConnection, EnemyEnum enemyEnum, Coord2dFloat screenPosition, IEnemyContext? enemyContext)
     {
         if (enemyEnum == EnemyEnum.Cedilla)
         {
@@ -57,6 +51,13 @@ public class DrawEnemyUtil : IDrawEnemyUtil
             return;
         }
 
+        if (enemyEnum == EnemyEnum.Spinner)
+        {
+            var spinnerContext = (enemyContext as SpinnerEnemyContext)!;
+            DrawSpinner(rayConnection, screenPosition, spinnerContext.SpinAngle);
+            return;
+        }
+
         if (enemyEnum == EnemyEnum.Minotaur)
         {
             DrawMinotaur(rayConnection, screenPosition);
@@ -64,29 +65,29 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         }
     }
 
-    private void DrawCedilla(IRayConnection rayConnection, Coord2dInt screenPosition)
+    private void DrawCedilla(IRayConnection rayConnection, Coord2dFloat screenPosition)
     {
-        _drawUtil.DrawCharacter(rayConnection, ScreenConstants.CedillaChar, screenPosition.X, screenPosition.Y, ScreenConstants.EnemyColor);
+        _drawUtil.DrawCharacter(rayConnection, ScreenConstants.CedillaChar, (int)screenPosition.X, (int)screenPosition.Y, ScreenConstants.EnemyColor);
     }
 
-    private void DrawCharger(IRayConnection rayConnection, Coord2dInt screenPosition)
+    private void DrawCharger(IRayConnection rayConnection, Coord2dFloat screenPosition)
     {
-        _drawUtil.DrawCharacter(rayConnection, ScreenConstants.ChargerCharacter, screenPosition.X, screenPosition.Y, ScreenConstants.ChargerColor);
+        _drawUtil.DrawCharacter(rayConnection, ScreenConstants.ChargerCharacter, (int)screenPosition.X, (int)screenPosition.Y, ScreenConstants.ChargerColor);
     }
 
-    private void DrawKestrel(IRayConnection rayConnection, Coord2dInt screenPosition)
+    private void DrawKestrel(IRayConnection rayConnection, Coord2dFloat screenPosition)
     {
         // Draw the kestrel bird character by character: [°]>
         var kestrelColor = new Color(135, 206, 235, 255); // Sky blue color for the kestrel
         
         // TODO: Add direction parameter to determine fafcing. For now, draw right-facing
-        _drawUtil.DrawCharacter(rayConnection, '[', (int)(screenPosition.X - _screenUtil.ScreenDelX), screenPosition.Y, kestrelColor); // body
-        _drawUtil.DrawCharacter(rayConnection, AsciiConstants.Ring, screenPosition.X, 
+        _drawUtil.DrawCharacter(rayConnection, '[', (int)(screenPosition.X - _screenUtil.ScreenDelX), (int)screenPosition.Y, kestrelColor); // body
+        _drawUtil.DrawCharacter(rayConnection, AsciiConstants.Ring, (int)screenPosition.X, 
             (int)(screenPosition.Y - _screenUtil.ScreenDelY / 2.0f), kestrelColor); // eye
-        _drawUtil.DrawCharacter(rayConnection, '>', (int)(screenPosition.X + _screenUtil.ScreenDelX), screenPosition.Y, kestrelColor); // beak
+        _drawUtil.DrawCharacter(rayConnection, '>', (int)(screenPosition.X + _screenUtil.ScreenDelX), (int)screenPosition.Y, kestrelColor); // beak
     }
     
-    private void DrawMinotaur(IRayConnection rayConnection, Coord2dInt screenPosition)
+    private void DrawMinotaur(IRayConnection rayConnection, Coord2dFloat screenPosition)
     {
         // The first frame is good enough for the loiks of you.
         // DrawSimpleAsciiFrame(rayConnection, screenPosition, rayConnection.MinotaurFrames.First());
@@ -118,7 +119,7 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         }
     }
 
-    private void DrawSimpleAsciiFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
+    private void DrawSimpleAsciiFrame(IRayConnection rayConnection, Coord2dFloat screenPosition, List<string> frame)
     {
         var color = Color.White;
         for (int dy = 0; dy < frame.Count; dy++)
@@ -168,7 +169,7 @@ public class DrawEnemyUtil : IDrawEnemyUtil
         }
 
     }
-    private void DrawTranslatedAsciiFrame(IRayConnection rayConnection, Coord2dInt screenPosition, List<string> frame)
+    private void DrawTranslatedAsciiFrame(IRayConnection rayConnection, Coord2dFloat screenPosition, List<string> frame)
     {
         var translatedFrame = TranslateAsciiFrame(frame);
         DrawSimpleAsciiFrame(rayConnection, screenPosition, translatedFrame);

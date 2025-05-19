@@ -30,16 +30,18 @@ public class EnemyPresenter : IEnemyPresenter
                 continue;
             
             var screenPos = _screenUtil.ToScreenCoord(enemy.Position, state.CameraState);
-            _drawEnemyUtil.Draw(rayConnection, enemy.EnemyType, screenPos);
-        }
-        
-        foreach (var spinner in state.Spinners)
-        {
-            if (!spinner.IsAlive)
+
+            if (enemy.EnemyType == EnemyEnum.Spinner)
+            {
+                // TODO: Why does its screen position work differently than the other enemies?
+                // TODO: This isn't a good thing.
+                var spinnerScreenPos = _screenUtil.ToScreenCoord(enemy.Position, state.CameraState);
+                var spinnerContext = (enemy as EnemyState<SpinnerEnemyContext>)!.Context;
+                _drawEnemyUtil.Draw(rayConnection, enemy.EnemyType, spinnerScreenPos, spinnerContext);
                 continue;
-            
-            var spinnerScreenPos = _screenUtil.ToScreenCoord(spinner.Position, state.CameraState);
-            _drawEnemyUtil.DrawSpinner(rayConnection, spinnerScreenPos, spinner.SpinAngle);
+            }
+
+            _drawEnemyUtil.Draw(rayConnection, enemy.EnemyType, screenPos, null);
         }
     }
 } 

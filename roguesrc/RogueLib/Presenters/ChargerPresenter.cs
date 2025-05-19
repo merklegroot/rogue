@@ -37,11 +37,11 @@ public class ChargerPresenter: IChargerPresenter
         if (Math.Abs(state.Charger.X - state.CameraState.X) >= 15 || Math.Abs(state.Charger.Y - state.CameraState.Y) >= 10)
             return;
 
-        var screenPos = new Coord2dInt(
-            (int)(100 + (state.Charger.X - state.CameraState.X) * 32 + 400), 
-            (int)(100 + (state.Charger.Y - state.CameraState.Y) * 40 + 200));
+        var screenPos = new Coord2dFloat(
+            100 + (state.Charger.X - state.CameraState.X) * 32 + 400,
+            100 + (state.Charger.Y - state.CameraState.Y) * 40 + 200);
         
-        _drawEnemyUtil.Draw(rayConnection, EnemyEnum.Charger, screenPos);
+        _drawEnemyUtil.Draw(rayConnection, EnemyEnum.Charger, screenPos, null);
     }
 
     private void DrawChargerHealth(IRayConnection rayConnection, GameState state)

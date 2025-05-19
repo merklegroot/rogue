@@ -32,16 +32,18 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         {
             HandleEnemy(state, enemy, frameTime);
         }
-        foreach (var spinner in state.Spinners)
-        {
-            HandleSpinner(state, spinner, frameTime);
-        }
     }
 
     private void HandleEnemy(GameState state, EnemyState enemy, float frameTime)
     {
         if (!enemy.IsAlive)
             return;
+
+        if(enemy.EnemyType == EnemyEnum.Spinner)
+        {
+            HandleSpinner(state, (enemy as EnemyState<SpinnerEnemyContext>)!, frameTime);
+            return;
+        }
 
         // Update movement timer
         enemy.MoveTimer += frameTime;
@@ -99,25 +101,24 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         }
 
         HandleCollisionWithPlayer(state, enemy);
-        
     }
 
-    private void HandleSpinner(GameState state, SpinnerEnemyState spinner, float frameTime)
+    private void HandleSpinner(GameState state, EnemyState<SpinnerEnemyContext> spinner, float frameTime)
     {
         if (!spinner.IsAlive)
             return;
 
         // Spin the blades
         float spinSpeed = 4.0f; // radians per second
-        spinner.SpinAngle += spinSpeed * frameTime;
-        if (spinner.SpinAngle > MathF.PI * 2) spinner.SpinAngle -= MathF.PI * 2;
+        spinner.Context.SpinAngle += spinSpeed * frameTime;
+        if (spinner.Context.SpinAngle > MathF.PI * 2) spinner.Context.SpinAngle -= MathF.PI * 2;
 
         if (!spinner.IsMoving)
             return;
 
         // Move in current direction
-        float dx = MathF.Cos(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
-        float dy = MathF.Sin(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
+        float dx = MathF.Cos(spinner.Context.DirectionAngle) * spinner.Context.MoveSpeed * frameTime;
+        float dy = MathF.Sin(spinner.Context.DirectionAngle) * spinner.Context.MoveSpeed * frameTime;
         float newX = spinner.Position.X + dx;
         float newY = spinner.Position.Y + dy;
 
@@ -130,32 +131,32 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
             float testY = spinner.Position.Y;
             if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(testX), (int)MathF.Floor(testY)))
             {
-                spinner.DirectionAngle = MathF.PI - spinner.DirectionAngle;
+                spinner.Context.DirectionAngle = MathF.PI - spinner.Context.DirectionAngle;
                 bounced = true;
             }
             // Try vertical bounce
             else if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(spinner.Position.X), (int)MathF.Floor(spinner.Position.Y + dy)))
             {
-                spinner.DirectionAngle = -spinner.DirectionAngle;
+                spinner.Context.DirectionAngle = -spinner.Context.DirectionAngle;
                 bounced = true;
             }
             else
             {
                 // Reverse direction if stuck
-                spinner.DirectionAngle += MathF.PI;
+                spinner.Context.DirectionAngle += MathF.PI;
                 bounced = true;
             }
             // Normalize
-            if (spinner.DirectionAngle > MathF.PI * 2) spinner.DirectionAngle -= MathF.PI * 2;
-            if (spinner.DirectionAngle < 0) spinner.DirectionAngle += MathF.PI * 2;
+            if (spinner.Context.DirectionAngle > MathF.PI * 2) spinner.Context.DirectionAngle -= MathF.PI * 2;
+            if (spinner.Context.DirectionAngle < 0) spinner.Context.DirectionAngle += MathF.PI * 2;
             if (bounced)
             {
                 // Move a small step in the new direction to avoid getting stuck
                 const float step = 0.1f;
                 spinner.Position = new Coord2dFloat
                 {
-                    X = spinner.Position.X + MathF.Cos(spinner.DirectionAngle) * step,
-                    Y = spinner.Position.Y + MathF.Sin(spinner.DirectionAngle) * step
+                    X = spinner.Position.X + MathF.Cos(spinner.Context.DirectionAngle) * step,
+                    Y = spinner.Position.Y + MathF.Sin(spinner.Context.DirectionAngle) * step
                 };
                 
             }

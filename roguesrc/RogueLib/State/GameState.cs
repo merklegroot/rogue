@@ -35,7 +35,6 @@ public class GameState
     // Constants moved to GameConstants
 
     public List<EnemyState> Enemies { get; } = [];
-    public List<SpinnerEnemyState> Spinners { get; } = [];
     public float EnemySpawnTimer { get; set; }
     
     public bool IsInvincible { get; set; } = false;

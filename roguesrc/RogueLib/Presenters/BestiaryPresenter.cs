@@ -234,7 +234,7 @@ public class BestiaryPresenter : IBestiaryPresenter
         }
         else
         {
-            _drawEnemyUtil.Draw(rayConnection, enemyType, screenPos);
+            _drawEnemyUtil.Draw(rayConnection, enemyType, screenPos, null);
         }
 
         // Calculate text start position (after profile box)

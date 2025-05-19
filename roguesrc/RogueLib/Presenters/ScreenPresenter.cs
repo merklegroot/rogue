@@ -704,10 +704,13 @@ public class ScreenPresenter : IScreenPresenter
             }
         }
         // Spinner collision (bigger radius)
-        foreach (var spinner in state.Spinners)
+        foreach (var spinnerEnemy in state.Enemies.Where(e => e.EnemyType == EnemyEnum.Spinner))
         {
+            var spinner = (spinnerEnemy as EnemyState<SpinnerEnemyContext>)!;
+
             if (!spinner.IsAlive)
                 continue;
+
             float dx = spinner.Position.X - state.PlayerPosition.X;
             float dy = spinner.Position.Y - state.PlayerPosition.Y;
             float distance = MathF.Sqrt(dx * dx + dy * dy);
@@ -722,8 +725,8 @@ public class ScreenPresenter : IScreenPresenter
                 state.InvincibilityTimer = 0f;
                 // Set spinner moving away from player
                 spinner.IsMoving = true;
-                spinner.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
-                spinner.MoveSpeed = 8.0f;
+                spinner.Context.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
+                spinner.Context.MoveSpeed = 8.0f;
                 break;
             }
         }
@@ -1380,8 +1383,10 @@ public class ScreenPresenter : IScreenPresenter
         }
 
         // Check for collision with spinners
-        foreach (var spinner in state.Spinners)
+        foreach (var spinnerEnemy in state.Enemies.Where(e => e.EnemyType == EnemyEnum.Spinner))
         {
+            var spinner = (spinnerEnemy as EnemyState<SpinnerEnemyContext>)!;
+
             if (!spinner.IsAlive || spinner.IsMoving)
                 continue;
 
@@ -1416,10 +1421,10 @@ public class ScreenPresenter : IScreenPresenter
 
                 if (isInDirection)
                 {
-                    spinner.IsMoving = true;
+                    spinner.IsMoving = true;    
                     // Set direction angle away from player
-                    spinner.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
-                    spinner.MoveSpeed = 8.0f; // Launch speed
+                    spinner.Context.DirectionAngle = MathF.Atan2(dy, dx); // From player to spinner
+                    spinner.Context.MoveSpeed = 8.0f; // Launch speed
                 }
             }
         }

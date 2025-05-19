@@ -32,10 +32,6 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
         // Check total enemy limit first
         if (state.Enemies.Count(e => e.IsAlive) >= EnemyConstants.MaxEnemies)
             return;
-        
-        // Check total spinner limit (same as enemies for now)
-        if (state.Spinners.Count(s => s.IsAlive) >= EnemyConstants.MaxEnemies)
-            return;
 
         // Calculate player's chunk coordinates
         var playerChunkX = (int)state.PlayerPosition.X / GameConstants.ChunkSize;
@@ -60,19 +56,14 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
                 if (Math.Abs(chunkX - playerChunkX) > 1 || Math.Abs(chunkY - playerChunkY) > 1) continue;
                 // Check if position is not occupied by player, enemies, or spinners
                 var occupied = (x == (int)state.PlayerPosition.X && y == (int)state.PlayerPosition.Y)
-                               || state.Enemies.Any(e => e.IsAlive && (int)e.Position.X == x && (int)e.Position.Y == y)
-                               || state.Spinners.Any(s => s.IsAlive && (int)s.Position.X == x && (int)s.Position.Y == y);
+                               || state.Enemies.Any(e => e.IsAlive && (int)e.Position.X == x && (int)e.Position.Y == y);
                 if (occupied) continue;
                 
                 // Check per-chunk limit for enemies and spinners combined
                 var mobsInChunk = state.Enemies.Count(e => 
                                       e.IsAlive && 
                                       (int)e.Position.X / GameConstants.ChunkSize == chunkX && 
-                                      (int)e.Position.Y / GameConstants.ChunkSize == chunkY)
-                                  + state.Spinners.Count(s => 
-                                      s.IsAlive && 
-                                      (int)s.Position.X / GameConstants.ChunkSize == chunkX && 
-                                      (int)s.Position.Y / GameConstants.ChunkSize == chunkY);
+                                      (int)e.Position.Y / GameConstants.ChunkSize == chunkY);
 
                 // Allow up to 2 mobs per chunk
                 if (mobsInChunk < 2)
@@ -97,10 +88,13 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
         
         // Spawn a spinner at the same position, with a random direction
         var angle = (float)(Random.NextDouble() * 2 * Math.PI);
-        state.Spinners.Add(new SpinnerEnemyState
+
+        var spinner = new EnemyState<SpinnerEnemyContext>
         {
             Position = new Coord2dFloat(newX + 0.5f, newY + 0.5f),
-            DirectionAngle = angle, SpinAngle = 0f, IsAlive = true
-        });
+            IsAlive = true,
+            EnemyType = EnemyEnum.Spinner,
+            Context = new SpinnerEnemyContext { DirectionAngle = angle, SpinAngle = 0f }
+        };
     }
 }
