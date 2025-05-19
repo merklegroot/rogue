@@ -14,7 +14,7 @@ public class EnemyState
     public bool IsMoving { get; set; } = false;
     public float MoveTimer { get; set; } = 0f;
 
-    public EnemyEnum EnemyType { get; set; } = EnemyEnum.Cedilla;
+    public required EnemyEnum EnemyType { get; set; }
 }
 
 public class EnemyState<TEnemyContext> : EnemyState where TEnemyContext : IEnemyContext
