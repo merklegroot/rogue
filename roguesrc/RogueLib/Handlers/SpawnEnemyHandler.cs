@@ -61,7 +61,7 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
                 // Check if position is not occupied by player, enemies, or spinners
                 var occupied = (x == (int)state.PlayerPosition.X && y == (int)state.PlayerPosition.Y)
                                || state.Enemies.Any(e => e.IsAlive && (int)e.Position.X == x && (int)e.Position.Y == y)
-                               || state.Spinners.Any(s => s.IsAlive && (int)s.X == x && (int)s.Y == y);
+                               || state.Spinners.Any(s => s.IsAlive && (int)s.Position.X == x && (int)s.Position.Y == y);
                 if (occupied) continue;
                 
                 // Check per-chunk limit for enemies and spinners combined
@@ -71,8 +71,8 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
                                       (int)e.Position.Y / GameConstants.ChunkSize == chunkY)
                                   + state.Spinners.Count(s => 
                                       s.IsAlive && 
-                                      (int)s.X / GameConstants.ChunkSize == chunkX && 
-                                      (int)s.Y / GameConstants.ChunkSize == chunkY);
+                                      (int)s.Position.X / GameConstants.ChunkSize == chunkX && 
+                                      (int)s.Position.Y / GameConstants.ChunkSize == chunkY);
 
                 // Allow up to 2 mobs per chunk
                 if (mobsInChunk < 2)
@@ -97,6 +97,10 @@ public class SpawnEnemyHandler : ISpawnEnemyHandler
         
         // Spawn a spinner at the same position, with a random direction
         var angle = (float)(Random.NextDouble() * 2 * Math.PI);
-        state.Spinners.Add(new SpinnerEnemyState { X = newX + 0.5f, Y = newY + 0.5f, DirectionAngle = angle, SpinAngle = 0f, IsAlive = true });
+        state.Spinners.Add(new SpinnerEnemyState
+        {
+            Position = new Coord2dFloat(newX + 0.5f, newY + 0.5f),
+            DirectionAngle = angle, SpinAngle = 0f, IsAlive = true
+        });
     }
 }

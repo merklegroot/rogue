@@ -38,7 +38,7 @@ public class EnemyPresenter : IEnemyPresenter
             if (!spinner.IsAlive)
                 continue;
             
-            var spinnerScreenPos = _screenUtil.ToScreenCoord(new Coord2dFloat(spinner.X, spinner.Y), state.CameraState);
+            var spinnerScreenPos = _screenUtil.ToScreenCoord(spinner.Position, state.CameraState);
             _drawEnemyUtil.DrawSpinner(rayConnection, spinnerScreenPos, spinner.SpinAngle);
         }
     }

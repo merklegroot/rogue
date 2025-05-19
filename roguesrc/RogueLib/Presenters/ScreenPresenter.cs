@@ -708,15 +708,15 @@ public class ScreenPresenter : IScreenPresenter
         {
             if (!spinner.IsAlive)
                 continue;
-            float dx = spinner.X - state.PlayerPosition.X;
-            float dy = spinner.Y - state.PlayerPosition.Y;
+            float dx = spinner.Position.X - state.PlayerPosition.X;
+            float dy = spinner.Position.Y - state.PlayerPosition.Y;
             float distance = MathF.Sqrt(dx * dx + dy * dy);
             float spinnerCollisionRadius = 0.9f;
             if (distance < spinnerCollisionRadius)
             {
                 state.CurrentHealth--;
                 Console.WriteLine($"Player hit by spinner! Health: {state.CurrentHealth}");
-                ApplyKnockback(state, new Vector2(spinner.X, spinner.Y));
+                ApplyKnockback(state, new Vector2(spinner.Position.X, spinner.Position.Y));
                 // Make player briefly invincible
                 state.IsInvincible = true;
                 state.InvincibilityTimer = 0f;
@@ -1386,8 +1386,8 @@ public class ScreenPresenter : IScreenPresenter
                 continue;
 
             // Calculate distance from player to spinner
-            var dx = spinner.X - state.PlayerPosition.X;
-            var dy = spinner.Y - state.PlayerPosition.Y;
+            var dx = spinner.Position.X - state.PlayerPosition.X;
+            var dy = spinner.Position.Y - state.PlayerPosition.Y;
             var distance = MathF.Sqrt(dx * dx + dy * dy);
 
             // Use a larger collision radius for spinner

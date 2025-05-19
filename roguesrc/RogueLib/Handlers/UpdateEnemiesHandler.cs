@@ -118,23 +118,23 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
         // Move in current direction
         float dx = MathF.Cos(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
         float dy = MathF.Sin(spinner.DirectionAngle) * spinner.MoveSpeed * frameTime;
-        float newX = spinner.X + dx;
-        float newY = spinner.Y + dy;
+        float newX = spinner.Position.X + dx;
+        float newY = spinner.Position.Y + dy;
 
         // Bounce off walls (non-walkable tiles)
         bool bounced = false;
         if (!_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(newX), (int)MathF.Floor(newY)))
         {
             // Try horizontal bounce
-            float testX = spinner.X + dx;
-            float testY = spinner.Y;
+            float testX = spinner.Position.X + dx;
+            float testY = spinner.Position.Y;
             if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(testX), (int)MathF.Floor(testY)))
             {
                 spinner.DirectionAngle = MathF.PI - spinner.DirectionAngle;
                 bounced = true;
             }
             // Try vertical bounce
-            else if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(spinner.X), (int)MathF.Floor(spinner.Y + dy)))
+            else if (_mapUtil.IsWalkableTile(state.Map, (int)MathF.Floor(spinner.Position.X), (int)MathF.Floor(spinner.Position.Y + dy)))
             {
                 spinner.DirectionAngle = -spinner.DirectionAngle;
                 bounced = true;
@@ -151,17 +151,18 @@ public class UpdateEnemiesHandler : IUpdateEnemiesHandler
             if (bounced)
             {
                 // Move a small step in the new direction to avoid getting stuck
-                float step = 0.1f;
-                spinner.X += MathF.Cos(spinner.DirectionAngle) * step;
-                spinner.Y += MathF.Sin(spinner.DirectionAngle) * step;
+                const float step = 0.1f;
+                spinner.Position = new Coord2dFloat
+                {
+                    X = spinner.Position.X + MathF.Cos(spinner.DirectionAngle) * step,
+                    Y = spinner.Position.Y + MathF.Sin(spinner.DirectionAngle) * step
+                };
+                
             }
             return;
         }
-        else
-        {
-            spinner.X = newX;
-            spinner.Y = newY;
-        }
+
+        spinner.Position = new Coord2dFloat(newX, newY);
     }
 
     private void HandleCollisionWithPlayer(GameState state, EnemyState enemy)
