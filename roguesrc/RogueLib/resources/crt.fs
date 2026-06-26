@@ -1,8 +1,11 @@
-#version 120
+#version 330
 
 // Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
+in vec2 fragTexCoord;
+in vec4 fragColor;
+
+// Output fragment color
+out vec4 finalColor;
 
 // Input uniform values
 uniform sampler2D texture0;
@@ -40,9 +43,9 @@ vec2 curveRemapUV(vec2 uv)
 // Apply RGB distortion (chromatic aberration)
 vec3 applyRGBDistortion(sampler2D tex, vec2 uv)
 {
-    float r = texture2D(tex, uv + vec2(distortion, 0.0)).r;
-    float g = texture2D(tex, uv).g;
-    float b = texture2D(tex, uv - vec2(distortion, 0.0)).b;
+    float r = texture(tex, uv + vec2(distortion, 0.0)).r;
+    float g = texture(tex, uv).g;
+    float b = texture(tex, uv - vec2(distortion, 0.0)).b;
     return vec3(r, g, b);
 }
 
@@ -72,7 +75,7 @@ void main()
     
     // Discard pixels outside the curved screen
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        finalColor = vec4(0.0, 0.0, 0.0, 1.0);
         return;
     }
     
@@ -92,5 +95,5 @@ void main()
     color *= brightness;
     
     // Output final color
-    gl_FragColor = vec4(color, 1.0);
+    finalColor = vec4(color, 1.0);
 }
