@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Rogue",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/roguesrc/Rogue/bin/Debug/net8.0/Rogue.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/roguesrc/Rogue",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        }
+    ]
+}
