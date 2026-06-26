@@ -66,7 +66,7 @@ public class GameState
 
     public HealthPickupState HealthPickupState { get; set; } = new HealthPickupState();
 
-    public bool ShouldEnableCrtEffect { get; set; } = true;  // Default to true
+    public bool ShouldEnableCrtEffect { get; set; } = false;
 
     public bool ShouldShowDebugPanel { get; set; }
 
